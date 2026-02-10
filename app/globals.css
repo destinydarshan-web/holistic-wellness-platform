@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scrollFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  .animate-scroll-fade-in {
+    opacity: 0;
+    animation: scrollFadeIn 0.6s ease-out forwards;
+  }
+
+  .scroll-animated {
+    animation-play-state: paused;
+  }
+
+  .scroll-animated.is-visible {
+    animation: scrollFadeIn 0.6s ease-out forwards;
+  }
+
+  /* Staggered animations for cards */
+  .scroll-animate-stagger-1 {
+    animation-delay: 0s;
+  }
+
+  .scroll-animate-stagger-2 {
+    animation-delay: 0.1s;
+  }
+
+  .scroll-animate-stagger-3 {
+    animation-delay: 0.2s;
+  }
+
+  .scroll-animate-stagger-4 {
+    animation-delay: 0.3s;
+  }
+
+  .scroll-animate-stagger-5 {
+    animation-delay: 0.4s;
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-scroll-fade-in,
+    .scroll-animated {
+      animation: none !important;
+      opacity: 1;
+      transform: translateY(0) !important;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    --background: 50 13% 96%;
+    --foreground: 30 20% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 20% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 20% 25%;
+    --primary: 140 45% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 70% 60%;
+    --secondary-foreground: 30 20% 25%;
+    --muted: 50 13% 88%;
+    --muted-foreground: 30 10% 50%;
+    --accent: 140 35% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 50 13% 90%;
+    --input: 50 13% 93%;
+    --ring: 140 45% 35%;
+    --chart-1: 140 45% 35%;
+    --chart-2: 45 70% 60%;
+    --chart-3: 190 60% 45%;
+    --chart-4: 280 50% 55%;
+    --chart-5: 30 70% 50%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 30 20% 25%;
+    --sidebar-primary: 140 45% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 70% 60%;
+    --sidebar-accent-foreground: 30 20% 25%;
+    --sidebar-border: 50 13% 90%;
+    --sidebar-ring: 140 45% 35%;
+  }
+  .dark {
+    --background: 30 15% 15%;
+    --foreground: 50 13% 95%;
+    --card: 30 15% 22%;
+    --card-foreground: 50 13% 95%;
+    --popover: 30 15% 22%;
+    --popover-foreground: 50 13% 95%;
+    --primary: 140 45% 50%;
+    --primary-foreground: 30 15% 15%;
+    --secondary: 45 70% 60%;
+    --secondary-foreground: 30 15% 15%;
+    --muted: 30 15% 30%;
+    --muted-foreground: 50 13% 70%;
+    --accent: 140 35% 55%;
+    --accent-foreground: 30 15% 15%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 15% 28%;
+    --input: 30 15% 28%;
+    --ring: 140 45% 50%;
+    --chart-1: 140 45% 50%;
+    --chart-2: 45 70% 60%;
+    --chart-3: 190 60% 50%;
+    --chart-4: 280 50% 60%;
+    --chart-5: 30 70% 55%;
+    --sidebar-background: 30 15% 18%;
+    --sidebar-foreground: 50 13% 95%;
+    --sidebar-primary: 140 45% 50%;
+    --sidebar-primary-foreground: 30 15% 15%;
+    --sidebar-accent: 45 70% 60%;
+    --sidebar-accent-foreground: 30 15% 15%;
+    --sidebar-border: 30 15% 28%;
+    --sidebar-ring: 140 45% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
