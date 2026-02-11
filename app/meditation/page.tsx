@@ -31,7 +31,7 @@ export default function MeditationPage() {
             <h2 className="text-3xl font-bold text-foreground mb-4">
               Upcoming Meditation Sessions
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
               {meditationEvents.map((event) => (
                 <Card key={event.title} className="p-6 border-border">
                   <div className="flex items-start justify-between mb-4">
@@ -95,7 +95,7 @@ export default function MeditationPage() {
             <h2 className="text-3xl font-bold text-foreground mb-12">
               Our Meditation Instructors
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
               {meditationEvents.map((event, index) => (
                 <Card key={`${event.trainer}-${index}`} className="p-6 text-center">
                   <div className="text-6xl mb-4 flex justify-center">

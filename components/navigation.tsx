@@ -36,13 +36,13 @@ export function Navigation() {
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 gap-2">
+        <div className="flex justify-between items-center py-4 gap-2">
           {/* Logo & Brand - Always Visible */}
           <Link
             href="/"
             className="flex-shrink-0 flex items-center gap-2 min-w-0"
           >
-            <div className="w-8 h-8 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center">
+            <div className="w-8 h-10 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center">
               <Image
                 src="/images/DD-Logo.jpeg"
                 alt="Destiny Darshan Logo"

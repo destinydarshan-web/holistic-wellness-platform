@@ -52,28 +52,28 @@ const recommendations: { [key: string]: RecommendationData } = {
     service: 'Astrology',
     description:
       'Gain insights into your life path and future through astrological guidance. Our experienced astrologers provide personalized readings based on your birth chart.',
-    icon: <Lightbulb className="w-12 h-12 text-foreground" />,
+    icon: <Lightbulb className="w-5 h-5 text-foreground" />,
     link: '/astrology',
   },
   counselling: {
     service: 'Counselling',
     description:
       'Professional mental health support to help you navigate life challenges. Our certified counsellors provide a safe, non-judgmental space for growth.',
-    icon: <Heart className="w-12 h-12 text-foreground" />,
+    icon: <Heart className="w-5 h-5 text-foreground" />,
     link: '/counselling',
   },
   yoga: {
     service: 'Yoga',
     description:
       'Strengthen your body and mind through yoga practice. Join our instructors for sessions that improve flexibility, balance, and overall wellness.',
-    icon: <Leaf className="w-12 h-12 text-foreground" />,
+    icon: <Leaf className="w-5 h-5 text-foreground" />,
     link: '/yoga',
   },
   meditation: {
     service: 'Meditation',
     description:
       'Find inner peace and mental clarity through guided meditation. Our meditation guides offer various techniques to calm your mind and reduce stress.',
-    icon: <Zap className="w-12 h-12 text-foreground" />,
+    icon: <Zap className="w-5 h-5 text-foreground" />,
     link: '/meditation',
   },
 }
@@ -391,14 +391,14 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-center text-foreground mb-12">
               Our Services
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
               {Object.values(recommendations).map((service, index) => (
                 <div key={service.service} className={`animate-scroll-fade-in scroll-animate-stagger-${Math.min(index + 1, 4)}`}>
-                  <Card className="p-6 hover:shadow-lg transition-shadow h-full">
+                  <Card className="p-3 rounded-2xl shadow-lg hover:-translate-y-2 hover:shadow-xl transition-all duration-300 h-full max-w-[240px] mx-auto space-y-2 border-2 border-primary/20">
                     <div className="flex justify-center mb-4">
                       {service.icon}
                     </div>
-                    <h3 className="text-xl font-semibold text-center text-foreground mb-3">
+                    <h3 className="text-base font-semibold text-center text-foreground mb-3">
                       {service.service}
                     </h3>
                     <p className="text-sm text-muted-foreground text-center mb-4">

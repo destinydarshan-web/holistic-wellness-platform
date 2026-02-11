@@ -117,7 +117,7 @@ export default function CounsellingPage() {
             <h2 className="text-3xl font-bold text-foreground mb-4">
               Our Counsellors
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
               {counsellors.map((counsellor) => (
                 <Card key={counsellor.name} className="p-6 text-center">
                   <div className="text-6xl mb-4 flex justify-center">
