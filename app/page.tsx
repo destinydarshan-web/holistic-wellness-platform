@@ -410,7 +410,7 @@ export default function Home() {
                         variant="outline"
                         className="w-full border-primary text-primary hover:bg-primary/10 bg-transparent"
                       >
-                        Learn More
+                        Explore
                       </Button>
                     </a>
                   </Card>

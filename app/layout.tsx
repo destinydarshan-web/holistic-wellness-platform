@@ -18,7 +18,7 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title: 'Holistic Wellness Platform | Astrology, Counselling, Yoga & Meditation',
-  description: 'Discover inner peace and wellness with our platform offering astrology guidance, professional counselling, yoga sessions, and meditation practices.',
+  description: 'Balance your mind, body and soul. Discover inner peace and wellness with our platform offering astrology guidance, professional counselling, yoga sessions, and meditation practices.',
   generator: 'v0.app',
   viewport: {
     width: 'device-width',

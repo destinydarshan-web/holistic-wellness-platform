@@ -12,8 +12,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Destiny Darshan</h3>
             <p className="text-sm opacity-90">
-              Discover inner peace and wellness through astrology, counselling,
-              yoga, and meditation.
+              Balance your mind, body and soul.
             </p>
           </div>
 

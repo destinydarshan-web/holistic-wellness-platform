@@ -40,8 +40,8 @@ export default function ContactPage() {
                 Phone
               </h3>
               <p className="text-muted-foreground">
-                <a href="tel:+911234567890" className="hover:text-primary transition-colors">
-                  +91 12345 67890
+                <a href="tel:+919038984582" className="hover:text-primary transition-colors">
+                  +91 9038984582
                 </a>
               </p>
             </Card>
@@ -55,12 +55,12 @@ export default function ContactPage() {
               </h3>
               <p className="text-muted-foreground">
                 <a 
-                  href="https://wa.me/911234567890" 
+                  href="https://wa.me/919038984582" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-primary transition-colors"
                 >
-                  +91 12345 67890
+                  +91 9038984582
                 </a>
               </p>
             </Card>
@@ -68,11 +68,11 @@ export default function ContactPage() {
 
           <Card className="p-8 bg-muted/50">
             <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Response Time
+              Our Team of Experts are waiting to hear from you.
             </h2>
-            <p className="text-muted-foreground leading-relaxed">
+            {/* <p className="text-muted-foreground leading-relaxed">
               We typically respond to all inquiries within 24-48 hours. For urgent matters, please use our WhatsApp contact option for faster communication.
-            </p>
+            </p> */}
           </Card>
 
           <div className="mt-12 bg-primary/5 p-8 rounded-lg border border-primary/20">
