@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
-import { Leaf, Heart, Lightbulb, Zap, ArrowRight, Badge } from 'lucide-react'
+import Link from 'next/link'
+import { Leaf, Heart, Lightbulb, Zap, ArrowRight, Badge, Sparkles, HeartHandshake, Leaf as YogaLeaf, Brain } from 'lucide-react'
 import { Testimonials } from '@/components/testimonials'
 import { Stats } from '@/components/stats'
 import { TrustBadges } from '@/components/trust-badges'
@@ -213,17 +214,107 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
-      <ServiceQuickLinks />
+      
+      {/* Hero Section */}
+      <section className="bg-[#faf8f3] bg-[radial-gradient(circle_at_20%_30%,rgba(251,204,30,0.08),transparent_40%)] py-16 md:py-20 px-6 border-b border-neutral-200">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Content */}
+            <div className="text-center md:text-left">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] tracking-tight max-w-4xl text-balance">
+                Find Clarity.<br/>
+                Restore Balance.<br/>
+                Transform Your Life.
+              </h1>
+              <p className="mt-6 text-lg md:text-xl leading-relaxed text-neutral-600 max-w-xl">
+                Personalized astrology, counselling, yoga and meditation designed to guide you through life's challenges with confidence and calm.
+              </p>
+              
+              <div className="flex gap-4 justify-center md:justify-start mt-8 flex-col sm:flex-row md:flex-row">
+                <a href="#form-section" className="bg-[#fbcc1e] text-black rounded-full px-8 py-3 shadow-md hover:bg-yellow-500 transition-all duration-300 text-center">
+                  Get My Personalized Guidance
+                </a>
+                <a href="tel:+919038984582" className="border border-[#fbcc1e] text-[#fbcc1e] rounded-full px-8 py-3 hover:bg-[#fbcc1e] hover:text-black transition-all duration-300 text-center">
+                  Talk to an Expert
+                </a>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mt-4">
+                🔒 100% confidential • Trusted by 1000+ clients
+              </p>
+            </div>
 
+            {/* Right Column - Service Cards */}
+            <div className="mt-10 md:mt-0 relative">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(251,204,30,0.15),transparent_60%)]"></div>
+              <div className="relative grid grid-cols-2 gap-6">
+                <Link
+                  href="/astrology"
+                  aria-label="Navigate to Astrology services"
+                  className="group flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
+                >
+                  <div className="w-6 h-6 mx-auto mb-2 text-primary transition-transform duration-300 group-hover:scale-110 hover:text-accent">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <span className="text-base font-semibold">
+                    Astrology
+                  </span>
+                </Link>
+                
+                <Link
+                  href="/counselling"
+                  aria-label="Navigate to Counselling services"
+                  className="group flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
+                >
+                  <div className="w-6 h-6 mx-auto mb-2 text-primary transition-transform duration-300 group-hover:scale-110 hover:text-accent">
+                    <HeartHandshake className="w-6 h-6" />
+                  </div>
+                  <span className="text-base font-semibold">
+                    Counselling
+                  </span>
+                </Link>
+                
+                <Link
+                  href="/yoga"
+                  aria-label="Navigate to Yoga services"
+                  className="group flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
+                >
+                  <div className="w-6 h-6 mx-auto mb-2 text-primary transition-transform duration-300 group-hover:scale-110 hover:text-accent">
+                    <Leaf className="w-6 h-6" />
+                  </div>
+                  <span className="text-base font-semibold">
+                    Yoga
+                  </span>
+                </Link>
+                
+                <Link
+                  href="/meditation"
+                  aria-label="Navigate to Meditation services"
+                  className="group flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
+                >
+                  <div className="w-6 h-6 mx-auto mb-2 text-primary transition-transform duration-300 group-hover:scale-110 hover:text-accent">
+                    <Brain className="w-6 h-6" />
+                  </div>
+                  <span className="text-base font-semibold">
+                    Meditation
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
       <main className="flex-1">
         {/* Hero Section with Background Video */}
       
 
         {/* Form Section - Reduced Top Padding */}
-        <section className="py-8 px-4 sm:px-6 lg:px-8 -mt-12">
+        <section id="form-section" className="bg-[#faf8f3] py-14 px-4 sm:px-6 lg:px-8 -mt-12">
           <div className="max-w-2xl mx-auto">
-            <Card className="p-8 border-border">
-              <h3 className="text-lg font-semibold text-primary mb-4">
+            <Card className="bg-white rounded-2xl shadow-md transition-all duration-300 ease-out p-6 md:p-8 max-w-2xl mx-auto">
+              <h3 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">
                 Not Sure Which Service Fits Your Situation?
               </h3>
               <p className="text-muted-foreground mb-6">
@@ -386,7 +477,7 @@ export default function Home() {
         <Stats />
 
         {/* Services Overview */}
-        <ScrollAnimatedSection className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
+        <ScrollAnimatedSection className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-muted/50">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold text-center text-foreground mb-12">
               Our Services

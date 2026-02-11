@@ -90,5 +90,9 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    scroll-behavior: smooth;
+  }
+  #services-section {
+    scroll-margin-top: 100px;
   }
 }

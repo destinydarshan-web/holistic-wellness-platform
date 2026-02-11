@@ -16,22 +16,22 @@ interface TrustBadgesProps {
 
 const defaultBadges: TrustBadge[] = [
   {
-    icon: <Lock className="w-6 h-6 text-foreground" />,
+    icon: <Lock className="w-6 h-6 text-[#1f1f1f]" />,
     title: '100% Confidential Sessions',
     description: 'Your privacy is our priority. All consultations are completely confidential.',
   },
   {
-    icon: <Award className="w-6 h-6 text-foreground" />,
+    icon: <Award className="w-6 h-6 text-[#1f1f1f]" />,
     title: 'Certified & Experienced Experts',
     description: 'Our practitioners are highly qualified and vetted professionals.',
   },
   {
-    icon: <Leaf className="w-6 h-6 text-foreground" />,
+    icon: <Leaf className="w-6 h-6 text-[#1f1f1f]" />,
     title: 'Holistic & Personalized Approach',
     description: 'Every session is tailored to your unique needs and wellness goals.',
   },
   {
-    icon: <MessageSquare className="w-6 h-6 text-foreground" />,
+    icon: <MessageSquare className="w-6 h-6 text-[#1f1f1f]" />,
     title: 'Secure Communication',
     description: 'All conversations are encrypted and secure on our platform.',
   },
@@ -39,23 +39,20 @@ const defaultBadges: TrustBadge[] = [
 
 export function TrustBadges({ badges = defaultBadges }: TrustBadgesProps) {
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8">
+    <section id="services-section" className="px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4.5 md:gap-6">
           {badges.map((badge, index) => (
             <div
               key={index}
-              className="flex flex-col items-center text-center p-6 rounded-lg border border-accent/20 hover:border-accent/50 hover:bg-accent/5 transition-all"
+              className="flex flex-col items-center justify-center p-6 md:p-8 bg-white rounded-2xl shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md text-center gap-4"
             >
-              <div className="mb-4">
+              <div className="w-6 h-6 text-[#fbcc1e] mb-4">
                 {badge.icon}
               </div>
-              <h3 className="font-semibold text-foreground mb-2 text-balance">
+              <h3 className="text-sm md:text-base font-semibold tracking-tight">
                 {badge.title}
               </h3>
-              <p className="text-sm text-foreground text-balance">
-                {badge.description}
-              </p>
             </div>
           ))}
         </div>
