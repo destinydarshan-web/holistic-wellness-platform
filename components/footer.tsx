@@ -21,6 +21,11 @@ export function Footer() {
             <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
+                <Link href="/products" className="hover:underline opacity-90 hover:opacity-100 transition-opacity">
+                  Products
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="hover:underline opacity-90 hover:opacity-100 transition-opacity">
                   About Us
                 </Link>
@@ -86,8 +91,9 @@ export function Footer() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp"
+      className="bg-white rounded-full p-2 hover:brightness-90 transition-all"
       >
-      <MessageCircle className="h-5 w-5 text-green-500" />
+      <MessageCircle className="h-5 w-5" style={{ color: '#25D366' }} />
     </a>
   </div>
 </div>

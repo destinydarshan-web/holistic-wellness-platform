@@ -6,18 +6,17 @@ import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import Image from 'next/image'
 
-const allNavItems = [
-  { label: 'Home', href: '/' },
-  { label: 'Astrology', href: '/astrology' },
-  { label: 'Counselling', href: '/counselling' },
-  { label: 'Yoga', href: '/yoga' },
-  { label: 'Meditation', href: '/meditation' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Contact Us', href: '/contact' },
+const navLinks = [
+  { name: 'Home', href: '/' },
+  { name: 'Astrology', href: '/astrology' },
+  { name: 'Counselling', href: '/counselling' },
+  { name: 'Yoga', href: '/yoga' },
+  { name: 'Meditation', href: '/meditation' },
+  { name: 'Products', href: '/products' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'About Us', href: '/about' },
+  { name: 'Contact Us', href: '/contact' }
 ]
-
-const desktopNavItems = allNavItems.slice(0, 6)
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -58,18 +57,35 @@ export function Navigation() {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-1">
-            {desktopNavItems.map((item) => (
+          <div className="hidden lg:flex items-center gap-1">
+            {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-2 text-sm font-medium transition-colors rounded-md ${
+                className={`px-2 py-2 text-xs font-medium transition-colors rounded-md ${
                   isActive(item.href)
                     ? 'text-primary bg-primary/10'
                     : 'text-foreground hover:text-primary'
                 }`}
               >
-                {item.label}
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Tablet Menu */}
+          <div className="hidden md:flex lg:hidden items-center gap-1">
+            {navLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`px-2 py-2 text-xs font-medium transition-colors rounded-md ${
+                  isActive(item.href)
+                    ? 'text-primary bg-primary/10'
+                    : 'text-foreground hover:text-primary'
+                }`}
+              >
+                {item.name}
               </Link>
             ))}
           </div>
@@ -85,14 +101,14 @@ export function Navigation() {
           </button>
         </div>
 
-        {/* Mobile/Tablet Menu - Full Navigation */}
+        {/* Mobile Menu - Full Navigation */}
         {isOpen && (
           <div
             className="md:hidden pb-4 space-y-1 animate-in slide-in-from-top-2 duration-200"
             role="navigation"
             aria-label="Mobile navigation"
           >
-            {allNavItems.map((item) => (
+            {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -103,7 +119,7 @@ export function Navigation() {
                     : 'text-foreground hover:bg-muted'
                 }`}
               >
-                {item.label}
+                {item.name}
               </Link>
             ))}
           </div>

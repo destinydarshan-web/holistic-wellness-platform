@@ -1,65 +1,58 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import Link from 'next/link'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/PageHeader'
+import { Sparkles, Scale, CalendarDays, Shield, Award, Heart, Lock, MessageCircle, Calendar } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { MessageCircle, Phone, Calendar } from 'lucide-react'
-import { Testimonials } from '@/components/testimonials'
-import { TrustBadges } from '@/components/trust-badges'
+import { Button } from '@/components/ui/button'
 import { BookingModal } from '@/components/booking-modal'
-import { ServiceCTALink } from '@/components/service-cta-link'
-import { ServiceHero } from '@/components/service-hero'
-import { horoscopes as fallbackHoroscopes } from '@/data/horoscopes'
+import { Testimonials } from '@/components/testimonials'
 
-interface HoroscopeData {
-  sign: string
-  dates: string
-  symbol: string
-  horoscope: string
+interface FeatureCardProps {
+  title: string
+  description: string
+  icon: React.ReactNode
+  href: string
 }
 
-const zodiacSymbols: Record<string, string> = {
-  aries: '♈',
-  taurus: '♉',
-  gemini: '♊',
-  cancer: '♋',
-  leo: '♌',
-  virgo: '♍',
-  libra: '♎',
-  scorpio: '♏',
-  sagittarius: '♐',
-  capricorn: '♑',
-  aquarius: '♒',
-  pisces: '♓',
+function FeatureCard({ title, description, icon, href }: FeatureCardProps) {
+  return (
+    <Link href={href}>
+      <Card className="p-4 bg-card border border-border rounded-lg shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 cursor-pointer group">
+        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+          {icon}
+        </div>
+        <h3 className="text-sm md:text-base font-medium text-foreground text-center">
+          {title}
+        </h3>
+      </Card>
+    </Link>
+  )
 }
 
-const zodiacDates: Record<string, string> = {
-  aries: '',
-  taurus: '',
-  gemini: '',
-  cancer: '',
-  leo: '',
-  virgo: '',
-  libra: '',
-  scorpio: '',
-  sagittarius: '',
-  capricorn: '',
-  aquarius: '',
-  pisces: '',
-}
-
-const getCurrentDate = () => {
-  const date = new Date()
-
-  return date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
+const features = [
+  {
+    title: 'Daily Horoscope',
+    description: '',
+    icon: <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-accent" />,
+    href: '/astrology/daily-horoscope'
+  },
+  {
+    title: 'Kundli Matching',
+    description: '',
+    icon: <Scale className="w-5 h-5 md:w-6 md:h-6 text-accent" />,
+    href: '/astrology/kundli-matching'
+  },
+  {
+    title: 'Panchang',
+    description: '',
+    icon: <CalendarDays className="w-5 h-5 md:w-6 md:h-6 text-accent" />,
+    href: '/astrology/panchang'
+  }
+]
 
 const astrologers = [
   {
@@ -84,123 +77,34 @@ const astrologers = [
   },
 ]
 
-const horoscopes = fallbackHoroscopes; // Declare the horoscopes variable
-
 export default function AstrologyPage() {
   const [bookingOpen, setBookingOpen] = useState(false)
-  const [bookingService, setBookingService] = useState('')
-  const [horoscopeData, setHoroscopeData] = useState<HoroscopeData[]>(fallbackHoroscopes)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    const fetchHoroscopes = async () => {
-      try {
-        setLoading(true)
-        setError(false)
-        const response = await fetch('/api/horoscope')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch horoscopes')
-        }
-
-        const data = await response.json()
-        console.log('[v0] Horoscope data fetched:', data.cached ? '(cached)' : '(fresh)')
-
-        // Transform API response into HoroscopeData format
-        const transformed: HoroscopeData[] = Object.entries(data.horoscopes).map(
-          ([sign, horoscope]) => {
-            const capitalizedSign =
-              sign.charAt(0).toUpperCase() + sign.slice(1)
-            return {
-              sign: capitalizedSign,
-              dates: zodiacDates[sign] || '',
-              symbol: zodiacSymbols[sign] || '☆',
-              horoscope: String(horoscope),
-            }
-          }
-        )
-
-        setHoroscopeData(transformed)
-      } catch (err) {
-        console.error('[v0] Error fetching horoscopes:', err)
-        setError(true)
-        // Use fallback data on error
-        setHoroscopeData(fallbackHoroscopes)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchHoroscopes()
-  }, [])
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <ServiceHero
-          title="Astrology"
-          description="Discover insights into your destiny and life path through the ancient wisdom of astrology."
-          backgroundImage="/images/hero-astrology.png"
-        />
+        <PageHeader title="Astrology" />
 
-        {/* Daily Horoscopes */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8">
+        {/* Feature Cards */}
+        <section className="py-8 md:py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-2">
-                Daily Horoscope
-              </h2>
-              <p className="text-lg text-secondary font-semibold">
-                Horoscope for {getCurrentDate()}
-              </p>
-              {error && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  ℹ Using local horoscope data
-                </p>
-              )}
+            <div className="grid grid-cols-3 gap-4">
+              {features.map((feature) => (
+                <FeatureCard
+                  key={feature.title}
+                  title={feature.title}
+                  description={feature.description}
+                  icon={feature.icon}
+                  href={feature.href}
+                />
+              ))}
             </div>
-
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <Card key={i} className="p-6 animate-pulse">
-                    <div className="h-20 bg-muted rounded-md"></div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {horoscopeData.map((horoscope) => (
-                  <Card
-                    key={horoscope.sign}
-                    className="p-6 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-primary">
-                          {horoscope.sign}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {horoscope.dates}
-                        </p>
-                      </div>
-                      <span className="text-4xl">{horoscope.symbol}</span>
-                    </div>
-                    <p className="text-foreground leading-relaxed">
-                      {horoscope.horoscope}
-                    </p>
-                  </Card>
-                ))}
-              </div>
-            )}
           </div>
         </section>
 
-        {/* Our Astrologers */}
+        {/* Meet Our Astrologers */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold text-foreground mb-12">
@@ -221,10 +125,7 @@ export default function AstrologyPage() {
                   <div className="flex gap-2 justify-center">
                     <Button
                       size="sm"
-                      onClick={() => {
-                        setBookingService('Astrology')
-                        setBookingOpen(true)
-                      }}
+                      onClick={() => setBookingOpen(true)}
                       className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2"
                     >
                       <Calendar size={16} />
@@ -244,14 +145,66 @@ export default function AstrologyPage() {
           </div>
         </section>
 
-        {/* Trust Badges */}
-        <TrustBadges />
-
-        {/* Testimonials */}
+        {/* Reviews */}
         <Testimonials
           title="What Our Astrology Clients Say"
           description="Read testimonials from people whose lives have been transformed through our astrology services."
         />
+
+        {/* Trust / Value Proposition */}
+        <section className="py-10 md:py-14 bg-background">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-card border border-border rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Lock className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">
+                  100% Confidential Sessions
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Your privacy is our top priority. All consultations are completely confidential and secure.
+                </p>
+              </Card>
+
+              <Card className="bg-card border border-border rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Award className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">
+                  Certified & Experienced Experts
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Our astrologers are highly qualified with years of experience in Vedic and Western astrology.
+                </p>
+              </Card>
+
+              <Card className="bg-card border border-border rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Heart className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">
+                  Holistic & Personalized Approach
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  We provide tailored guidance that addresses your unique needs and life circumstances.
+                </p>
+              </Card>
+
+              <Card className="bg-card border border-border rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">
+                  Secure Communication
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  End-to-end encrypted communication channels ensure your information remains protected.
+                </p>
+              </Card>
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />
@@ -260,7 +213,7 @@ export default function AstrologyPage() {
       <BookingModal
         open={bookingOpen}
         onOpenChange={setBookingOpen}
-        service={bookingService}
+        service="Astrology"
         experts={['Priya Sharma', 'Raj Patel', 'Meera Gupta', 'Arjun Reddy']}
       />
     </div>

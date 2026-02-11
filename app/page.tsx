@@ -17,6 +17,7 @@ import { BookingModal } from '@/components/booking-modal'
 import { ServiceCTALink } from '@/components/service-cta-link'
 import { HeroVideo } from '@/components/hero-video'
 import { ScrollAnimatedSection } from '@/components/scroll-animated-section'
+import { ServiceQuickLinks } from '@/components/ServiceQuickLinks'
 import { generateRecommendation } from '@/utils/recommendation'
 
 interface FormData {
@@ -51,28 +52,28 @@ const recommendations: { [key: string]: RecommendationData } = {
     service: 'Astrology',
     description:
       'Gain insights into your life path and future through astrological guidance. Our experienced astrologers provide personalized readings based on your birth chart.',
-    icon: <Lightbulb className="w-12 h-12 text-secondary" />,
+    icon: <Lightbulb className="w-12 h-12 text-foreground" />,
     link: '/astrology',
   },
   counselling: {
     service: 'Counselling',
     description:
       'Professional mental health support to help you navigate life challenges. Our certified counsellors provide a safe, non-judgmental space for growth.',
-    icon: <Heart className="w-12 h-12 text-secondary" />,
+    icon: <Heart className="w-12 h-12 text-foreground" />,
     link: '/counselling',
   },
   yoga: {
     service: 'Yoga',
     description:
       'Strengthen your body and mind through yoga practice. Join our instructors for sessions that improve flexibility, balance, and overall wellness.',
-    icon: <Leaf className="w-12 h-12 text-secondary" />,
+    icon: <Leaf className="w-12 h-12 text-foreground" />,
     link: '/yoga',
   },
   meditation: {
     service: 'Meditation',
     description:
       'Find inner peace and mental clarity through guided meditation. Our meditation guides offer various techniques to calm your mind and reduce stress.',
-    icon: <Zap className="w-12 h-12 text-secondary" />,
+    icon: <Zap className="w-12 h-12 text-foreground" />,
     link: '/meditation',
   },
 }
@@ -212,6 +213,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
+      <ServiceQuickLinks />
 
       <main className="flex-1">
         {/* Hero Section with Background Video */}
@@ -221,11 +223,11 @@ export default function Home() {
         <section className="py-8 px-4 sm:px-6 lg:px-8 -mt-12">
           <div className="max-w-2xl mx-auto">
             <Card className="p-8 border-border">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-               Begin Your Guidance Journey
-              </h2>
+              <h3 className="text-lg font-semibold text-primary mb-4">
+                Not Sure Which Service Fits Your Situation?
+              </h3>
               <p className="text-muted-foreground mb-6">
-              Tell us what you’re facing - Career, love, stress, life direction, whatever and we’ll suggest the right path.
+                Share your concern below and receive an instant, personalized recommendation aligned with your journey.
               </p>
 
               {!submitted ? (

@@ -58,11 +58,11 @@ export async function POST(request: NextRequest) {
     <style>
       body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
       .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-      .header { background: linear-gradient(135deg, #228B5E 0%, #FFD966 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header { background: linear-gradient(135deg, #F4C21A 0%, #E6B800 100%); color: #1E1E1E; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
       .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 0 0 8px 8px; }
       .field { margin-bottom: 15px; }
-      .label { font-weight: bold; color: #228B5E; margin-bottom: 5px; }
-      .value { padding: 10px; background: white; border-left: 4px solid #FFD966; padding-left: 15px; }
+      .label { font-weight: bold; color: #F4C21A; margin-bottom: 5px; }
+      .value { padding: 10px; background: white; border-left: 4px solid #F4C21A; padding-left: 15px; }
       .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; padding-top: 10px; border-top: 1px solid #ddd; }
     </style>
   </head>
@@ -138,9 +138,9 @@ export async function POST(request: NextRequest) {
     <style>
       body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
       .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-      .header { background: linear-gradient(135deg, #228B5E 0%, #FFD966 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+      .header { background: linear-gradient(135deg, #F4C21A 0%, #E6B800 100%); color: #1E1E1E; padding: 20px; border-radius: 8px; text-align: center; }
       .content { padding: 20px; text-align: center; }
-      .button { display: inline-block; background: #228B5E; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+      .button { display: inline-block; background: #F4C21A; color: #1E1E1E; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
       .footer { font-size: 12px; color: #666; text-align: center; padding-top: 20px; border-top: 1px solid #ddd; margin-top: 20px; }
     </style>
   </head>
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         
         <p>Our team will review your concerns and get back to you within 24-48 hours to help you on your wellness journey.</p>
         
-        <p style="color: #228B5E; font-weight: bold;">Expected Service: ${recommendedService}</p>
+        <p style="color: #F4C21A; font-weight: bold;">Expected Service: ${recommendedService}</p>
         
         <a href="https://destinydarshan.com" class="button">Visit Our Website</a>
       </div>

@@ -58,7 +58,7 @@ const defaultTestimonials: Testimonial[] = [
   },
 ]
 
-export function Testimonials({
+export function Testimonials({ 
   testimonials = defaultTestimonials,
   title = 'What Our Clients Say',
   description = 'Join thousands of people who have transformed their lives through our wellness services.',
@@ -98,7 +98,7 @@ export function Testimonials({
                   <h3 className="font-semibold text-foreground">
                     {testimonial.name}
                   </h3>
-                  <p className="text-sm text-secondary">
+                  <p className="text-sm text-muted-foreground">
                     {testimonial.service}
                   </p>
                 </div>
@@ -109,7 +109,7 @@ export function Testimonials({
                   <Star
                     key={i}
                     size={16}
-                    className="fill-secondary text-secondary"
+                    className="fill-accent text-accent"
                   />
                 ))}
               </div>

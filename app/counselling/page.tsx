@@ -5,12 +5,12 @@ import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { MessageCircle, Phone, Calendar } from 'lucide-react'
+import { MessageCircle, Phone, Calendar, HeartHandshake, Briefcase, Brain, Users, Sparkles } from 'lucide-react'
 import { Testimonials } from '@/components/testimonials'
 import { TrustBadges } from '@/components/trust-badges'
 import { BookingModal } from '@/components/booking-modal'
 import { ServiceCTALink } from '@/components/service-cta-link'
-import { ServiceHero } from '@/components/service-hero'
+import { PageHeader } from '@/components/PageHeader'
 
 const counsellors = [
   {
@@ -19,19 +19,19 @@ const counsellors = [
     image: '👩‍⚕️',
   },
   {
-    name: 'Dr. James Chen',
-    specialization: 'Career & Stress Management',
-    image: '👨‍⚕️',
-  },
-  {
-    name: 'Emily Rodriguez',
-    specialization: 'Anxiety & Depression Support',
-    image: '👩‍💻',
-  },
-  {
-    name: 'Michael Thompson',
-    specialization: 'Life Coach & Personal Growth',
+    name: 'James Chen',
+    specialization: 'Career & Personal Development',
     image: '👨‍💼',
+  },
+  {
+    name: 'Dr. Maria Rodriguez',
+    specialization: 'Anxiety & Stress Management',
+    image: '👩‍⚕️',
+  },
+  {
+    name: 'Robert Kim',
+    specialization: 'Family & Child Psychology',
+    image: '👨‍⚕️',
   },
   {
     name: 'Dr. Priya Nair',
@@ -45,6 +45,15 @@ const counsellors = [
   },
 ]
 
+const counsellingTypes = [
+  { title: "Relationship Counselling", icon: HeartHandshake },
+  { title: "Career Counselling", icon: Briefcase },
+  { title: "Stress & Anxiety", icon: Brain },
+  { title: "Family Counselling", icon: Users },
+  { title: "Personal Growth", icon: Sparkles },
+  { title: "And Many More", icon: Sparkles }
+]
+
 export default function CounsellingPage() {
   const [bookingOpen, setBookingOpen] = useState(false)
 
@@ -53,12 +62,37 @@ export default function CounsellingPage() {
       <Navigation />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <ServiceHero
-          title="Professional Counselling"
-          description="Get support from certified counsellors in a safe, non-judgmental space."
-          backgroundImage="/images/hero-counselling.png"
-        />
+        {/* Page Header */}
+        <PageHeader title="Professional Counselling" />
+
+        {/* Top Counselling Specializations */}
+        <section className="py-10 md:py-14 bg-background">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-3">
+                Our Counselling Specializations
+              </h2>
+            </div>
+            
+            {/* Mobile: Horizontal scroll, Desktop: 6-column grid */}
+            <div className="flex md:grid md:grid-cols-6 gap-4 overflow-x-auto md:overflow-x-visible scrollbar-hide">
+              {counsellingTypes.map((type: any, index: number) => {
+                const Icon = type.icon
+                return (
+                  <Card
+                    key={index}
+                    className="bg-card border border-border rounded-lg p-4 text-center shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 cursor-pointer min-w-[160px] md:min-w-0"
+                  >
+                    <Icon className="w-5 h-5 md:w-6 md:h-6 text-accent mb-2 mx-auto" />
+                    <h3 className="text-sm md:text-base font-medium text-foreground">
+                      {type.title}
+                    </h3>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        </section>
 
         {/* About Counselling
         <section className="py-16 px-4 sm:px-6 lg:px-8">
@@ -78,9 +112,9 @@ export default function CounsellingPage() {
         </section> */}
 
         {/* Our Counsellors */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
+        <section className="py-4 px-4 sm:px-6 lg:px-8 bg-muted/50">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-foreground mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
               Our Counsellors
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
