@@ -45,7 +45,7 @@ export function Navigation() {
           >
             <div className="w-8 h-8 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center">
               <Image
-                src="public\DD Logo.jpeg"
+                src="C:\Users\utkar\Downloads\holistic-wellness-platform\public\images\DD-Logo.jpeg"
                 alt="Destiny Darshan Logo"
                 width={36}
                 height={36}
