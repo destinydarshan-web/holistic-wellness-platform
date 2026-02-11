@@ -60,7 +60,7 @@ export default function CounsellingPage() {
           backgroundImage="/images/hero-counselling.png"
         />
 
-        {/* About Counselling */}
+        {/* About Counselling
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <Card className="p-8 border-border">
@@ -75,7 +75,7 @@ export default function CounsellingPage() {
               </p>
             </Card>
           </div>
-        </section>
+        </section> */}
 
         {/* Our Counsellors */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">

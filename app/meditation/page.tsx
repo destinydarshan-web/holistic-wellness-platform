@@ -84,7 +84,7 @@ export default function MeditationPage() {
           backgroundImage="/images/hero-meditation.png"
         />
 
-        {/* Meditation Overview */}
+        {/* Meditation Overview
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto mb-12">
             <Card className="p-8 border-border">
@@ -99,7 +99,7 @@ export default function MeditationPage() {
               </p>
             </Card>
           </div>
-        </section>
+        </section> */}
 
         {/* Upcoming Events */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
