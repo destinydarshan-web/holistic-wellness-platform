@@ -215,10 +215,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section with Background Video */}
-        <HeroVideo
-          title="Balance your mind, body and  soul"
-          subtitle="We blend ancient wisdom with modern guidance to support your wellness journey."
-        />
+      
 
         {/* Form Section - Reduced Top Padding */}
         <section className="py-8 px-4 sm:px-6 lg:px-8 -mt-12">

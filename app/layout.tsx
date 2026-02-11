@@ -30,14 +30,6 @@ const merriweather = Merriweather({
 // }
 
 
-export const metadata: Metadata = {
-  title: "Holistic Wellness Platform | Astrology, Counselling, Yoga & Meditation",
-  description: "Balance your mind, body and soul.",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fdce20" },
-    { media: "(prefers-color-scheme: dark)", color: "#fdce20" },
-  ],
-};
 
 
 export default function RootLayout({
