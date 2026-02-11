@@ -16,7 +16,7 @@ export function HeroVideo({ title, subtitle, children }: HeroVideoProps) {
   return (
     <section className="relative w-full overflow-hidden">
       {/* Video Background Container */}
-      <div className="relative h-screen max-h-[600px] md:max-h-[700px] w-full overflow-hidden">
+      <div className="relative h-screen max-h-[200px] md:max-h-[200px] w-full overflow-hidden">
         {/* Fallback Image (shows while video loads) */}
         <div
           className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500 ${
