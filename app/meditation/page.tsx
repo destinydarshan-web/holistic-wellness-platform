@@ -81,7 +81,7 @@ export default function MeditationPage() {
         <ServiceHero
           title="Meditation & Mindfulness"
           description="Find inner peace and mental clarity through guided meditation practices."
-          backgroundImage="/images/hero-meditation.jpg"
+          backgroundImage="/images/hero-meditation.png"
         />
 
         {/* Meditation Overview */}

@@ -225,11 +225,10 @@ export default function Home() {
           <div className="max-w-2xl mx-auto">
             <Card className="p-8 border-border">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                Tell Us About Your Concern
+               Begin Your Guidance Journey
               </h2>
               <p className="text-muted-foreground mb-6">
-                Share what&apos;s on your mind, and we&apos;ll recommend the perfect
-                service for you.
+              Tell us what you’re facing - Career, love, stress, life direction, whatever and we’ll suggest the right path.
               </p>
 
               {!submitted ? (
@@ -269,7 +268,7 @@ export default function Home() {
                       <Input
                         type="tel"
                         name="phone"
-                        placeholder="+1 (555) 000-0000"
+                        placeholder="0000000000"
                         value={formData.phone}
                         onChange={handleChange}
                         className="w-full"
@@ -283,7 +282,7 @@ export default function Home() {
                     </label>
                     <Textarea
                       name="concern"
-                      placeholder="Tell us what's on your mind..."
+                      placeholder="What is in your mind today? 🔒 Your information is kept confidential."
                       value={formData.concern}
                       onChange={handleChange}
                       className="w-full min-h-28"

@@ -87,7 +87,7 @@ export default function YogaPage() {
         <ServiceHero
           title="Yoga Classes"
           description="Strengthen your body and calm your mind through yoga practice."
-          backgroundImage="/images/hero-yoga.jpg"
+          backgroundImage="/images/hero-yoga.png"
         />
 
         {/* Yoga Overview */}

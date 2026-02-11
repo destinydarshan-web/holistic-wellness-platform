@@ -57,7 +57,7 @@ export default function CounsellingPage() {
         <ServiceHero
           title="Professional Counselling"
           description="Get support from certified counsellors in a safe, non-judgmental space."
-          backgroundImage="/images/hero-counselling.jpg"
+          backgroundImage="/images/hero-counselling.png"
         />
 
         {/* About Counselling */}

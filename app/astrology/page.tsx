@@ -36,22 +36,23 @@ const zodiacSymbols: Record<string, string> = {
 }
 
 const zodiacDates: Record<string, string> = {
-  aries: 'March 21 - April 19',
-  taurus: 'April 20 - May 20',
-  gemini: 'May 21 - June 20',
-  cancer: 'June 21 - July 22',
-  leo: 'July 23 - August 22',
-  virgo: 'August 23 - September 22',
-  libra: 'September 23 - October 22',
-  scorpio: 'October 23 - November 21',
-  sagittarius: 'November 22 - December 21',
-  capricorn: 'December 22 - January 19',
-  aquarius: 'January 20 - February 18',
-  pisces: 'February 19 - March 20',
+  aries: '',
+  taurus: '',
+  gemini: '',
+  cancer: '',
+  leo: '',
+  virgo: '',
+  libra: '',
+  scorpio: '',
+  sagittarius: '',
+  capricorn: '',
+  aquarius: '',
+  pisces: '',
 }
 
 const getCurrentDate = () => {
-  const date = new Date(2026, 1, 10) // February 10, 2026
+  const date = new Date()
+
   return date.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'long',
@@ -59,10 +60,11 @@ const getCurrentDate = () => {
   })
 }
 
+
 const astrologers = [
   {
     name: 'Priya Sharma',
-    expertise: 'Vedic Astrology & Birth Chart Analysis',
+    expertise: 'Vedic Astrology and Birth Chart Analysis',
     image: '👩‍🔬',
   },
   {
@@ -142,7 +144,7 @@ export default function AstrologyPage() {
         <ServiceHero
           title="Astrology"
           description="Discover insights into your destiny and life path through the ancient wisdom of astrology."
-          backgroundImage="/images/hero-astrology.jpg"
+          backgroundImage="/images/hero-astrology.png"
         />
 
         {/* Daily Horoscopes */}

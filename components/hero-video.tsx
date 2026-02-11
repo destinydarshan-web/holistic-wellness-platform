@@ -35,7 +35,7 @@ export function HeroVideo({ title, subtitle, children }: HeroVideoProps) {
           loop
           playsInline
           onCanPlay={() => setVideoLoaded(true)}
-          poster="/videos/hero-wellness-fallback.jpg"
+          poster="images/hero_bg.png"
         >
           {/* Video source - can be easily swapped */}
           <source src="/videos/hero-wellness.mp4" type="video/mp4" />
