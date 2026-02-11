@@ -18,7 +18,7 @@ interface StatsProps {
 const defaultStats: Stat[] = [
   {
     icon: <Users className="w-8 h-8 text-secondary" />,
-    value: '10,00+',
+    value: '1000+',
     label: 'Consultations Completed',
   },
   {

@@ -23,7 +23,7 @@ export function HeroVideo({ title, subtitle, children }: HeroVideoProps) {
             videoLoaded ? 'opacity-0' : 'opacity-100'
           }`}
           style={{
-            backgroundImage: 'url(/videos/hero-wellness-fallback.jpg)',
+            backgroundImage: 'url(public\hero_bg.png)',
           }}
         />
 
