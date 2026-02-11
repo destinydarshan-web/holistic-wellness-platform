@@ -315,12 +315,15 @@ export default function Home() {
         <section id="form-section" className="bg-[#faf8f3] py-14 px-4 sm:px-6 lg:px-8 -mt-12">
           <div className="max-w-2xl mx-auto">
             <Card className="bg-white rounded-2xl shadow-md transition-all duration-300 ease-out p-6 md:p-8 max-w-2xl mx-auto">
-              <h3 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                 Not Sure Which Service Fits Your Situation?
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Share your concern below and receive an instant, personalized recommendation aligned with your journey.
-              </p>
+              </h2>
+              <div className="flex items-center gap-2 mb-6">
+                <Sparkles className="w-4 h-4 text-[#fbcc1e] animate-pulse" />
+                <p className="text-lg text-muted-foreground">
+                  Let Our AI Guide You.
+                </p>
+              </div>
 
               {!submitted ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -372,21 +375,25 @@ export default function Home() {
                       Describe Your Concern or Question
                     </label>
                     <Textarea
-                      name="concern"
-                      placeholder="What is in your mind today? 🔒 Your information is kept confidential."
+                      id="concern"
+                      placeholder="What is on your mind today? The more you share, the better our AI can guide you."
                       value={formData.concern}
-                      onChange={handleChange}
-                      className="w-full min-h-28"
+                      onChange={(e) => setFormData({...formData, concern: e.target.value})}
+                      className="min-h-[120px] resize-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all duration-300"
+                      required
                     />
                   </div>
 
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                    className="w-full bg-[#fbcc1e] text-black hover:bg-yellow-500 transition-all duration-300 shadow-[0_0_20px_rgba(255,200,0,0.25)] hover:shadow-[0_0_25px_rgba(255,200,0,0.35)] hover:-translate-y-[-2px]"
                   >
-                    {isLoading ? 'Analyzing Your Concern...' : 'Get Personalized Recommendation'}
+                    {isLoading ? 'Analyzing Your Concern...' : 'Get Instant AI Recommendation'}
                   </Button>
+                  <p className="text-sm text-gray-500 mt-3 text-center">
+                    🔒 Your details are 100% confidential. No spam. Just guidance.
+                  </p>
                 </form>
               ) : (
                 <div className="space-y-6">
@@ -498,8 +505,8 @@ export default function Home() {
                     </p>
                     <a href={service.link} className="block">
                       <Button
-                        variant="outline"
-                        className="w-full border-primary text-primary hover:bg-primary/10 bg-transparent"
+                        type="submit"
+                        className="w-full bg-[#fbcc1e] text-black hover:bg-yellow-500 transition-colors"
                       >
                         Explore
                       </Button>
