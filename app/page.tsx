@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
-import { Leaf, Heart, Lightbulb, Zap, ArrowRight, Badge, Sparkles, HeartHandshake, Leaf as YogaLeaf, Brain } from 'lucide-react'
+import { Leaf, Heart, Lightbulb, Zap, ArrowRight, Badge, Sparkles, HeartHandshake, Leaf as YogaLeaf, Brain, Phone } from 'lucide-react'
 import { Testimonials } from '@/components/testimonials'
 import { Stats } from '@/components/stats'
 import { TrustBadges } from '@/components/trust-badges'
@@ -234,7 +234,8 @@ export default function Home() {
                 <a href="#form-section" className="bg-[#fbcc1e] text-black rounded-full px-8 py-3 shadow-md hover:bg-yellow-500 transition-all duration-300 text-center">
                   Get My Personalized Guidance
                 </a>
-                <a href="tel:+919038984582" className="border border-[#fbcc1e] text-[#fbcc1e] rounded-full px-8 py-3 hover:bg-[#fbcc1e] hover:text-black transition-all duration-300 text-center">
+                <a href="tel:+919038984582" className="inline-flex items-center justify-center gap-2 border border-[#fbcc1e] text-black font-medium rounded-full px-8 py-3 hover:bg-[#fbcc1e] transition-all duration-300 hover:-translate-y-0.5">
+                  <Phone className="w-4 h-4 shrink-0 leading-none" />
                   Talk to an Expert
                 </a>
               </div>
