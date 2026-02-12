@@ -79,13 +79,13 @@ const features = [
     title: 'Horoscope',
     description: '',
     icon: <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-accent" />,
-    href: '/astrology/daily-horoscope'
+    href: '/astrology/horoscope'
   },
   {
     title: 'Kundli',
     description: '',
     icon: <Scale className="w-5 h-5 md:w-6 md:h-6 text-accent" />,
-    href: '/astrology/kundli-matching'
+    href: '/astrology/kundli'
   },
   {
     title: 'Panchang',
@@ -178,8 +178,9 @@ export default function AstrologyPage() {
             {/* Service Cards - Single Responsive Grid */}
             <div className="grid grid-cols-3 gap-3 px-4 mb-6">
               {features.map((feature) => (
-                <div
+                <Link
                   key={feature.title}
+                  href={feature.href}
                   className="group flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
                 >
                   <div className="w-6 h-6 mx-auto mb-2 text-primary transition-transform duration-300 group-hover:scale-110 hover:text-accent">
@@ -188,7 +189,7 @@ export default function AstrologyPage() {
                   <span className="text-base font-semibold">
                     {feature.title}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
