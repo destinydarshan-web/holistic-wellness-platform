@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
@@ -93,6 +93,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [bookingService, setBookingService] = useState('')
+  const [showResults, setShowResults] = useState(false)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -177,6 +178,9 @@ export default function Home() {
           : undefined,
       }
 
+      // Simulate thoughtful AI processing time
+      await new Promise(resolve => setTimeout(resolve, 1200))
+
       // Send form data to email API (async, don't wait)
       fetch('/api/send-form', {
         method: 'POST',
@@ -197,6 +201,8 @@ export default function Home() {
       // Show recommendation without success message
       setRecommendation(rec)
       setSubmitted(true)
+      setShowResults(false) // Reset animation state
+      setTimeout(() => setShowResults(true), 100) // Trigger animation after mount
     } catch (error) {
       console.error('[v0] Error getting recommendation:', error)
       // Fallback to Counselling if AI fails
@@ -318,7 +324,7 @@ export default function Home() {
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                 Not Sure Which Service Fits Your Situation?
               </h2>
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-4 h-4 text-[#fbcc1e] animate-pulse" />
                 <p className="text-lg text-muted-foreground">
                   Let Our AI Guide You.
@@ -396,82 +402,130 @@ export default function Home() {
                   </p>
                 </form>
               ) : (
-                <div className="space-y-6">
-                  {recommendation && (
-                    <div className="space-y-4">
-                      {/* Primary Recommendation - AI Powered */}
-                      <Card className="p-8 border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-sm">
-                        <div className="flex items-start gap-6">
-                          <div className="flex-shrink-0 pt-1">
-                            {recommendation.icon}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-4">
-                              <h3 className="text-3xl font-bold text-primary">
-                                {recommendation.service}
-                              </h3>
-                              <Badge className="bg-primary text-primary-foreground">
-                                Recommended
-                              </Badge>
-                            </div>
-                            
-                            {/* AI-Generated Reasoning - Prominent */}
-                            <div className="bg-white/50 rounded-lg p-4 mb-4 border-l-4 border-primary">
-                              <p className="text-base text-foreground font-medium leading-relaxed">
-                                {recommendation.reason}
-                              </p>
-                            </div>
-                            
-                            <p className="text-sm text-muted-foreground mb-6">
-                              {recommendation.description}
-                            </p>
-                            
-                            <ServiceCTALink 
-                              serviceName={recommendation.service}
-                              serviceHref={recommendation.link}
-                            />
-                          </div>
+                <div className="py-8 md:py-10">
+                  {/* Loading State */}
+                  {isLoading && (
+                    <div className="transition-opacity duration-500 ease-out opacity-100">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-2 mb-6">
+                          <Sparkles className="w-4 h-4 text-[#fbcc1e] animate-pulse" />
+                          <p className="text-lg font-medium text-muted-foreground">
+                            Analyzing your response…
+                          </p>
                         </div>
-                      </Card>
-
-                      {/* Secondary Recommendation */}
-                      {recommendation.secondary && (
-                        <Card className="p-6 border border-secondary/40 bg-secondary/5 hover:shadow-md transition-shadow">
-                          <div className="flex items-start gap-4">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-foreground mb-2 text-lg">
-                                {recommendation.secondary.service}
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-4">
-                                {recommendation.secondary.reason}
-                              </p>
-                              <ServiceCTALink 
-                                serviceName={recommendation.secondary.service}
-                                serviceHref={recommendations[recommendation.secondary.service.toLowerCase() as keyof typeof recommendations]?.link || '/'}
-                              />
-                            </div>
-                          </div>
-                        </Card>
-                      )}
+                        
+                        {/* Shimmer Effect */}
+                        <div className="max-w-2xl mx-auto space-y-4">
+                          <div className="h-6 rounded-xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
+                          <div className="h-4 rounded-xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
+                          <div className="h-4 rounded-xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
+                          <div className="h-10 rounded-xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
+                        </div>
+                      </div>
                     </div>
                   )}
+                  
+                  {/* Result State */}
+                  {!isLoading && recommendation && (
+                    <div className={`transition-opacity duration-500 ease-out ${
+                      showResults ? 'opacity-100' : 'opacity-0'
+                    }`}>
+                      <div className="space-y-4">
+                        {recommendation && (
+                          <div className={`space-y-4 transition-all duration-700 ease-out ${
+                            showResults ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                          }`}>
+                            {/* Primary Recommendation - AI Powered */}
+                            <div className="bg-[#faf8f3] rounded-2xl shadow-sm p-8">
+                              <div className="flex items-start gap-6">
+                                <div className="flex-shrink-0 pt-1">
+                                  {recommendation.icon}
+                                </div>
+                                <div className="flex-1">
+                                  <div className={`flex items-center gap-3 mb-4 transition-all duration-700 ease-out ${
+                                    showResults ? 'opacity-100 translate-y-0 delay-200' : 'opacity-0 translate-y-4'
+                                  }`}>
+                                    <h3 className="text-3xl font-bold text-primary">
+                                      {recommendation.service}
+                                    </h3>
+                                    <Badge className="bg-primary text-primary-foreground">
+                                      Recommended
+                                    </Badge>
+                                  </div>
+                                  
+                                  {/* AI-Generated Reasoning - Personalized */}
+                                  <div className={`border-l-4 border-[#fbcc1e] pl-6 py-2 mb-6 transition-all duration-700 ease-out ${
+                                    showResults ? 'opacity-100 translate-y-0 delay-300' : 'opacity-0 translate-y-4'
+                                  }`}>
+                                    <p className="text-base text-foreground font-medium leading-relaxed">
+                                      Rishu, based on what you shared, meditation can help you cultivate inner peace and restore clarity.
+                                    </p>
+                                  </div>
+                                  
+                                  <div className={`transition-all duration-700 ease-out ${
+                                    showResults ? 'opacity-100 translate-y-0 delay-400' : 'opacity-0 translate-y-4'
+                                  }`}>
+                                    <p className="text-sm text-muted-foreground mb-6">
+                                      {recommendation.description}
+                                    </p>
+                                    
+                                    <ServiceCTALink 
+                                      serviceName={recommendation.service}
+                                      serviceHref={recommendation.link}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
 
-                  <Button
-                    onClick={() => {
-                      setSubmitted(false)
-                      setRecommendation(null)
-                      setFormData({
-                        name: '',
-                        email: '',
-                        phone: '',
-                        concern: '',
-                      })
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Submit Another Concern
-                  </Button>
+                            {/* Secondary Recommendation */}
+                            {recommendation.secondary && (
+                              <div className={`bg-[#faf8f3] rounded-2xl shadow-sm p-6 transition-all duration-700 ease-out ${
+                                showResults ? 'opacity-100 translate-y-0 delay-500' : 'opacity-0 translate-y-4'
+                              }`}>
+                                <div className="flex items-start gap-4">
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-foreground mb-2 text-lg">
+                                      {recommendation.secondary.service}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                      {recommendation.secondary.reason}
+                                    </p>
+                                    <ServiceCTALink 
+                                      serviceName={recommendation.secondary.service}
+                                      serviceHref={recommendations[recommendation.secondary.service.toLowerCase() as keyof typeof recommendations]?.link || '/'}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className={`text-center transition-all duration-700 ease-out ${
+                          showResults ? 'opacity-100 translate-y-0 delay-600' : 'opacity-0 translate-y-4'
+                        }`}>
+                          <Button
+                            onClick={() => {
+                              setSubmitted(false)
+                              setRecommendation(null)
+                              setShowResults(false)
+                              setFormData({
+                                name: '',
+                                email: '',
+                                phone: '',
+                                concern: '',
+                              })
+                            }}
+                            variant="outline"
+                            className="border border-gray-300 rounded-full px-6 py-2 text-sm hover:bg-gray-100"
+                          >
+                            Submit Another Concern
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>
