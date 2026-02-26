@@ -83,7 +83,7 @@ export default function ExpertDashboard() {
   }
 
   return (
-    <div className="py-8">
+    <div className="pt-24 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
         <div className="mb-8">

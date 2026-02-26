@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard, Calendar, DollarSign } from 'lucide-react'
 import Image from 'next/image'
 import { ServiceIcon } from '@/components/ServiceIcon'
 import { useAuth } from '@/contexts/AuthContext'
@@ -28,7 +28,6 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { user, profile, signOut, logout, loading } = useAuth()
@@ -64,20 +63,8 @@ export function Navigation() {
     }
   }
 
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   return (
-    <nav className={`absolute top-0 left-0 w-full z-50 transition-all duration-300 ${
-      scrolled ? 'bg-[#0F0F14]/80 backdrop-blur-xl border-b border-white/10' : 'bg-transparent'
-    } py-5`}>
+    <nav className="absolute top-0 left-0 w-full z-50 py-5">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex justify-between items-center">
           {/* Logo & Brand - Left */}
@@ -94,7 +81,7 @@ export function Navigation() {
                 className="w-full h-full"
               />
             </div>
-            <span className="text-base md:text-lg font-semibold text-white truncate">
+            <span className="text-base md:text-lg font-semibold text-white truncate drop-shadow-md">
               Destiny Darshan
             </span>
           </Link>
@@ -106,7 +93,7 @@ export function Navigation() {
                 {item.hasDropdown ? (
                   <>
                     <div className="flex items-center gap-1 cursor-pointer">
-                      <span className={`text-sm font-medium transition-all duration-200 ${
+                      <span className={`text-sm font-medium transition-all duration-200 drop-shadow-md ${
                         isActive(item.href)
                           ? 'text-yellow-400 font-semibold'
                           : 'text-white/90 hover:text-white'
@@ -123,7 +110,7 @@ export function Navigation() {
                     </div>
                     
                     {/* Services Dropdown */}
-                    <div className="absolute left-0 top-full opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 w-64 bg-[#1C1C24] backdrop-blur-xl border border-white/10 shadow-xl rounded-xl p-4 z-50">
+                    <div className="absolute left-0 top-full opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 w-64 bg-[#111] border border-white/10 shadow-xl rounded-xl p-4 z-50">
                       <div className="space-y-2">
                         {servicesList.map((service) => (
                           <Link
@@ -144,7 +131,7 @@ export function Navigation() {
                 ) : (
                   <Link
                     href={item.href}
-                    className={`text-sm font-medium transition-all duration-200 ${
+                    className={`text-sm font-medium transition-all duration-200 drop-shadow-md ${
                       isActive(item.href)
                         ? 'text-yellow-400 font-semibold'
                         : 'text-white/90 hover:text-white'
@@ -169,7 +156,7 @@ export function Navigation() {
                   className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
                 >
                   <User size={16} />
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium drop-shadow-md">
                     Hi, {profile?.full_name || user.email?.split('@')[0]}
                   </span>
                   <ChevronDown size={14} className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
@@ -177,7 +164,7 @@ export function Navigation() {
 
                 {/* Dropdown Menu */}
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1C1C24] backdrop-blur-xl border border-white/10 shadow-xl rounded-xl p-2 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#111] border border-white/10 shadow-xl rounded-xl p-2 z-50">
                     <Link
                       href={getDashboardLink()}
                       className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
@@ -186,6 +173,47 @@ export function Navigation() {
                       <LayoutDashboard size={16} />
                       <span className="text-sm">Dashboard</span>
                     </Link>
+                    
+                    {/* Expert-specific menu items */}
+                    {profile?.role === 'expert' && (
+                      <>
+                        <div className="border-t border-white/10 my-2"></div>
+                        <Link
+                          href="/expert/dashboard"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <LayoutDashboard size={16} />
+                          <span className="text-sm">Expert Dashboard</span>
+                        </Link>
+                        <Link
+                          href="/expert/profile"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <User size={16} />
+                          <span className="text-sm">Edit Profile</span>
+                        </Link>
+                        <Link
+                          href="/expert/availability"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <Calendar size={16} />
+                          <span className="text-sm">Availability</span>
+                        </Link>
+                        <Link
+                          href="/expert/earnings"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <DollarSign size={16} />
+                          <span className="text-sm">Earnings</span>
+                        </Link>
+                      </>
+                    )}
+                    
+                    <div className="border-t border-white/10 my-2"></div>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white w-full text-left"
@@ -203,7 +231,7 @@ export function Navigation() {
                 className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
               >
                 <User size={16} />
-                <span className="text-sm font-medium">Login</span>
+                <span className="text-sm font-medium drop-shadow-md">Login</span>
               </Link>
             )}
           </div>
@@ -222,7 +250,7 @@ export function Navigation() {
         {/* Mobile Menu */}
         {isOpen && (
           <div
-            className="lg:hidden px-6 pt-6 pb-8 bg-black/80 backdrop-blur-md transition-transform duration-300 translate-x-0"
+            className="lg:hidden px-6 pt-6 pb-8 transition-transform duration-300 translate-x-0"
             role="navigation"
             aria-label="Mobile navigation"
           >
@@ -233,7 +261,7 @@ export function Navigation() {
                     <div>
                       <button
                         onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
-                        className={`flex items-center justify-between w-full px-4 py-3 text-base font-medium transition-all duration-200 rounded-lg ${
+                        className={`flex items-center justify-between w-full px-4 py-3 text-base font-medium transition-all duration-200 rounded-lg drop-shadow-md ${
                           isActive(item.href)
                             ? 'bg-[#fbcc1e]/20 text-[#fbcc1e] font-semibold'
                             : 'text-white/90 hover:bg-white/10'
@@ -274,7 +302,7 @@ export function Navigation() {
                     <Link
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block px-4 py-3 text-base font-medium transition-all duration-200 rounded-lg ${
+                      className={`block px-4 py-3 text-base font-medium transition-all duration-200 rounded-lg drop-shadow-md ${
                         isActive(item.href)
                           ? 'bg-[#fbcc1e]/20 text-[#fbcc1e] font-semibold'
                           : 'text-white/90 hover:bg-white/10'
@@ -298,7 +326,7 @@ export function Navigation() {
                       className="flex items-center gap-3 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center"
                     >
                       <LayoutDashboard size={16} />
-                      <span className="text-sm font-medium">Dashboard</span>
+                      <span className="text-sm font-medium drop-shadow-md">Dashboard</span>
                     </Link>
                     <button
                       onClick={() => {
@@ -308,7 +336,7 @@ export function Navigation() {
                       className="flex items-center gap-3 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center"
                     >
                       <LogOut size={16} />
-                      <span className="text-sm font-medium">Logout</span>
+                      <span className="text-sm font-medium drop-shadow-md">Logout</span>
                     </button>
                   </div>
                 ) : (
@@ -318,7 +346,7 @@ export function Navigation() {
                     className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center"
                   >
                     <User size={16} />
-                    <span className="text-sm font-medium">Login</span>
+                    <span className="text-sm font-medium drop-shadow-md">Login</span>
                   </Link>
                 )}
               </div>

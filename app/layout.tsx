@@ -46,7 +46,7 @@ export default function RootLayout({
         <AuthProvider>
           <div className="min-h-screen flex flex-col bg-[#0F0F14]">
             <Navigation />
-            <main className="pt-[80px] flex-1">
+            <main className="flex-1">
               {children}
             </main>
             <Footer />

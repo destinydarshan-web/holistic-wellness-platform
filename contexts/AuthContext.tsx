@@ -9,7 +9,7 @@ export interface Profile {
   full_name: string | null
   role: 'user' | 'expert' | 'admin'
   specialization: 'astrologer' | 'counsellor' | 'yoga_trainer' | 'meditation_expert' | null
-  status: 'approved' | 'pending'
+  status: 'approved' | 'pending' | 'rejected' | null
   created_at: string
 }
 
@@ -34,22 +34,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     if (!userId) return
 
+    console.log('=== DEBUG: Fetching Profile ===')
+    console.log('User ID:', userId)
+
+    // First try with service role (bypass RLS) to see if profile exists
+    const { data: serviceData, error: serviceError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle()
+
+    console.log('Service role check:', { data: serviceData, error: serviceError })
+
+    // Then try with user context (subject to RLS)
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .maybeSingle()
 
+    console.log('User context fetch:', { data, error })
+
     if (error) {
       console.error("Profile fetch error:", error.message)
+      console.error("Error details:", error)
+      console.log("This suggests RLS policy issue - user cannot access their own profile")
       return
     }
 
     if (!data) {
       console.warn("No profile found for user:", userId)
+      console.log("This might be due to RLS policies or missing profile creation")
+      if (serviceData) {
+        console.log("Profile exists in database but RLS blocks access")
+        console.log("Profile data (service role):", serviceData)
+      }
       return
     }
 
+    console.log("Profile fetched successfully:", data)
     setProfile(data)
   }
 

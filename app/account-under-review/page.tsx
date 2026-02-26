@@ -9,10 +9,18 @@ export default function AccountUnderReviewPage() {
   const { user, profile, loading } = useAuth()
 
   useEffect(() => {
+    console.log('=== DEBUG: Account Under Review Page ===')
+    console.log('Loading:', loading)
+    console.log('User:', user)
+    console.log('Profile:', profile)
+    console.log('Profile status:', profile?.status)
+    
     if (!loading) {
       if (!user) {
+        console.log('No user, redirecting to login')
         router.replace("/login")
       } else if (profile && profile.status !== "pending") {
+        console.log('Profile status not pending, redirecting to home. Status:', profile.status)
         router.replace("/")
       }
     }
@@ -27,7 +35,7 @@ export default function AccountUnderReviewPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="pt-24 min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 text-center shadow-2xl">
 
         <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-yellow-500/10 flex items-center justify-center">
