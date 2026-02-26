@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard } from 'lucide-react'
 import Image from 'next/image'
 import { ServiceIcon } from '@/components/ServiceIcon'
+import { useAuth } from '@/contexts/AuthContext'
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -26,8 +27,11 @@ const servicesList = [
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false)
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, profile, signOut, logout, loading } = useAuth()
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -38,6 +42,26 @@ export function Navigation() {
 
   const handleLinkClick = () => {
     setIsOpen(false)
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    setIsUserDropdownOpen(false)
+    router.push("/")
+  }
+
+  const getDashboardLink = () => {
+    if (!profile) return '/dashboard'
+    
+    switch (profile.role) {
+      case 'admin':
+        return '/admin-dashboard'
+      case 'expert':
+        return profile.status === 'approved' ? '/expert-dashboard' : '/account-under-review'
+      case 'user':
+      default:
+        return '/dashboard'
+    }
   }
 
   // Handle scroll effect
@@ -133,12 +157,55 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* Account Button - Right */}
+          {/* Auth Section - Right */}
           <div className="hidden lg:flex items-center">
-            <button className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300">
-              <span className="text-sm">👤</span>
-              <span className="text-sm font-medium">Account</span>
-            </button>
+            {loading ? (
+              <div className="w-20 h-10 bg-white/10 rounded-full animate-pulse"></div>
+            ) : user ? (
+              /* User Dropdown */
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
+                >
+                  <User size={16} />
+                  <span className="text-sm font-medium">
+                    Hi, {profile?.full_name || user.email?.split('@')[0]}
+                  </span>
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isUserDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1C1C24] backdrop-blur-xl border border-white/10 shadow-xl rounded-xl p-2 z-50">
+                    <Link
+                      href={getDashboardLink()}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <LayoutDashboard size={16} />
+                      <span className="text-sm">Dashboard</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white w-full text-left"
+                    >
+                      <LogOut size={16} />
+                      <span className="text-sm">Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Login Button */
+              <Link
+                href="/login"
+                className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
+              >
+                <User size={16} />
+                <span className="text-sm font-medium">Login</span>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -219,12 +286,41 @@ export function Navigation() {
                 </div>
               ))}
               
-              {/* Mobile Account Button */}
+              {/* Mobile Auth Section */}
               <div className="pt-4 border-t border-white/20">
-                <button className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center">
-                  <span className="text-sm">👤</span>
-                  <span className="text-sm font-medium">Account</span>
-                </button>
+                {loading ? (
+                  <div className="w-full h-10 bg-white/10 rounded-full animate-pulse"></div>
+                ) : user ? (
+                  <div className="space-y-2">
+                    <Link
+                      href={getDashboardLink()}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center"
+                    >
+                      <LayoutDashboard size={16} />
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout()
+                        setIsOpen(false)
+                      }}
+                      className="flex items-center gap-3 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center"
+                    >
+                      <LogOut size={16} />
+                      <span className="text-sm font-medium">Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300 w-full justify-center"
+                  >
+                    <User size={16} />
+                    <span className="text-sm font-medium">Login</span>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

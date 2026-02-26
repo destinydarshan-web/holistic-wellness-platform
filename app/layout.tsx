@@ -3,6 +3,9 @@ import type { Metadata } from 'next'
 import { Poppins, Merriweather } from 'next/font/google'
 
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -39,7 +42,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} ${merriweather.variable}`}>
-      <body className="font-sans antialiased bg-background text-foreground">{children}</body>
+      <body className="font-sans antialiased bg-background text-foreground">
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col bg-[#0F0F14]">
+            <Navigation />
+            <main className="pt-[80px] flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
+      </body>
     </html>
   )
 }

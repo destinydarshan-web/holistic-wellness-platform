@@ -3,8 +3,6 @@
 import React from "react"
 
 import { useState, useEffect } from 'react'
-import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -247,9 +245,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0F0F14]">
-      <Navigation />
-      
+    <div className="min-h-[85vh]">
       {/* Hero Section with Video Background */}
       <section className="relative min-h-[85vh] overflow-hidden">
         {/* Video Background */}
@@ -689,14 +685,8 @@ export default function Home() {
       <Testimonials />
       <Stats />
       <TrustBadges />
-      
-      {/* Footer Section */}
-      <div className="mt-20">
-        <Footer />
-      </div>
 
-      <BookingModal 
-        isOpen={bookingOpen}
+      <BookingModal
         onClose={() => setBookingOpen(false)}
         service={bookingService}
       />
