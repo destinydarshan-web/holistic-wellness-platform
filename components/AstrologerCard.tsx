@@ -1,5 +1,8 @@
-import React from 'react'
-import { Users, Star, Clock, CheckCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabaseClient'
+import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Video } from 'lucide-react'
 
 interface AstrologerCardProps {
   astrologer: {
@@ -20,6 +23,93 @@ interface AstrologerCardProps {
 }
 
 export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const handleSessionStart = async (sessionType: 'chat' | 'voice' | 'video') => {
+    if (!user?.id) {
+      console.log('User not authenticated')
+      return
+    }
+
+    console.log(`Starting ${sessionType} session with expert ${astrologer.id}`)
+    setLoading(sessionType)
+
+    try {
+      // Step A: Fetch wallet balance
+      console.log('Fetching wallet balance...')
+      const { data: wallet, error: walletError } = await supabase
+        .from("user_wallet")
+        .select("balance")
+        .eq("user_id", user.id)
+        .single()
+
+      if (walletError) {
+        console.error('Wallet fetch error:', walletError)
+      }
+
+      console.log('Wallet data:', wallet)
+      console.log('Wallet balance:', wallet?.balance || 0)
+
+      // Check minimum required balance
+      const MINIMUM_BALANCE = 50
+      if (!wallet || wallet.balance < MINIMUM_BALANCE) {
+        console.log('Insufficient balance:', wallet?.balance || 0, 'Required:', MINIMUM_BALANCE)
+        alert('Insufficient wallet balance. Minimum required: $50')
+        setLoading(null)
+        return
+      }
+
+      console.log('Balance sufficient, creating session...')
+
+      // Step 2: Create session in live_sessions
+      const { data: session, error: sessionError } = await supabase
+        .from("live_sessions")
+        .insert({
+          user_id: user.id,
+          expert_id: astrologer.id,
+          service_category: "astrology",
+          session_type: sessionType,
+          status: "pending"
+        })
+        .select()
+        .single()
+
+      if (sessionError) {
+        console.error('Session creation error:', sessionError)
+        alert('Failed to create session. Please try again.')
+        setLoading(null)
+        return
+      }
+
+      console.log('Session created successfully:', session)
+
+      // Step 3: Redirect to appropriate live session page
+      let redirectUrl = ''
+      switch (sessionType) {
+        case 'chat':
+          redirectUrl = `/live/chat/${session.id}`
+          break
+        case 'voice':
+          redirectUrl = `/live/voice/${session.id}`
+          break
+        case 'video':
+          redirectUrl = `/live/video/${session.id}`
+          break
+      }
+
+      console.log('Redirecting to:', redirectUrl)
+      router.push(redirectUrl)
+
+    } catch (error) {
+      console.error('Unexpected error during session creation:', error)
+      alert('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <div
       className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
@@ -112,8 +202,22 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       <div className="space-y-4">
         {/* Primary Chat Button - Only show if chat enabled and online */}
         {astrologer.online && astrologer.modes.includes('chat') && (
-          <button className="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-xl hover:shadow-lg transition-all duration-300 text-lg shadow-md">
-            Start Chat Now
+          <button 
+            onClick={() => handleSessionStart('chat')}
+            disabled={loading === 'chat'}
+            className="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-xl hover:shadow-lg transition-all duration-300 text-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading === 'chat' ? (
+              <>
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                Starting...
+              </>
+            ) : (
+              <>
+                <MessageCircle size={18} />
+                Start Chat Now
+              </>
+            )}
           </button>
         )}
         
@@ -128,13 +232,35 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         {/* Secondary Actions */}
         <div className="grid grid-cols-2 gap-3">
           {astrologer.online && astrologer.modes.includes('call') && (
-            <button className="py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors">
-              Call
+            <button 
+              onClick={() => handleSessionStart('voice')}
+              disabled={loading === 'voice'}
+              className="py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading === 'voice' ? (
+                <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Phone size={16} />
+                  Call
+                </>
+              )}
             </button>
           )}
           {astrologer.online && astrologer.modes.includes('video') && (
-            <button className="py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors">
-              Video
+            <button 
+              onClick={() => handleSessionStart('video')}
+              disabled={loading === 'video'}
+              className="py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading === 'video' ? (
+                <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Video size={16} />
+                  Video
+                </>
+              )}
             </button>
           )}
         </div>

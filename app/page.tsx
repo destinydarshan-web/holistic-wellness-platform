@@ -1,7 +1,5 @@
 'use client'
 
-import React from "react"
-
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +12,6 @@ import { Stats } from '@/components/stats'
 import { TrustBadges } from '@/components/trust-badges'
 import { BookingModal } from '@/components/booking-modal'
 import { ServiceCTALink } from '@/components/service-cta-link'
-import { HeroVideo } from '@/components/hero-video'
 import { ScrollAnimatedSection } from '@/components/scroll-animated-section'
 import { ServiceQuickLinks } from '@/components/ServiceQuickLinks'
 import { ServiceIcon } from '@/components/ServiceIcon'
@@ -31,7 +28,7 @@ interface RecommendationData {
   description: string
   icon: React.ReactNode
   link: string
-  secondary?: string
+  secondary?: SecondaryService
   reason?: string
 }
 
@@ -687,7 +684,8 @@ export default function Home() {
       <TrustBadges />
 
       <BookingModal
-        onClose={() => setBookingOpen(false)}
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
         service={bookingService}
       />
     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { User, Camera, Edit2, Save, X, Check, Star, Languages, Briefcase, Clock, DollarSign, MessageCircle, Phone, Video, Eye, EyeOff, AlertCircle, Upload } from 'lucide-react'
 import AstrologerCard from '@/components/AstrologerCard'
 

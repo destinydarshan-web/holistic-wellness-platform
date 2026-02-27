@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock, DollarSign, Users, TrendingUp, ToggleLeft, ToggleRight, Video, Phone, MessageCircle, Star, AlertCircle, CheckCircle } from 'lucide-react'
 import { RoleGuard } from '@/components/RoleGuard'
+import ExpertIncomingSession from '@/components/ExpertIncomingSession'
 
 interface Session {
   id: string
@@ -135,6 +136,16 @@ export default function ExpertDashboard() {
 
   return (
     <RoleGuard allowedRoles={['expert']}>
+      <ExpertIncomingSession 
+        onSessionAccepted={(session) => {
+          console.log("🔔 Session accepted in dashboard:", session)
+          // You can add additional logic here, like refreshing sessions list
+        }}
+        onSessionRejected={(session) => {
+          console.log("🔔 Session rejected in dashboard:", session)
+          // You can add additional logic here
+        }}
+      />
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">

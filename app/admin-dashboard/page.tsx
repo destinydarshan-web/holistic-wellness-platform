@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { Users, CheckCircle, XCircle, Clock, LogOut, Settings, TrendingUp } from 'lucide-react'
 
 interface ExpertProfile {
