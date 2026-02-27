@@ -55,15 +55,28 @@ export default function LoginPage() {
     setFormLoading(true)
     setError('')
 
+    // Mobile debugging
+    console.log('Login attempt from mobile:', {
+      userAgent: navigator.userAgent,
+      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      email: formData.email
+    })
+
     try {
       if (isLogin) {
         // Login
+        console.log('Attempting login...')
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password
         })
 
-        if (error) throw error
+        console.log('Login response:', { data, error })
+
+        if (error) {
+          console.error('Login error details:', error)
+          throw error
+        }
         // Redirect will happen via useEffect
       } else {
         // Signup
@@ -126,7 +139,22 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      setError(error.message || 'Something went wrong')
+      console.error('Login error caught:', error)
+      
+      // Mobile-specific error handling
+      let errorMessage = 'Something went wrong'
+      
+      if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.'
+      } else if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please try again.'
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Please check your email and confirm your account.'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setFormLoading(false)
     }
