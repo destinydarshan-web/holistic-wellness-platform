@@ -22,24 +22,44 @@ export default function ChatSessionPage() {
     if (!sessionId) return;
 
     const checkStatus = async () => {
-      const { data } = await supabaseClient
+      console.log('=== DEBUG: User Checking Session Status ===')
+      const { data, error } = await supabaseClient
         .from("live_sessions")
-        .select("status")
+        .select("*")
         .eq("id", sessionId)
         .single();
 
+      console.log('Session status check result:', { data, error })
+
+      if (error) {
+        console.error('Error checking session status:', error)
+        return
+      }
+
       if (data?.status === "accepted") {
+        console.log('Session is accepted, redirecting to chat')
         router.push(`/session/chat/${sessionId}`);
+      } else if (data?.status === "rejected") {
+        console.log('Session was rejected')
+        alert("Session rejected by expert.");
+        router.push("/astrology");
       }
     };
 
+    // Check immediately
     checkStatus();
+    
+    // Set up periodic check every 3 seconds
+    const interval = setInterval(checkStatus, 3000);
+    
+    return () => clearInterval(interval);
   }, [sessionId]);
 
   // 2️⃣ Add Realtime UPDATE Listener
   useEffect(() => {
     if (!sessionId) return;
 
+    console.log('=== DEBUG: Setting up User Realtime Listener ===')
     const channel = supabaseClient
       .channel(`user-session-${sessionId}`)
       .on(
@@ -51,26 +71,28 @@ export default function ChatSessionPage() {
           filter: `id=eq.${sessionId}` 
         },
         (payload) => {
-          console.log("Session UPDATE received:", payload);
+          console.log("=== DEBUG: User Session UPDATE received ===", payload);
 
           const updated = payload.new;
 
           if (updated.status === "accepted") {
-            console.log("Session accepted — redirecting to chat");
+            console.log("=== DEBUG: Session accepted — redirecting to chat ===");
             router.push(`/session/chat/${sessionId}`);
           }
 
           if (updated.status === "rejected") {
+            console.log("=== DEBUG: Session rejected ===");
             alert("Session rejected by expert.");
-            router.push("/dashboard");
+            router.push("/astrology");
           }
         }
       )
       .subscribe((status) => {
-        console.log("User realtime subscription status:", status);
+        console.log("=== DEBUG: User realtime subscription status ===", status);
       });
 
     return () => {
+      console.log("=== DEBUG: Cleaning up user realtime subscription ===")
       supabaseClient.removeChannel(channel);
     };
   }, [sessionId]);

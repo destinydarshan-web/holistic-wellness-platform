@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle } from 'lucide-react'
 import AstrologerCard from '@/components/AstrologerCard'
 import Link from 'next/link'
@@ -26,14 +26,42 @@ export default function AstrologyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [onlineOnly, setOnlineOnly] = useState(false)
+  const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [selectedMode, setSelectedMode] = useState('all')
   const [priceRange, setPriceRange] = useState([0, 5000])
   const [sortBy, setSortBy] = useState('recommended')
   const [showFilters, setShowFilters] = useState(false)
+  const [showPriceModal, setShowPriceModal] = useState(false)
+  const [isModeOpen, setIsModeOpen] = useState(false)
+  const [isSortOpen, setIsSortOpen] = useState(false)
+  const [isPriceOpen, setIsPriceOpen] = useState(false)
+  const modeRef = useRef<HTMLDivElement>(null)
+  const sortRef = useRef<HTMLDivElement>(null)
+  const priceRef = useRef<HTMLDivElement>(null)
+
+  // Click outside handlers
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modeRef.current && !modeRef.current.contains(event.target as Node)) {
+        setIsModeOpen(false)
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false)
+      }
+      if (priceRef.current && !priceRef.current.contains(event.target as Node)) {
+        setIsPriceOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   useEffect(() => {
     fetchExperts()
-  }, [onlineOnly, selectedMode, priceRange, sortBy])
+  }, [onlineOnly, isOnlineOnly, selectedMode, priceRange, sortBy])
 
   const fetchExperts = async () => {
     try {
@@ -155,114 +183,227 @@ export default function AstrologyPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0f172a]">
+    <div>
       {/* Main Content Wrapper - Compensate for navbar height */}
       <div className="pt-20">
-        {/* SECTION 1 - Quick Astrology Tools */}
-        <section className="px-6 pt-10 pb-12 bg-gradient-to-b from-[#1a1f3a] to-[#0f172a]">
+        {/* SECTION 1 - Free ASTROLOGY TOOLS */}
+        <section className="px-6 py-4 mb-4">
           <div className="max-w-[1200px] mx-auto">
-            <div className="text-sm uppercase tracking-wide text-white/60 font-medium mb-4">
-              Quick Astrology Tools
+            <div className="text-xs tracking-widest uppercase text-gray-400 font-medium mb-4">
+              FREE ASTROLOGY TOOLS
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-hide">
               {/* Daily Horoscope */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
+              <Link href="/astrology/daily-horoscope" className="group flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 shadow-md shadow-black/20 transition-all duration-200 hover:bg-white/10 hover:scale-[1.02] cursor-pointer min-w-[160px] h-12">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🌙</span>
-                  <span className="text-white font-medium">Daily Horoscope</span>
+                  <div className="w-7 h-7 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                    <span className="text-sm">🌙</span>
+                  </div>
+                  <span className="text-sm font-normal text-gray-300 group-hover:text-white transition-colors duration-200">Daily Horoscope</span>
                 </div>
-              </div>
+              </Link>
 
               {/* Create Kundli */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
+              <Link href="/astrology/kundli" className="group flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 shadow-md shadow-black/20 transition-all duration-200 hover:bg-white/10 hover:scale-[1.02] cursor-pointer min-w-[160px] h-12">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🔮</span>
-                  <span className="text-white font-medium">Create Kundli</span>
+                  <div className="w-7 h-7 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                    <span className="text-sm">🔮</span>
+                  </div>
+                  <span className="text-sm font-normal text-gray-300 group-hover:text-white transition-colors duration-200">Create Kundli</span>
                 </div>
-              </div>
-
-              {/* Match Making */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">💑</span>
-                  <span className="text-white font-medium">Match Making</span>
-                </div>
-              </div>
-
-              {/* Palm Reading */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🤚</span>
-                  <span className="text-white font-medium">Palm Reading</span>
-                </div>
-              </div>
-
-              {/* Numerology */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🔢</span>
-                  <span className="text-white font-medium">Numerology</span>
-                </div>
-              </div>
+              </Link>
 
               {/* Vastu */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
+              <Link href="/astrology/vastu" className="group flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 shadow-md shadow-black/20 transition-all duration-200 hover:bg-white/10 hover:scale-[1.02] cursor-pointer min-w-[160px] h-12">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🏠</span>
-                  <span className="text-white font-medium">Vastu</span>
+                  <div className="w-7 h-7 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                    <span className="text-sm">🏠</span>
+                  </div>
+                  <span className="text-sm font-normal text-gray-300 group-hover:text-white transition-colors duration-200">Vastu</span>
                 </div>
-              </div>
+              </Link>
 
-              {/* Tarot Reading */}
-              <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 hover:bg-white/15 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer min-w-[200px]">
+              {/* Panchang */}
+              <Link href="/astrology/panchang" className="group flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 shadow-md shadow-black/20 transition-all duration-200 hover:bg-white/10 hover:scale-[1.02] cursor-pointer min-w-[160px] h-12">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🎴</span>
-                  <span className="text-white font-medium">Tarot Reading</span>
+                  <div className="w-7 h-7 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                    <span className="text-sm">📜</span>
+                  </div>
+                  <span className="text-sm font-normal text-gray-300 group-hover:text-white transition-colors duration-200">Panchang</span>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </section>
 
         {/* SECTION 2 - Astrologer Listing */}
-        <section className="px-6 py-15 bg-[#f8f9fc]">
+        <section className="px-6 py-15">
           <div className="max-w-[1200px] mx-auto">
             {/* Title Section - Left Aligned */}
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-serif text-gray-900 mb-3">
+              <h1 className="text-3xl md:text-4xl font-serif text-white mb-3">
                 Meet Our Astrologers
               </h1>
-              <p className="text-lg text-gray-600">
-                Choose an expert and start your session instantly.
+              <p className="text-lg text-gray-300">
+                Authentic guidance, real answers.
               </p>
             </div>
 
             {/* Integrated Filter Bar */}
-            <div className="sticky top-0 z-40 mb-8">
-              <div className="bg-[#f3f4f6] border border-gray-200 rounded-lg p-4">
-                <div className="flex flex-wrap items-center gap-4">
+            <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#0f172a]/95 via-[#0f172a]/90 to-[#0b1220]/95 backdrop-blur-lg border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-all duration-300 mb-8">
+              {/* Top Soft Highlight Line */}
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-4">
+                {/* Mobile: Compact Single Row */}
+                <div className="flex items-center gap-2 flex-nowrap w-full py-3 px-4 md:hidden">
+                  {/* Online Toggle (Mobile) */}
+                  <button
+                    onClick={() => setIsOnlineOnly(prev => !prev)}
+                    className={`flex items-center justify-center gap-2 h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 flex-1 ${
+                      isOnlineOnly
+                        ? 'bg-yellow-500 text-black shadow-md'
+                        : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    {isOnlineOnly && (
+                      <span className="h-2 w-2 rounded-full bg-green-400"></span>
+                    )}
+                    <span>Online</span>
+                  </button>
+
+                  {/* Mode Dropdown (Mobile) */}
+                  <div ref={modeRef} className="relative inline-block flex-1">
+                    <button
+                      onClick={() => setIsModeOpen(!isModeOpen)}
+                      className="h-8 px-3 rounded-full bg-white/5 border border-white/10 text-xs text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-colors w-full"
+                    >
+                      {selectedMode === 'all' ? 'Mode' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}
+                      <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Compact Dropdown */}
+                    {isModeOpen && (
+                      <div className="absolute left-0 mt-2 min-w-full w-max rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
+                        <div className="flex flex-col gap-1">
+                          {['all', 'chat', 'call', 'video'].map((mode) => (
+                            <button
+                              key={mode}
+                              onClick={() => {
+                                setSelectedMode(mode)
+                                setIsModeOpen(false)
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                                selectedMode === mode
+                                  ? 'bg-white/10 text-white font-medium'
+                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {mode === 'all' ? 'All Modes' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price Button (Mobile) */}
+                  <div ref={priceRef} className="relative inline-block flex-1">
+                    <button
+                      onClick={() => setIsPriceOpen(!isPriceOpen)}
+                      className="h-8 px-3 rounded-full bg-white/5 text-white border border-white/10 text-xs font-medium hover:bg-white/10 transition-colors w-full text-center"
+                    >
+                      ₹{priceRange[1]}
+                    </button>
+
+                    {/* Compact Price Panel */}
+                    {isPriceOpen && (
+                      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm p-4 z-50">
+                        <div className="text-sm text-white mb-3">
+                          Max Price: ₹{priceRange[1]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5000"
+                          value={priceRange[1]}
+                          onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                          className="w-full accent-yellow-500"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 mt-2">
+                          <span>₹0</span>
+                          <span>₹5000</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sort Dropdown (Mobile) */}
+                  <div ref={sortRef} className="relative inline-block flex-1">
+                    <button
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className="h-8 px-3 rounded-full bg-white/5 text-white border border-white/10 text-xs flex items-center justify-center gap-2 hover:bg-white/10 transition-colors w-full"
+                    >
+                      {sortBy === 'recommended' ? 'Sort' : sortBy.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()).split(' ')[0]}
+                      <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Compact Dropdown */}
+                    {isSortOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
+                        <div className="flex flex-col gap-1">
+                          {[
+                            { value: 'recommended', label: 'Recommended' },
+                            { value: 'online', label: 'Online Now' },
+                            { value: 'rating', label: 'Highest Rated' },
+                            { value: 'experience', label: 'Most Experienced' },
+                            { value: 'price-low', label: 'Lowest Price' },
+                            { value: 'price-high', label: 'Highest Price' }
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => {
+                                setSortBy(option.value)
+                                setIsSortOpen(false)
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                                sortBy === option.value
+                                  ? 'bg-white/10 text-white font-medium'
+                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Desktop: Full Layout */}
+                <div className="hidden md:flex flex-wrap items-center gap-4">
                   {/* Online Now Toggle */}
                   <button
-                    onClick={() => setOnlineOnly(!onlineOnly)}
+                    onClick={() => setIsOnlineOnly(prev => !prev)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      onlineOnly
+                      isOnlineOnly
                         ? 'bg-yellow-500 text-black'
-                        : 'bg-white text-gray-700 border border-gray-300'
+                        : 'bg-white/10 text-white border border-white/20 hover:bg-white/15'
                     }`}
                   >
                     <div className={`w-2 h-2 rounded-full ${
-                      onlineOnly ? 'bg-green-500' : 'bg-gray-300'
+                      isOnlineOnly ? 'bg-green-400' : 'bg-gray-400'
                     }`}>
                       <div className={`w-1 h-1 rounded-full bg-white transition-transform ${
-                        onlineOnly ? 'translate-x-0.5' : 'translate-x-1'
+                        isOnlineOnly ? 'translate-x-0.5' : 'translate-x-1'
                       }`}></div>
                     </div>
-                    <span>{onlineOnly ? 'Online Only' : 'All Experts'}</span>
+                    <span>Online</span>
                   </button>
 
                   {/* Mode Filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Mode:</span>
+                    <span className="text-sm text-gray-300">Mode:</span>
                     <div className="flex gap-1">
                       {['all', 'chat', 'call', 'video'].map((mode) => (
                         <button
@@ -270,8 +411,8 @@ export default function AstrologyPage() {
                           onClick={() => setSelectedMode(mode)}
                           className={`px-3 py-1 rounded-lg text-sm capitalize transition-all duration-300 ${
                             selectedMode === mode
-                              ? 'bg-gray-800 text-white'
-                              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-300'
+                              ? 'bg-white/20 text-white border border-white/30'
+                              : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
                           }`}
                         >
                           {mode === 'all' ? 'All' : mode}
@@ -282,9 +423,9 @@ export default function AstrologyPage() {
 
                   {/* Price Range */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Price:</span>
+                    <span className="text-sm text-gray-300">Price:</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">₹{priceRange[0]}</span>
+                      <span className="text-sm text-white">₹{priceRange[0]}</span>
                       <input
                         type="range"
                         min="0"
@@ -293,17 +434,17 @@ export default function AstrologyPage() {
                         onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                         className="w-24"
                       />
-                      <span className="text-sm">₹{priceRange[1]}</span>
+                      <span className="text-sm text-white">₹{priceRange[1]}</span>
                     </div>
                   </div>
 
                   {/* Sort Dropdown */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Sort:</span>
+                    <span className="text-sm text-gray-300">Sort:</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="px-3 py-1 rounded-lg bg-white text-gray-700 text-sm border border-gray-300 focus:ring-2 focus:ring-yellow-400"
+                      className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm border border-white/20 focus:ring-2 focus:ring-yellow-400/50"
                     >
                       <option value="recommended">Recommended</option>
                       <option value="online">Online Now</option>
@@ -348,7 +489,7 @@ export default function AstrologyPage() {
             ) : experts.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {experts.map((expert) => (
                   <AstrologerCard key={expert.id} astrologer={expert} />
                 ))}
@@ -358,52 +499,30 @@ export default function AstrologyPage() {
         </section>
 
         {/* SECTION 3 - Trust Section */}
-        <section className="py-16 px-6 bg-white">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <section className="py-12 border-t border-white/10 bg-gradient-to-b from-[#0b1220] to-[#0f172a]">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
-                { icon: <Shield className="w-7 h-7" />, title: 'Verified Experts', description: 'All our astrologers are verified and background checked' },
-                { icon: <Lock className="w-7 h-7" />, title: 'Privacy Protected', description: 'Your conversations are 100% private and secure' },
-                { icon: <Heart className="w-7 h-7" />, title: 'Satisfaction Guaranteed', description: 'Get a refund if you\'re not satisfied with session' },
-                { icon: <HelpCircle className="w-7 h-7" />, title: '24/7 Support', description: 'Our support team is always here to help you' }
-              ].map((feature, index) => (
-                <div key={index} className="text-center">
-                  <div className="w-14 h-14 mx-auto mb-4 bg-yellow-400/10 rounded-full flex items-center justify-center text-yellow-400">
-                    {feature.icon}
+                { icon: <Shield className="w-5 h-5 text-white/70" />, title: 'Verified Experts', description: 'All our astrologers are verified and background checked' },
+                { icon: <Lock className="w-5 h-5 text-white/70" />, title: 'Privacy Protected', description: 'Your conversations are 100% private and secure' },
+                { icon: <Heart className="w-5 h-5 text-white/70" />, title: 'Satisfaction Guaranteed', description: 'Get a refund if you\'re not satisfied with session' },
+                { icon: <HelpCircle className="w-5 h-5 text-white/70" />, title: '24/7 Support', description: 'Our support team is always here to help you' }
+              ].map((badge, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center justify-center p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm transition-all duration-200 hover:bg-white/10 text-center"
+                >
+                  <div className="w-5 h-5 mx-auto mb-2">
+                    {badge.icon}
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-sm font-medium text-white/80">
+                    {badge.title}
+                  </h3>
                 </div>
               ))}
             </div>
           </div>
         </section>
-
-        {/* Floating Conversion Button */}
-        <button 
-          onClick={() => {
-            const element = document.querySelector('.grid')
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-          }}
-          className="fixed bottom-8 right-8 px-6 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50"
-        >
-          Talk to an Astrologer Now
-        </button>
-
-        {/* Mobile Floating Action Button (larger for easy tapping) */}
-        <button 
-          onClick={() => {
-            const element = document.querySelector('.grid')
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-          }}
-          className="lg:hidden fixed bottom-6 right-6 px-8 py-5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50 text-lg"
-        >
-          Talk to an Astrologer Now
-        </button>
       </div>
     </div>
   )

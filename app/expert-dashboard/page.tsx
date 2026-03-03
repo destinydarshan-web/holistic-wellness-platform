@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { Calendar, Users, Star, Clock, DollarSign, LogOut, Settings } from 'lucide-react'
+import { Calendar, Users, Star, Clock, DollarSign, LogOut, Settings, AlertCircle, Bell } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function ExpertDashboard() {
   const { user, profile, loading, signOut } = useAuth()
@@ -16,6 +17,9 @@ export default function ExpertDashboard() {
     earnings: 0
   })
   const [bookings, setBookings] = useState<any[]>([])
+  const [expertProfile, setExpertProfile] = useState<any>(null)
+  const [pendingSessions, setPendingSessions] = useState<any[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
 
   useEffect(() => {
     if (!loading) {
@@ -24,14 +28,128 @@ export default function ExpertDashboard() {
         return
       }
 
-      if (!profile || profile.role !== 'expert' || profile.status !== 'approved') {
+      if (!profile || (profile.role !== 'expert' && profile.role !== 'astrologer') || profile.status !== 'approved') {
         router.push('/account-under-review')
         return
       }
 
+      // Check if expert profile is complete
+      const loadExpertProfile = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("expert_astrologers")
+            .select("*")
+            .eq("id", user.id)
+            .maybeSingle()
+          
+          if (error) {
+            // Check if table doesn't exist
+            if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+              console.log('expert_astrologers table does not exist yet - showing completion notice')
+              setExpertProfile(null) // Will trigger completion notice
+            } else {
+              console.error('Error loading expert profile:', error)
+              console.error('Error details:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+              })
+            }
+          } else {
+            console.log('Expert profile loaded:', data)
+            setExpertProfile(data)
+          }
+        } catch (err) {
+          console.error('Unexpected error loading expert profile:', err)
+          // Set to null to show completion notice
+          setExpertProfile(null)
+        }
+      }
+
+      loadExpertProfile()
       loadExpertData()
+      loadPendingSessions()
     }
   }, [user, profile, loading, router])
+
+  const loadPendingSessions = async () => {
+    try {
+      console.log('=== DEBUG: Loading Pending Sessions ===')
+      
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .select('*')
+        .eq('expert_id', user?.id)
+        .in('status', ['pending', 'active'])
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading pending sessions:', error)
+      } else {
+        console.log('Pending sessions found:', data)
+        setPendingSessions(data || [])
+      }
+    } catch (err) {
+      console.error('Unexpected error loading pending sessions:', err)
+    }
+  }
+
+  const handleAcceptSession = async (sessionId: string) => {
+    try {
+      console.log('=== DEBUG: Accepting Session ===', sessionId)
+      
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .update({ 
+          status: 'accepted'
+        })
+        .eq('id', sessionId)
+        .eq('expert_id', user?.id)
+        .select()
+
+      if (error) {
+        console.error('Error accepting session:', error)
+        alert('Failed to accept session. Please try again.')
+      } else {
+        console.log('Session accepted successfully:', data)
+        // Remove from pending list
+        setPendingSessions(prev => prev.filter(session => session.id !== sessionId))
+        // Redirect expert to session chat
+        router.push(`/session/chat/${sessionId}`)
+      }
+    } catch (err) {
+      console.error('Unexpected error accepting session:', err)
+      alert('Failed to accept session. Please try again.')
+    }
+  }
+
+  const handleRejectSession = async (sessionId: string) => {
+    try {
+      console.log('=== DEBUG: Rejecting Session ===', sessionId)
+      
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .update({ 
+          status: 'rejected'
+        })
+        .eq('id', sessionId)
+        .eq('expert_id', user?.id)
+        .select()
+
+      if (error) {
+        console.error('Error rejecting session:', error)
+        alert('Failed to reject session. Please try again.')
+      } else {
+        console.log('Session rejected successfully:', data)
+        // Remove from pending list
+        setPendingSessions(prev => prev.filter(session => session.id !== sessionId))
+      }
+    } catch (err) {
+      console.error('Unexpected error rejecting session:', err)
+      alert('Failed to reject session. Please try again.')
+    }
+  }
 
   const loadExpertData = async () => {
     // TODO: Load expert's actual data from database
@@ -83,7 +201,7 @@ export default function ExpertDashboard() {
   }
 
   return (
-    <div className="pt-24 py-8">
+    <div className="pt-24 py-8 bg-[#0F0F14]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -94,6 +212,112 @@ export default function ExpertDashboard() {
             Welcome back, {profile.full_name || user.email?.split('@')[0]}! • {profile.specialization?.replace('_', ' ').charAt(0).toUpperCase() + (profile.specialization?.slice(1).replace('_', '') || '')}
           </p>
         </div>
+
+        {/* Profile Completion Notice */}
+        {(!expertProfile || !expertProfile.is_profile_complete) && (
+          <div className="mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-400" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-400 mb-1">
+                  Your account has been approved. Please complete your profile to get listed.
+                </h3>
+                <p className="text-yellow-200 text-sm">
+                  Complete your profile information including display name, bio, experience, pricing, and specialties to appear in the astrology listings.
+                </p>
+                <button
+                  onClick={() => router.push('/expert/profile')}
+                  className="mt-4 px-4 py-2 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors"
+                >
+                  Complete Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profile Completed Success Message */}
+        {expertProfile && expertProfile.is_profile_complete && (
+          <div className="mb-8 p-6 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-white rounded-full"></div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-green-400 mb-1">
+                  Profile Completed Successfully
+                </h3>
+                <p className="text-green-200 text-sm">
+                  Your profile is now live and visible to users in the astrology listings. You can start receiving booking requests.
+                </p>
+                <button
+                  onClick={() => router.push('/astrology')}
+                  className="mt-4 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-400 transition-colors"
+                >
+                  View Your Listing
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Sessions Notifications */}
+        {pendingSessions.length > 0 && (
+          <div className="bg-[#1C1C24] rounded-xl border border-white/10 mb-8">
+            <div className="p-6 border-b border-white/10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Bell className="text-[#fbcc1e] w-6 h-6 animate-pulse" />
+                  <h2 className="text-xl font-semibold text-white">
+                    Pending Session Requests ({pendingSessions.length})
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  {showNotifications ? 'Hide' : 'Show'} Details
+                </button>
+              </div>
+              
+              {showNotifications && (
+                <div className="space-y-3">
+                  {pendingSessions.map((session) => (
+                    <div key={session.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-medium text-white mb-1">
+                            {session.user_name} - {session.service_category}
+                          </h4>
+                          <p className="text-white/60 text-sm">
+                            Session ID: {session.id}
+                          </p>
+                          <p className="text-white/60 text-sm">
+                            Created: {new Date(session.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAcceptSession(session.id)}
+                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectSession(session.id)}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

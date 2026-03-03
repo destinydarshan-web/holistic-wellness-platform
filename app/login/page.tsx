@@ -15,7 +15,7 @@ export default function LoginPage() {
     email: '',
     password: '',
     fullName: '',
-    role: 'user' as 'user' | 'expert',
+    role: 'user' as 'user' | 'expert' | 'astrologer',
     specialization: '' as 'astrologer' | 'counsellor' | 'yoga_trainer' | 'meditation_expert' | ''
   })
   const [error, setError] = useState('')
@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user && profile) {
-      if (profile.role === "expert") {
+      if (profile.role === "expert" || profile.role === "astrologer") {
         if (profile.status === "pending") {
           router.replace("/account-under-review")
         } else if (profile.status === "approved") {
@@ -118,8 +118,8 @@ export default function LoginPage() {
               id: data.user.id,
               full_name: formData.fullName,
               role: formData.role,
-              specialization: formData.role === 'expert' ? formData.specialization : null,
-              status: formData.role === 'expert' ? 'pending' : 'approved',
+              specialization: (formData.role === 'expert' || formData.role === 'astrologer') ? formData.specialization : null,
+              status: (formData.role === 'expert' || formData.role === 'astrologer') ? 'pending' : 'approved',
             })
 
           if (profileError) {
@@ -130,8 +130,31 @@ export default function LoginPage() {
 
           console.log("Profile created successfully")
 
+          // Create expert_astrologers entry for astrologers with default values
+          if (formData.role === 'expert' || formData.role === 'astrologer') {
+            const { error: expertError } = await supabase
+              .from("expert_astrologers")
+              .insert({
+                id: data.user.id,
+                display_name: formData.fullName,
+                bio: '',
+                experience_years: 0,
+                price_per_minute: 299,
+                specialties: [],
+                avatar_url: '',
+                is_profile_complete: false
+              })
+
+            if (expertError) {
+              console.error("Expert profile insert failed:", expertError)
+              // Don't fail the signup, just log the error
+            } else {
+              console.log("Expert profile created successfully")
+            }
+          }
+
           // Redirect based on role
-          if (formData.role === "expert") {
+          if (formData.role === "expert" || formData.role === "astrologer") {
             router.replace("/account-under-review")
           } else {
             router.replace("/dashboard")

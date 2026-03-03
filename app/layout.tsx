@@ -6,6 +6,7 @@ import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
+import { GlobalBackground } from '@/components/layout/GlobalBackground'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -42,15 +43,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} ${merriweather.variable}`}>
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body className="font-sans antialiased text-foreground">
         <AuthProvider>
-          <div className="min-h-screen flex flex-col bg-[#0F0F14]">
-            <Navigation />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <GlobalBackground>
+            <div className="min-h-screen flex flex-col">
+              <Navigation />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </GlobalBackground>
         </AuthProvider>
       </body>
     </html>

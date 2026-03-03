@@ -1,21 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { User, AuthError } from '@supabase/supabase-js';
 
 type AuthContextType = {
   user: User | null;
   profile: any;
   loading: boolean;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: AuthError | null }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
-  signOut: async () => {},
+  signOut: async () => ({ error: null }),
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -23,10 +23,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
+  const signOut = async (): Promise<{ error: AuthError | null }> => {
+    try {
+      const result = await supabase.auth.signOut();
+      
+      // Clear all auth state immediately
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      
+      console.log("Logout successful, state cleared");
+      return result;
+    } catch (error) {
+      console.error("Logout exception:", error);
+      return { error: error as AuthError };
+    }
   };
 
   useEffect(() => {
@@ -60,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
+      async (_event: string, session: any) => {
         const newUser = session?.user ?? null;
         setUser(newUser);
 

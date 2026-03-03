@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Database } from '@/lib/supabaseClient'
-import { supabase as supabaseClient } from '@/lib/supabaseClient'
 import { 
   MessageCircle, 
   Phone, 
@@ -18,9 +18,13 @@ import {
   CreditCard,
   History,
   Star,
-  ChevronRight,
+  ArrowRight,
+  Bell,
+  Lightbulb,
+  Heart,
+  Zap,
   Sparkles,
-  ArrowRight
+  ChevronRight
 } from 'lucide-react'
 
 type Booking = Database['public']['Tables']['bookings']['Row']
@@ -43,13 +47,20 @@ export default function Dashboard() {
   const [data, setData] = useState<EngagementData | null>(null)
   const [selectedService, setSelectedService] = useState<string>('all')
   const [walletBalance, setWalletBalance] = useState<number>(0)
+  const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'past'>('active')
   
   const services = ['all', 'astrology', 'counselling', 'yoga', 'meditation'] as const
+
+  // Filter engagements based on active tab
+  const filteredEngagements = data ? 
+    (activeTab === 'active' ? data.active :
+     activeTab === 'upcoming' ? data.upcoming :
+     data.past) : []
 
   // Debug: Log current user ID
   useEffect(() => {
     const getCurrentUser = async () => {
-      const { data, error } = await supabaseClient.auth.getUser()
+      const { data, error } = await supabase.auth.getUser()
 
       if (error) {
         console.error("Error fetching user:", error)
@@ -70,19 +81,30 @@ export default function Dashboard() {
 
       console.log("🔍 Auth user id:", userId)
 
-      const { data, error } = await supabase
-        .from("user_wallet")
-        .select("*")
-        .eq("user_id", userId)
+      try {
+        const { data, error } = await supabase
+          .from("user_wallet")
+          .select("*")
+          .eq("user_id", userId)
 
-      console.log("🔍 Wallet raw response:", data)
-      console.log("🔍 Wallet error:", error)
+        console.log("🔍 Wallet raw response:", data)
+        console.log("🔍 Wallet error:", error)
 
-      if (data && data.length > 0) {
-        console.log("✅ Wallet balance found:", data[0].balance)
-        setWalletBalance(data[0].balance)
-      } else {
-        console.log("❌ No wallet data found")
+        if (error) {
+          console.log("❌ Wallet table not found or error:", error)
+          setWalletBalance(0)
+          return
+        }
+
+        if (data && data.length > 0) {
+          console.log("✅ Wallet balance found:", data[0].balance)
+          setWalletBalance(data[0].balance)
+        } else {
+          console.log("❌ No wallet data found")
+          setWalletBalance(0)
+        }
+      } catch (err) {
+        console.log("❌ Wallet fetch exception:", err)
         setWalletBalance(0)
       }
     }
@@ -91,30 +113,56 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
+    console.log('=== DEBUG: Dashboard useEffect triggered ===')
+    console.log('Loading:', loading)
+    console.log('User:', user ? user.id : 'null')
+    console.log('Profile:', profile)
+    console.log('Data loaded:', data ? 'yes' : 'no')
+    
     if (loading) {
+      console.log('=== DEBUG: Auth still loading, waiting...')
       return
     }
 
     if (!user) {
+      console.log('=== DEBUG: No user, redirecting to login')
       router.push('/login')
       return
     }
 
+    // Handle role-based redirects
     if (profile && profile.role !== 'user') {
+      console.log('=== DEBUG: Non-user role, redirecting:', profile.role)
       // Redirect to appropriate dashboard
       switch (profile.role) {
         case 'admin':
           router.push('/admin-dashboard')
           break
         case 'expert':
+        case 'astrologer':
           router.push(profile.status === 'approved' ? '/expert-dashboard' : '/account-under-review')
           break
       }
       return
     }
 
-    loadDashboardData()
+    // Load data for users (or when profile is null but user exists)
+    if (!profile || profile.role === 'user') {
+      console.log('=== DEBUG: User authenticated, loading dashboard data')
+      console.log('User ID:', user.id)
+      console.log('Profile:', profile)
+      
+      loadDashboardData()
+    }
   }, [loading, user, profile, router])
+
+  // Fallback: Load data when component mounts if auth is ready
+  useEffect(() => {
+    if (!loading && user && (!profile || profile.role === 'user') && !data) {
+      console.log('=== DEBUG: Fallback - Auth ready but no data, loading dashboard data')
+      loadDashboardData()
+    }
+  }, [loading, user, profile, data])
 
   const loadDashboardData = async () => {
     if (!user?.id) return
@@ -122,8 +170,11 @@ export default function Dashboard() {
     try {
       setDashboardLoading(true)
       
-      // Fetch all data in parallel
-      const [bookingsResponse, transactionsResponse, expertsResponse] = await Promise.all([
+      console.log('=== DEBUG: Loading Dashboard Data ===')
+      console.log('User ID:', user.id)
+      
+      // Fetch all data in parallel with error handling
+      const [bookingsResponse, transactionsResponse, expertsResponse] = await Promise.allSettled([
         supabase
           .from('bookings')
           .select('*')
@@ -139,12 +190,39 @@ export default function Dashboard() {
           .select('*')
       ])
 
-      const bookings = bookingsResponse.data || []
-      const transactions = transactionsResponse.data || []
-      const experts = (expertsResponse.data || []).reduce((acc, expert) => {
-        acc[expert.user_id] = expert
-        return acc
-      }, {} as Record<string, Expert>)
+      console.log('=== DEBUG: Dashboard API Responses ===')
+      
+      // Handle bookings response
+      let bookings = []
+      if (bookingsResponse.status === 'fulfilled') {
+        bookings = bookingsResponse.value.data || []
+        console.log('Bookings loaded:', bookings.length)
+      } else {
+        console.log('Bookings table not found or error:', bookingsResponse.reason)
+      }
+      
+      // Handle transactions response
+      let transactions = []
+      if (transactionsResponse.status === 'fulfilled') {
+        transactions = transactionsResponse.value.data || []
+        console.log('Transactions loaded:', transactions.length)
+      } else {
+        console.log('Transactions table not found or error:', transactionsResponse.reason)
+      }
+      
+      // Handle experts response
+      let experts = {}
+      if (expertsResponse.status === 'fulfilled') {
+        const expertsData = expertsResponse.value.data || []
+        console.log('Experts loaded:', expertsData.length)
+        // Fix: Use expert.id instead of expert.user_id
+        experts = expertsData.reduce((acc, expert) => {
+          acc[expert.id] = expert
+          return acc
+        }, {} as Record<string, Expert>)
+      } else {
+        console.log('Experts table error:', expertsResponse.reason)
+      }
 
       // Categorize engagements
       const now = new Date()
@@ -159,6 +237,12 @@ export default function Dashboard() {
         return t.type === 'credit' ? sum + t.amount : sum - t.amount
       }, 0)
 
+      console.log('=== DEBUG: Dashboard Data Summary ===')
+      console.log('Active bookings:', active.length)
+      console.log('Upcoming bookings:', upcoming.length)
+      console.log('Past bookings:', past.length)
+      console.log('Wallet balance:', balance)
+
       setData({
         active,
         upcoming,
@@ -169,6 +253,15 @@ export default function Dashboard() {
       })
     } catch (error) {
       console.error('Dashboard fetch error:', error)
+      // Set empty data to prevent infinite loading
+      setData({
+        active: [],
+        upcoming: [],
+        past: [],
+        experts: {},
+        balance: 0,
+        transactions: []
+      })
     } finally {
       setDashboardLoading(false)
     }
@@ -377,150 +470,312 @@ export default function Dashboard() {
     )
   }
 
-  if (!user || !profile) {
+  if (!user) {
     return null // Will redirect
   }
 
+  // Handle case where profile is null but user exists
+  if (!profile) {
+    console.log('=== DEBUG: Profile is null, showing fallback dashboard ===')
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 lg:pt-24">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-6xl mx-auto px-6 py-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome back, {user.email?.split('@')[0]}!
+            </h1>
+            <p className="text-gray-600">
+              Manage your wellness journey and bookings
+            </p>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+          {/* Premium Wallet Card */}
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl p-6 shadow-lg text-white h-[120px]">
+            <div className="flex items-center justify-between h-full">
+              <div>
+                <p className="text-yellow-100 text-sm mb-1">Wallet Balance</p>
+                <p className="text-3xl font-bold">${walletBalance.toFixed(2)}</p>
+              </div>
+              <div className="flex gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
+                  <Plus className="w-4 h-4" />
+                  Add Funds
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
+                  <History className="w-4 h-4" />
+                  View Transactions
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Empty State */}
+          <div className="text-center py-16">
+            <div className="flex justify-center mb-4">
+              <MessageCircle className="w-12 h-12 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">✨ Welcome to Your Wellness Journey!</h3>
+            <p className="text-gray-600 mb-6">Start by browsing our expert astrologers and booking your first consultation</p>
+            <button
+              onClick={() => router.push('/astrology')}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+            >
+              Browse Experts
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {profile.full_name || user.email?.split('@')[0]}!
-          </h1>
-          <p className="text-gray-600">
-            Manage your wellness journey and bookings
-          </p>
+    <div className="min-h-screen bg-[#0f172a] pt-20 lg:pt-24">
+      {/* Premium Header with Glassmorphism */}
+      <div className="bg-white/5 backdrop-blur-xl border-b border-white/10 shadow-xl shadow-black/40">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Welcome back, {profile?.full_name || user.email?.split('@')[0]}!
+              </h1>
+              <p className="text-white/70">
+                Manage your wellness journey and bookings
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+                <span className="text-2xl">✨</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8 space-y-8">
         {/* Premium Wallet Card */}
-        <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl p-6 shadow-lg text-white h-[120px]">
-          <div className="flex items-center justify-between h-full">
-            <div>
-              <p className="text-yellow-100 text-sm mb-1">Wallet Balance</p>
-              <p className="text-3xl font-bold">${walletBalance.toFixed(2)}</p>
-            </div>
-            <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
-                <Plus className="w-4 h-4" />
-                Add Funds
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
-                <History className="w-4 h-4" />
-                View Transactions
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Next Session Highlight Card */}
-        {nextSession && (
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
+        <div className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 rounded-3xl p-8 shadow-2xl shadow-yellow-500/30 text-white relative overflow-hidden">
+          {/* Subtle Glow Effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.1),_transparent_60%)]"></div>
+          
+          <div className="relative z-10">
             <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    {getServiceIcon(nextSession.service_category)}
-                  </div>
-                  <div>
-                    <span className="inline-block px-2 py-1 bg-white/20 rounded-full text-xs font-medium capitalize">
-                      {nextSession.service_category}
-                    </span>
-                    <p className="text-sm text-white/80 mt-1">
-                      {data.experts[nextSession.expert_id]?.display_name || 'Expert'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(nextSession.scheduled_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{new Date(nextSession.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
+                <p className="text-yellow-100 text-sm font-medium mb-2 uppercase tracking-wider">Wallet Balance</p>
+                <p className="text-4xl font-bold mb-1">${walletBalance.toFixed(2)}</p>
+                <p className="text-yellow-100 text-sm">Available for consultations</p>
               </div>
               <div className="flex gap-3">
-                <button className="px-6 py-2.5 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                  Join
+                <button className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-200 font-medium">
+                  <Plus className="w-5 h-5" />
+                  Add Funds
                 </button>
-                <button className="px-4 py-2.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
-                  Reschedule
+                <button className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all duration-200 font-medium">
+                  <History className="w-5 h-5" />
+                  History
                 </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Service Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {services.map(service => (
-            <button
-              key={service}
-              onClick={() => setSelectedService(service)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize whitespace-nowrap border transition-all
-                ${selectedService === service 
-                  ? 'bg-yellow-500 text-black border-yellow-500 shadow-sm' 
-                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }
-              `}
-            >
-              {service}
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Link href="/astrology" className="group">
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl shadow-black/40 p-6 hover:bg-white/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                  <Star className="w-6 h-6 text-black" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-yellow-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold mb-2">Book Session</h3>
+              <p className="text-white/60 text-sm">Connect with expert astrologers</p>
+            </div>
+          </Link>
+
+          <Link href="/astrology/daily-horoscope" className="group">
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl shadow-black/40 p-6 hover:bg-white/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-white" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-yellow-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold mb-2">Daily Horoscope</h3>
+              <p className="text-white/60 text-sm">Your cosmic guidance today</p>
+            </div>
+          </Link>
+
+          <Link href="/astrology/kundli" className="group">
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl shadow-black/40 p-6 hover:bg-white/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-yellow-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold mb-2">Create Kundli</h3>
+              <p className="text-white/60 text-sm">Generate your birth chart</p>
+            </div>
+          </Link>
+
+          <Link href="/meditation" className="group">
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl shadow-black/40 p-6 hover:bg-white/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-yellow-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold mb-2">Meditation</h3>
+              <p className="text-white/60 text-sm">Find inner peace</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Recent Activity Section */}
+        <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-xl shadow-black/40 p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
+            <button className="text-yellow-400 hover:text-yellow-300 transition-colors font-medium">
+              View All
             </button>
-          ))}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 mb-8 border-b border-white/10">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-4 py-3 font-medium transition-all duration-200 border-b-2 ${
+                activeTab === 'active'
+                  ? 'text-yellow-400 border-yellow-400'
+                  : 'text-white/60 border-transparent hover:text-white hover:border-white/20'
+              }`}
+            >
+              Active Sessions
+            </button>
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`px-4 py-3 font-medium transition-all duration-200 border-b-2 ${
+                activeTab === 'upcoming'
+                  ? 'text-yellow-400 border-yellow-400'
+                  : 'text-white/60 border-transparent hover:text-white hover:border-white/20'
+              }`}
+            >
+              Upcoming
+            </button>
+            <button
+              onClick={() => setActiveTab('past')}
+              className={`px-4 py-3 font-medium transition-all duration-200 border-b-2 ${
+                activeTab === 'past'
+                  ? 'text-yellow-400 border-yellow-400'
+                  : 'text-white/60 border-transparent hover:text-white hover:border-white/20'
+              }`}
+            >
+              Past Sessions
+            </button>
+          </div>
+
+          {/* Content Area */}
+          <div className="min-h-[400px]">
+            {dashboardLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+              </div>
+            ) : filteredEngagements.length === 0 ? (
+              /* Empty State */
+              <div className="text-center py-16">
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+                    <MessageCircle className="w-10 h-10 text-white/40" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">✨ No {activeTab} Sessions</h3>
+                <p className="text-white/60 mb-8 max-w-md mx-auto">
+                  {activeTab === 'active' 
+                    ? "You don't have any active sessions right now. Start by browsing our expert astrologers."
+                    : activeTab === 'upcoming'
+                    ? "No upcoming sessions scheduled. Book a consultation to get started."
+                    : "No past sessions yet. Your consultation history will appear here."
+                  }
+                </p>
+                <button
+                  onClick={() => router.push('/astrology')}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-black rounded-full font-semibold shadow-lg shadow-yellow-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  Browse Experts
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              /* Engagement Cards */
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEngagements.map((booking: any) => (
+                  <EngagementCard key={booking.id} booking={booking} type={activeTab} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Active Engagements */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Active Sessions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data && filterBookings(data.active).map(booking => (
-              <EngagementCard key={booking.id} booking={booking} type="active" />
-            ))}
+        {/* Additional Premium Features */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Upcoming Reminders */}
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-xl shadow-black/40 p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Upcoming Reminders</h2>
+              <Bell className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="w-10 h-10 rounded-full bg-yellow-400/20 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">Daily Horoscope</p>
+                  <p className="text-white/60 text-sm">Available at 6:00 AM</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">Weekly Astrology Update</p>
+                  <p className="text-white/60 text-sm">Every Sunday morning</p>
+                </div>
+              </div>
+            </div>
           </div>
-          {data && filterBookings(data.active).length === 0 && (
-            <EmptyState type="active" hasData={false} />
-          )}
-        </div>
 
-        {/* Upcoming Engagements */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-500" />
-            Upcoming Sessions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data && filterBookings(data.upcoming).map(booking => (
-              <EngagementCard key={booking.id} booking={booking} type="upcoming" />
-            ))}
+          {/* Quick Tips */}
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-xl shadow-black/40 p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Wellness Tips</h2>
+              <Lightbulb className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div className="space-y-4">
+              <div className="p-4 bg-gradient-to-r from-yellow-400/10 to-amber-400/10 rounded-xl border-l-4 border-yellow-400">
+                <p className="text-white/90 text-sm leading-relaxed">
+                  Start your day with positive affirmations to set the right tone for cosmic alignment.
+                </p>
+              </div>
+              <div className="p-4 bg-gradient-to-r from-purple-400/10 to-blue-400/10 rounded-xl border-l-4 border-purple-400">
+                <p className="text-white/90 text-sm leading-relaxed">
+                  Meditation during Mercury retrograde can help maintain mental clarity.
+                </p>
+              </div>
+              <div className="p-4 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-xl border-l-4 border-green-400">
+                <p className="text-white/90 text-sm leading-relaxed">
+                  Regular yoga practice enhances the positive effects of planetary alignments.
+                </p>
+              </div>
+            </div>
           </div>
-          {data && filterBookings(data.upcoming).length === 0 && (
-            <EmptyState type="upcoming" hasData={false} />
-          )}
-        </div>
-
-        {/* Past Engagements */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <History className="w-5 h-5 text-gray-500" />
-            Past Sessions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data && filterBookings(data.past).slice(0, 6).map(booking => (
-              <EngagementCard key={booking.id} booking={booking} type="past" />
-            ))}
-          </div>
-          {data && filterBookings(data.past).length === 0 && (
-            <EmptyState type="past" hasData={false} />
-          )}
         </div>
       </div>
     </div>
