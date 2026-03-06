@@ -1185,7 +1185,7 @@ www.destiny-darshan.com → CNAME → cname.vercel-dns.com
 
 | Limitation | Current | Scalable Solution |
 |-----------|---------|-------------------|
-| **User Logins** | None | Firebase Auth / Supabase Auth |
+| **User Logins** | None | Supabase Auth |
 | **Data Storage** | In-memory/Static | PostgreSQL (Neon/Supabase) |
 | **Email Sending** | Logged only | SendGrid / Mailgun API |
 | **User Bookings** | Modal only | Database + Email confirmation |

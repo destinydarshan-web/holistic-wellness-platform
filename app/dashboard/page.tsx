@@ -28,13 +28,14 @@ import {
 } from 'lucide-react'
 
 type Booking = Database['public']['Tables']['bookings']['Row']
+type Appointment = Database['public']['Tables']['appointments']['Row']
 type Transaction = Database['public']['Tables']['transactions']['Row']
 type Expert = Database['public']['Tables']['expert_astrologers']['Row']
 
 interface EngagementData {
-  active: Booking[]
-  upcoming: Booking[]
-  past: Booking[]
+  active: (Booking | Appointment)[]
+  upcoming: (Booking | Appointment)[]
+  past: (Booking | Appointment)[]
   experts: Record<string, Expert>
   balance: number
   transactions: Transaction[]
@@ -110,6 +111,31 @@ export default function Dashboard() {
     }
 
     fetchWallet()
+    
+    // Set up real-time wallet updates
+    const setupRealtimeUpdates = async () => {
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData.user?.id
+      
+      if (userId) {
+        const channel = supabase
+          .channel('wallet_changes')
+          .on('postgres_changes', 
+            { event: 'UPDATE', schema: 'public', table: 'user_wallet', filter: `user_id=eq.${userId}` },
+            (payload) => {
+              console.log('🔄 Real-time wallet update:', payload.new)
+              setWalletBalance(payload.new.balance)
+            }
+          )
+          .subscribe()
+
+        return () => {
+          supabase.removeChannel(channel)
+        }
+      }
+    }
+    
+    setupRealtimeUpdates()
   }, [])
 
   useEffect(() => {
@@ -130,10 +156,9 @@ export default function Dashboard() {
       return
     }
 
-    // Handle role-based redirects
+    // Handle role-based redirects if profile exists
     if (profile && profile.role !== 'user') {
       console.log('=== DEBUG: Non-user role, redirecting:', profile.role)
-      // Redirect to appropriate dashboard
       switch (profile.role) {
         case 'admin':
           router.push('/admin-dashboard')
@@ -147,22 +172,11 @@ export default function Dashboard() {
     }
 
     // Load data for users (or when profile is null but user exists)
-    if (!profile || profile.role === 'user') {
+    if (!data) {
       console.log('=== DEBUG: User authenticated, loading dashboard data')
-      console.log('User ID:', user.id)
-      console.log('Profile:', profile)
-      
       loadDashboardData()
     }
-  }, [loading, user, profile, router])
-
-  // Fallback: Load data when component mounts if auth is ready
-  useEffect(() => {
-    if (!loading && user && (!profile || profile.role === 'user') && !data) {
-      console.log('=== DEBUG: Fallback - Auth ready but no data, loading dashboard data')
-      loadDashboardData()
-    }
-  }, [loading, user, profile, data])
+  }, [loading, user, profile, data, router])
 
   const loadDashboardData = async () => {
     if (!user?.id) return
@@ -174,12 +188,18 @@ export default function Dashboard() {
       console.log('User ID:', user.id)
       
       // Fetch all data in parallel with error handling
-      const [bookingsResponse, transactionsResponse, expertsResponse] = await Promise.allSettled([
+      const [bookingsResponse, appointmentsResponse, transactionsResponse, expertsResponse] = await Promise.allSettled([
         supabase
           .from('bookings')
           .select('*')
           .eq('user_id', user.id)
           .order('scheduled_at', { ascending: false }),
+        supabase
+          .from('appointments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('appointment_date', { ascending: false })
+          .order('appointment_time', { ascending: false }),
         supabase
           .from('transactions')
           .select('*')
@@ -199,6 +219,15 @@ export default function Dashboard() {
         console.log('Bookings loaded:', bookings.length)
       } else {
         console.log('Bookings table not found or error:', bookingsResponse.reason)
+      }
+      
+      // Handle appointments response
+      let appointments = []
+      if (appointmentsResponse.status === 'fulfilled') {
+        appointments = appointmentsResponse.value.data || []
+        console.log('Appointments loaded:', appointments.length)
+      } else {
+        console.log('Appointments table not found or error:', appointmentsResponse.reason)
       }
       
       // Handle transactions response
@@ -224,18 +253,82 @@ export default function Dashboard() {
         console.log('Experts table error:', expertsResponse.reason)
       }
 
+      // Combine bookings and appointments for unified activity feed
+      const allEngagements = [...bookings, ...appointments]
+      
       // Categorize engagements
       const now = new Date()
-      const active = bookings.filter(b => b.status === 'active')
-      const upcoming = bookings.filter(
-        b => b.status === 'upcoming' && new Date(b.scheduled_at) > now
-      )
-      const past = bookings.filter(b => b.status === 'completed')
+      console.log('=== DEBUG: Current Time ===')
+      console.log('Current time:', now.toISOString())
+      
+      const active = allEngagements.filter(engagement => {
+        // Active bookings
+        if ('status' in engagement) {
+          return engagement.status === 'active'
+        }
+        // Active appointments (appointments that are currently happening)
+        if ('appointment_date' in engagement) {
+          const appointmentDateTime = new Date(`${engagement.appointment_date}T${engagement.appointment_time}`)
+          console.log('=== DEBUG: Appointment Date Check ===')
+          console.log('Appointment:', engagement)
+          console.log('Appointment date/time:', `${engagement.appointment_date}T${engagement.appointment_time}`)
+          console.log('Parsed appointment datetime:', appointmentDateTime.toISOString())
+          console.log('Is appointment upcoming <= now:', appointmentDateTime <= now)
+          console.log('Appointment status:', engagement.status)
+          return engagement.status === 'upcoming' && appointmentDateTime <= now
+        }
+        return false
+      })
+      
+      const upcoming = allEngagements.filter(engagement => {
+        // Upcoming bookings
+        if ('status' in engagement) {
+          return engagement.status === 'upcoming' && 
+                 new Date(engagement.scheduled_at) > now
+        }
+        // Upcoming appointments
+        if ('appointment_date' in engagement) {
+          const appointmentDateTime = new Date(`${engagement.appointment_date}T${engagement.appointment_time}`)
+          console.log('=== DEBUG: Upcoming Appointment Check ===')
+          console.log('Appointment:', engagement)
+          console.log('Appointment date/time:', `${engagement.appointment_date}T${engagement.appointment_time}`)
+          console.log('Parsed appointment datetime:', appointmentDateTime.toISOString())
+          console.log('Is appointment upcoming > now:', appointmentDateTime > now)
+          console.log('Appointment status:', engagement.status)
+          return engagement.status === 'upcoming' && appointmentDateTime > now
+        }
+        return false
+      })
+      
+      const past = allEngagements.filter(engagement => {
+        // Past bookings
+        if ('status' in engagement) {
+          return engagement.status === 'completed'
+        }
+        // Past appointments
+        if ('appointment_date' in engagement) {
+          const appointmentDateTime = new Date(`${engagement.appointment_date}T${engagement.appointment_time}`)
+          console.log('=== DEBUG: Past Appointment Check ===')
+          console.log('Appointment:', engagement)
+          console.log('Appointment date/time:', `${engagement.appointment_date}T${engagement.appointment_time}`)
+          console.log('Parsed appointment datetime:', appointmentDateTime.toISOString())
+          console.log('Is appointment completed?:', engagement.status === 'completed')
+          return engagement.status === 'completed'
+        }
+        return false
+      })
 
-      // Calculate wallet balance
-      const balance = transactions.reduce((sum, t) => {
-        return t.type === 'credit' ? sum + t.amount : sum - t.amount
-      }, 0)
+      console.log('=== DEBUG: Engagement Filtering ===')
+      console.log('All engagements:', allEngagements.length)
+      console.log('Active engagements:', active.length)
+      console.log('Upcoming engagements:', upcoming.length)
+      console.log('Past engagements:', past.length)
+      console.log('Active tab:', activeTab)
+      console.log('Filtered engagements:', filteredEngagements.length)
+
+      // Use the actual wallet balance from user_wallet table
+      // The transaction calculation is not reliable for the total balance
+      const balance = walletBalance
 
       console.log('=== DEBUG: Dashboard Data Summary ===')
       console.log('Active bookings:', active.length)
@@ -288,10 +381,38 @@ export default function Dashboard() {
   }
 
   // Engagement-based rendering components
-  const EngagementCard = ({ booking, type }: { booking: Booking; type: 'active' | 'upcoming' | 'past' }) => {
+  const EngagementCard = ({ booking, type }: { booking: Booking | Appointment; type: 'active' | 'upcoming' | 'past' }) => {
     const expert = data?.experts[booking.expert_id]
-    const isJoinEnabled = type === 'upcoming' && 
+    
+    // Determine if this is a booking or appointment
+    const isAppointment = 'appointment_date' in booking
+    
+    // Check if join is enabled for appointments
+    const isAppointmentJoinEnabled = type === 'upcoming' && isAppointment && 
+      new Date(`${booking.appointment_date}T${booking.appointment_time}`).getTime() - new Date().getTime() <= 10 * 60 * 1000
+    
+    // Check if join is enabled for bookings
+    const isBookingJoinEnabled = type === 'upcoming' && !isAppointment && 
+      'scheduled_at' in booking &&
       new Date(booking.scheduled_at).getTime() - new Date().getTime() <= 10 * 60 * 1000
+    
+    const canJoinSession = isAppointmentJoinEnabled || isBookingJoinEnabled
+    
+    // Get service category with fallback
+    const serviceCategory = isAppointment ? booking.service_category : 
+                         ('service_category' in booking ? booking.service_category : 'astrology')
+    
+    // Get amount with fallback
+    const amount = isAppointment ? booking.amount_paid : 
+                   ('amount' in booking ? booking.amount : 0)
+    
+    // Get status text with fallback
+    const statusText = booking.status
+    
+    // Get date/time with fallback
+    const dateTime = isAppointment ? 
+      `${booking.appointment_date} at ${booking.appointment_time}` :
+      ('scheduled_at' in booking ? new Date(booking.scheduled_at).toLocaleString() : 'Unknown')
 
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
@@ -299,33 +420,45 @@ export default function Dashboard() {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center
-              ${booking.service_category === 'astrology' ? 'bg-purple-100 text-purple-600' : ''}
-              ${booking.service_category === 'counselling' ? 'bg-blue-100 text-blue-600' : ''}
-              ${booking.service_category === 'yoga' ? 'bg-green-100 text-green-600' : ''}
-              ${booking.service_category === 'meditation' ? 'bg-indigo-100 text-indigo-600' : ''}
+              ${serviceCategory === 'astrology' ? 'bg-purple-100 text-purple-600' : ''}
+              ${serviceCategory === 'counselling' ? 'bg-blue-100 text-blue-600' : ''}
+              ${serviceCategory === 'yoga' ? 'bg-green-100 text-green-600' : ''}
+              ${serviceCategory === 'meditation' ? 'bg-indigo-100 text-indigo-600' : ''}
             `}>
-              {getServiceIcon(booking.service_category)}
+              {serviceCategory === 'astrology' && <Star className="w-4 h-4" />}
+              {serviceCategory === 'counselling' && <MessageCircle className="w-4 h-4" />}
+              {serviceCategory === 'yoga' && <Users className="w-4 h-4" />}
+              {serviceCategory === 'meditation' && <Sparkles className="w-4 h-4" />}
+              {!['astrology', 'counselling', 'yoga', 'meditation'].includes(serviceCategory) && <Calendar className="w-4 h-4" />}
             </div>
             <div>
-              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium capitalize mb-1
-                ${booking.service_category === 'astrology' ? 'bg-purple-50 text-purple-700' : ''}
-                ${booking.service_category === 'counselling' ? 'bg-blue-50 text-blue-700' : ''}
-                ${booking.service_category === 'yoga' ? 'bg-green-50 text-green-700' : ''}
-                ${booking.service_category === 'meditation' ? 'bg-indigo-50 text-indigo-700' : ''}
-              `}>
-                {booking.service_category}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 capitalize">
-                  {booking.engagement_type.replace('_', ' ')}
-                </span>
-                <span className="text-xs text-gray-400">•</span>
-                <span className="text-xs text-gray-500 capitalize">
-                  {booking.session_mode}
-                </span>
-              </div>
+              <p className="font-semibold text-gray-900">
+                {expert?.display_name || 'Expert'}
+              </p>
+              <p className="text-sm text-gray-500">
+                {expert?.primary_specialization || 'General'}
+              </p>
             </div>
           </div>
+          
+          <div className="flex items-center gap-4">
+            <span className={`px-3 py-1 rounded-full text-xs font-medium
+              ${statusText === 'active' ? 'bg-green-100 text-green-800' : ''}
+              ${statusText === 'upcoming' ? 'bg-blue-100 text-blue-800' : ''}
+              ${statusText === 'completed' ? 'bg-gray-100 text-gray-800' : ''}
+              ${statusText === 'cancelled' ? 'bg-red-100 text-red-800' : ''}
+            `}>
+              {statusText}
+            </span>
+            <span className="text-sm text-gray-500">
+              {isAppointment ? `Appointment` : `Session`}
+            </span>
+            {amount > 0 && (
+              <span className="text-sm font-medium text-gray-900">
+                ₹{amount.toLocaleString()}
+              </span>
+            )}
+          </div>  
         </div>
 
         {/* Expert Info */}
@@ -338,26 +471,51 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Time Info */}
-        <div className="flex items-center gap-3 text-sm text-gray-600 mb-6">
-          <div className="flex items-center gap-1">
+        {/* Date/Time */}
+        <div className="mb-4">
+          <p className="text-sm text-gray-600 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            <span>{new Date(booking.scheduled_at).toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            <span>{new Date(booking.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
+            {dateTime}
+          </p>
         </div>
+
+        {/* Amount */}
+        {amount > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              ₹{amount.toLocaleString()}
+            </p>
+          </div>
+        )}
+
+        {/* Join Button */}
+        {isJoinEnabled && (
+          <button className="w-full py-2 bg-gradient-to-r from-yellow-400 to-amber-500 text-black rounded-lg font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
+            Join Session
+          </button>
+        )}
 
         {/* Action Buttons - Engagement-based */}
         <div className="flex gap-3">
           {type === 'active' && (
             <>
-              {booking.engagement_type === 'one_to_one' && (
+              {isAppointment && 'meeting_mode' in booking && (
+                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                  <Video className="w-4 h-4" />
+                  Join Video Call
+                </button>
+              )}
+              {isAppointment && 'meeting_mode' in booking && booking.meeting_mode === 'audio' && (
+                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                  <Phone className="w-4 h-4" />
+                  Join Audio Call
+                </button>
+              )}
+              {!isAppointment && 'session_mode' in booking && (
                 <>
                   {booking.session_mode === 'chat' && (
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
                       <MessageCircle className="w-4 h-4" />
                       Resume Chat
                     </button>
@@ -365,49 +523,42 @@ export default function Dashboard() {
                   {booking.session_mode === 'call' && (
                     <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
                       <Phone className="w-4 h-4" />
-                      Join Call
+                      Resume Call
                     </button>
                   )}
                   {booking.session_mode === 'video' && (
                     <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
                       <Video className="w-4 h-4" />
-                      Join Video
+                      Resume Video
                     </button>
                   )}
                 </>
               )}
-              {booking.engagement_type === 'group' && (
-                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors">
-                  <Users className="w-4 h-4" />
-                  Join Live Class
-                </button>
-              )}
             </>
           )}
-
           {type === 'upcoming' && (
-            <>
-              {isJoinEnabled && (
-                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                  <ChevronRight className="w-4 h-4" />
-                  Join Now
-                </button>
-              )}
-              <button className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                Cancel
-              </button>
-            </>
+            <button 
+              onClick={() => router.push(`/dashboard/history`)}
+              className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              View Details
+            </button>
           )}
-
           {type === 'past' && (
             <>
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors">
+              <button 
+                onClick={() => router.push('/astrology')}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors"
+              >
                 <Calendar className="w-4 h-4" />
-                Rebook
+                Book Again
               </button>
-              <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                <Star className="w-4 h-4" />
-                Rate
+              <button 
+                onClick={() => router.push(`/dashboard/history`)}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <History className="w-4 h-4" />
+                View History
               </button>
             </>
           )}
@@ -573,7 +724,10 @@ export default function Dashboard() {
                   <Plus className="w-5 h-5" />
                   Add Funds
                 </button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all duration-200 font-medium">
+                <button 
+                  onClick={() => router.push('/dashboard/history')}
+                  className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all duration-200 font-medium"
+                >
                   <History className="w-5 h-5" />
                   History
                 </button>
@@ -635,91 +789,6 @@ export default function Dashboard() {
               <p className="text-white/60 text-sm">Find inner peace</p>
             </div>
           </Link>
-        </div>
-
-        {/* Recent Activity Section */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-xl shadow-black/40 p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
-            <button className="text-yellow-400 hover:text-yellow-300 transition-colors font-medium">
-              View All
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-2 mb-8 border-b border-white/10">
-            <button
-              onClick={() => setActiveTab('active')}
-              className={`px-4 py-3 font-medium transition-all duration-200 border-b-2 ${
-                activeTab === 'active'
-                  ? 'text-yellow-400 border-yellow-400'
-                  : 'text-white/60 border-transparent hover:text-white hover:border-white/20'
-              }`}
-            >
-              Active Sessions
-            </button>
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className={`px-4 py-3 font-medium transition-all duration-200 border-b-2 ${
-                activeTab === 'upcoming'
-                  ? 'text-yellow-400 border-yellow-400'
-                  : 'text-white/60 border-transparent hover:text-white hover:border-white/20'
-              }`}
-            >
-              Upcoming
-            </button>
-            <button
-              onClick={() => setActiveTab('past')}
-              className={`px-4 py-3 font-medium transition-all duration-200 border-b-2 ${
-                activeTab === 'past'
-                  ? 'text-yellow-400 border-yellow-400'
-                  : 'text-white/60 border-transparent hover:text-white hover:border-white/20'
-              }`}
-            >
-              Past Sessions
-            </button>
-          </div>
-
-          {/* Content Area */}
-          <div className="min-h-[400px]">
-            {dashboardLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
-              </div>
-            ) : filteredEngagements.length === 0 ? (
-              /* Empty State */
-              <div className="text-center py-16">
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-                    <MessageCircle className="w-10 h-10 text-white/40" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-3">✨ No {activeTab} Sessions</h3>
-                <p className="text-white/60 mb-8 max-w-md mx-auto">
-                  {activeTab === 'active' 
-                    ? "You don't have any active sessions right now. Start by browsing our expert astrologers."
-                    : activeTab === 'upcoming'
-                    ? "No upcoming sessions scheduled. Book a consultation to get started."
-                    : "No past sessions yet. Your consultation history will appear here."
-                  }
-                </p>
-                <button
-                  onClick={() => router.push('/astrology')}
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-black rounded-full font-semibold shadow-lg shadow-yellow-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  Browse Experts
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            ) : (
-              /* Engagement Cards */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEngagements.map((booking: any) => (
-                  <EngagementCard key={booking.id} booking={booking} type={activeTab} />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Additional Premium Features */}

@@ -2,7 +2,16 @@ import { createClient } from '@supabase/supabase-js'
 
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      debug: false
+    }
+  }
 )
 
 export type Database = {
@@ -123,6 +132,7 @@ export type Database = {
           video_enabled: boolean
           is_online: boolean
           cost_per_minute: number
+          hourly_rate: number
           response_time: string
         }
         Insert: {
@@ -140,6 +150,7 @@ export type Database = {
           video_enabled?: boolean
           is_online?: boolean
           cost_per_minute?: number
+          hourly_rate?: number
           response_time?: string
         }
         Update: {
@@ -157,7 +168,93 @@ export type Database = {
           video_enabled?: boolean
           is_online?: boolean
           cost_per_minute?: number
+          hourly_rate?: number
           response_time?: string
+        }
+      }
+      appointments: {
+        Row: {
+          id: string
+          user_id: string
+          expert_id: string
+          service_category: 'astrology' | 'counselling' | 'yoga' | 'meditation'
+          appointment_date: string
+          appointment_time: string
+          duration_minutes: number
+          status: 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled'
+          amount_paid: number
+          hourly_rate: number
+          payment_status: 'pending' | 'paid' | 'refunded'
+          notes?: string
+          meeting_link?: string
+          meeting_mode: 'video' | 'audio' | 'in_person'
+          created_at: string
+          updated_at: string
+          cancelled_at?: string
+          cancellation_reason?: string
+          rescheduled_from?: string
+        }
+        Insert: {
+          user_id: string
+          expert_id: string
+          service_category?: 'astrology' | 'counselling' | 'yoga' | 'meditation'
+          appointment_date: string
+          appointment_time: string
+          duration_minutes?: number
+          status?: 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled'
+          amount_paid: number
+          hourly_rate: number
+          payment_status?: 'pending' | 'paid' | 'refunded'
+          notes?: string
+          meeting_link?: string
+          meeting_mode?: 'video' | 'audio' | 'in_person'
+          created_at?: string
+          updated_at?: string
+          cancelled_at?: string
+          cancellation_reason?: string
+          rescheduled_from?: string
+        }
+        Update: {
+          user_id?: string
+          expert_id?: string
+          service_category?: 'astrology' | 'counselling' | 'yoga' | 'meditation'
+          appointment_date?: string
+          appointment_time?: string
+          duration_minutes?: number
+          status?: 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled'
+          amount_paid?: number
+          hourly_rate?: number
+          payment_status?: 'pending' | 'paid' | 'refunded'
+          notes?: string
+          meeting_link?: string
+          meeting_mode?: 'video' | 'audio' | 'in_person'
+          updated_at?: string
+          cancelled_at?: string
+          cancellation_reason?: string
+          rescheduled_from?: string
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          session_id: string
+          sender_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          sender_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          sender_id?: string
+          content?: string
+          created_at?: string
         }
       }
       user_wallet: {

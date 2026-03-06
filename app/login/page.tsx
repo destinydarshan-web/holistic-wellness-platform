@@ -23,14 +23,22 @@ export default function LoginPage() {
   const { user, profile, loading } = useAuth()
 
   useEffect(() => {
-    if (!loading && user && profile) {
-      if (profile.role === "expert" || profile.role === "astrologer") {
-        if (profile.status === "pending") {
-          router.replace("/account-under-review")
-        } else if (profile.status === "approved") {
-          router.replace("/expert-dashboard")
+    if (!loading && user) {
+      // Redirect immediately when user is authenticated
+      // Profile loading will happen on the dashboard page
+      if (profile) {
+        // If profile is already loaded, use role-based redirect
+        if (profile.role === "expert" || profile.role === "astrologer") {
+          if (profile.status === "pending") {
+            router.replace("/account-under-review")
+          } else if (profile.status === "approved") {
+            router.replace("/expert-dashboard")
+          }
+        } else {
+          router.replace("/dashboard")
         }
       } else {
+        // If profile isn't loaded yet, redirect to dashboard and let it handle profile loading
         router.replace("/dashboard")
       }
     }

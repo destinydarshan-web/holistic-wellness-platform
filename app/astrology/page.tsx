@@ -7,18 +7,18 @@ import Link from 'next/link'
 
 interface Expert {
   id: string
-  name: string
-  specialization: string
+  display_name: string
+  avatar_url: string
   bio: string
-  rating: number
-  reviews: number
-  experience: string
-  responseTime: string
-  price: number
-  image: string
-  online: boolean
-  verified: boolean
+  experience_years: number
+  price_per_minute: number
+  hourly_rate: number
+  specialties: string[]
+  is_profile_complete: boolean
+  is_online: boolean
   modes: string[]
+  created_at?: string
+  updated_at?: string
 }
 
 export default function AstrologyPage() {

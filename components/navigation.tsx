@@ -204,14 +204,24 @@ export function Navigation() {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-[#111] border border-white/10 shadow-xl rounded-xl p-2 z-50">
                     {/* Show Dashboard only for non-expert users */}
                     {profile?.role !== 'expert' && profile?.role !== 'astrologer' && (
-                      <Link
-                        href={getDashboardLink()}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                      >
-                        <LayoutDashboard size={16} />
-                        <span className="text-sm">Dashboard</span>
-                      </Link>
+                      <>
+                        <Link
+                          href={getDashboardLink()}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <LayoutDashboard size={16} />
+                          <span className="text-sm">Dashboard</span>
+                        </Link>
+                        <Link
+                          href="/appointments"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <Calendar size={16} />
+                          <span className="text-sm">Appointments</span>
+                        </Link>
+                      </>
                     )}
                     
                     {/* Expert-specific menu items */}
@@ -398,14 +408,24 @@ export function Navigation() {
                     <div className="space-y-2">
                       {/* Show Dashboard only for non-expert users */}
                       {profile?.role !== 'expert' && profile?.role !== 'astrologer' && (
-                        <Link
-                          href={getDashboardLink()}
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide"
-                        >
-                          <LayoutDashboard size={16} />
-                          <span>Dashboard</span>
-                        </Link>
+                        <>
+                          <Link
+                            href={getDashboardLink()}
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide"
+                          >
+                            <LayoutDashboard size={16} />
+                            <span>Dashboard</span>
+                          </Link>
+                          <Link
+                            href="/appointments"
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide"
+                          >
+                            <Calendar size={16} />
+                            <span>Appointments</span>
+                          </Link>
+                        </>
                       )}
                       
                       {/* Expert-specific mobile menu */}

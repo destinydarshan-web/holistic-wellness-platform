@@ -44,27 +44,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
 
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
 
-      if (currentUser) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .single();
+        if (currentUser) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .single();
+
+          if (mounted) {
+            setProfile(data);
+          }
+        }
 
         if (mounted) {
-          setProfile(data);
+          setLoading(false);
         }
-      }
-
-      if (mounted) {
-        setLoading(false);
+      } catch (error: any) {
+        console.error('Auth initialization error:', error);
+        
+        // Handle lock timeout errors gracefully
+        if (error.message?.includes('Navigator LockManager') || error.message?.includes('timed out')) {
+          console.log('Auth lock timeout - retrying...');
+          // Retry after a short delay
+          setTimeout(() => {
+            if (mounted) init();
+          }, 1000);
+        } else {
+          // For other errors, just finish loading
+          if (mounted) {
+            setLoading(false);
+          }
+        }
       }
     };
 

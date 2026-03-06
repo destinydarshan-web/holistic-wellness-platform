@@ -5,7 +5,7 @@ import { Poppins, Merriweather } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
+import { ConditionalFooter } from '@/components/ConditionalFooter'
 import { GlobalBackground } from '@/components/layout/GlobalBackground'
 
 const poppins = Poppins({
@@ -51,7 +51,7 @@ export default function RootLayout({
               <main className="flex-1">
                 {children}
               </main>
-              <Footer />
+              <ConditionalFooter />
             </div>
           </GlobalBackground>
         </AuthProvider>

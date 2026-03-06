@@ -18,7 +18,7 @@ export default function MeditationPage() {
   const [bookingOpen, setBookingOpen] = useState(false)
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#0f172a] to-[#0b1220]">
       <Navigation />
 
       <main className="flex-1">

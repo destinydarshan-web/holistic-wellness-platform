@@ -5,7 +5,27 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Database } from '@/lib/supabaseClient'
 import { supabase as supabaseClient } from '@/lib/supabaseClient'
-import { MessageCircle, Clock, User } from 'lucide-react'
+import { 
+  MessageCircle, 
+  Clock, 
+  User, 
+  Shield, 
+  Lock, 
+  Heart, 
+  Sparkles, 
+  X, 
+  HelpCircle,
+  ChevronRight,
+  RefreshCw,
+  Phone,
+  Video,
+  Star,
+  AlertCircle,
+  Calendar,
+  DollarSign,
+  CheckCircle
+} from 'lucide-react'
+import Link from 'next/link'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row']
 
@@ -15,6 +35,7 @@ export default function ChatSessionPage() {
   const params = useParams()
   const [session, setSession] = useState<LiveSession | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const sessionId = params.sessionId as string
 
   // 3️⃣ Add Initial Status Check (Important)
@@ -133,12 +154,65 @@ export default function ChatSessionPage() {
     fetchSession()
   }, [user?.id, params.sessionId])
 
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      const { data, error } = await supabaseClient
+        .from("live_sessions")
+        .select("*")
+        .eq("id", sessionId)
+        .single();
+
+      if (data?.status === "accepted") {
+        router.push(`/session/chat/${sessionId}`);
+      } else if (data?.status === "rejected") {
+        alert("Session rejected by expert.");
+        router.push("/astrology");
+      } else if (data) {
+        setSession(data)
+      }
+    } catch (error) {
+      console.error('Error refreshing session:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+      case 'active': return 'bg-green-500/20 text-green-400 border border-green-500/30'
+      case 'completed': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+      case 'rejected': return 'bg-red-500/20 text-red-400 border border-red-500/30'
+      default: return 'bg-white/10 text-white border border-white/20'
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return <Clock className="w-4 h-4 animate-pulse" />
+      case 'active': return <MessageCircle className="w-4 h-4" />
+      case 'completed': return <CheckCircle className="w-4 h-4" />
+      case 'rejected': return <X className="w-4 h-4" />
+      default: return <AlertCircle className="w-4 h-4" />
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading chat session...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] pt-20 flex items-center justify-center">
+        {/* Background Effects */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,200,0,0.03),_transparent_60%)]"></div>
+        </div>
+        <div className="relative z-10">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-400"></div>
+            <div className="absolute top-0 left-0 animate-ping">
+              <div className="h-16 w-16 rounded-full bg-yellow-400 opacity-20"></div>
+            </div>
+          </div>
+          <p className="text-white/60 mt-4">Loading chat session...</p>
         </div>
       </div>
     )
@@ -146,106 +220,167 @@ export default function ChatSessionPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Session Not Found</h2>
-          <p className="text-gray-600 mb-4">This chat session could not be found or may have expired.</p>
-          <button
-            onClick={() => router.push('/astrology')}
-            className="px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors"
+      <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] pt-20 flex items-center justify-center">
+        {/* Background Effects */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,200,0,0.03),_transparent_60%)]"></div>
+        </div>
+        <div className="relative z-10 text-center">
+          <div className="relative w-24 h-24 mx-auto mb-6">
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center">
+              <MessageCircle className="w-12 h-12 text-white/60" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Session Not Found</h2>
+          <p className="text-gray-300 mb-6 max-w-md mx-auto">
+            This chat session could not be found or may have expired.
+          </p>
+          <Link 
+            href="/astrology"
+            className="group inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white hover:bg-white/15 transition-all duration-300"
           >
+            <ChevronRight className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" />
             Back to Experts
-          </button>
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] pt-20">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,200,0,0.03),_transparent_60%)]"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className="relative bg-white/5 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-blue-600" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/10 rounded-full blur-lg opacity-50"></div>
+                <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-2 rounded-full">
+                  <MessageCircle className="w-6 h-6 text-white" />
+                </div>
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Chat Session</h1>
-                <p className="text-sm text-gray-600">Session ID: {session.id}</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-white">Live Chat Session</h1>
+                <p className="text-gray-400 text-xs">Session ID: {session.id}</p>
               </div>
             </div>
+            
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium
-                ${session.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : ''}
-                ${session.status === 'active' ? 'bg-green-100 text-green-700' : ''}
-                ${session.status === 'completed' ? 'bg-gray-100 text-gray-700' : ''}
-              `}>
-                {session.status}
-              </span>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(session.status)}`}>
+                {getStatusIcon(session.status)}
+                <span className="capitalize">{session.status}</span>
+              </div>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="group relative px-3 py-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white hover:bg-white/15 transition-all duration-300 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-4 sm:p-6">
           {/* Waiting State */}
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Clock className="w-8 h-8 text-blue-600 animate-pulse" />
+          <div className="text-center py-4 sm:py-6">
+            {/* Animated Waiting Icon */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4">
+              <div className="absolute inset-0 bg-yellow-500/20 rounded-full blur-lg opacity-50 animate-pulse"></div>
+              <div className="relative bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/30 rounded-full flex items-center justify-center">
+                <Clock className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 animate-pulse" />
+              </div>
             </div>
             
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
               Waiting for expert to accept...
             </h2>
             
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Your chat session has been created. The expert will be notified and will join shortly. 
-              Please wait while we connect you with your astrologer.
+            <p className="text-gray-300 mb-4 max-w-xl mx-auto text-sm">
+              Your chat session has been created. The expert will be notified and will join shortly.
             </p>
 
-            {/* Session Details */}
-            <div className="bg-gray-50 rounded-lg p-6 max-w-sm mx-auto">
-              <h3 className="font-medium text-gray-900 mb-4">Session Details</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Session Type:</span>
-                  <span className="font-medium capitalize">Chat</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Service:</span>
-                  <span className="font-medium capitalize">{session.service_category}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span className="font-medium capitalize">{session.status}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="font-medium">
-                    {new Date(session.created_at).toLocaleString()}
+            {/* Session Details Card */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 max-w-sm mx-auto mb-4">
+              <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-yellow-400" />
+                Session Details
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center py-1 border-b border-white/10">
+                  <span className="text-gray-400 flex items-center gap-1">
+                    <MessageCircle className="w-3 h-3" />
+                    Type
                   </span>
+                  <span className="text-white font-medium">Chat</span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-white/10">
+                  <span className="text-gray-400 flex items-center gap-1">
+                    <Star className="w-3 h-3" />
+                    Service
+                  </span>
+                  <span className="text-white font-medium capitalize">{session.service_category}</span>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-gray-400 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Status
+                  </span>
+                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(session.status)}`}>
+                    {getStatusIcon(session.status)}
+                    <span className="capitalize">{session.status}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="bg-blue-500/10 backdrop-blur-sm border border-blue-500/30 rounded-xl p-3 max-w-sm mx-auto mb-4">
+              <div className="flex items-start gap-2">
+                <Shield className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="text-left">
+                  <h4 className="text-white font-medium mb-1 text-sm">Secure & Private</h4>
+                  <p className="text-gray-300 text-xs">
+                    Your conversation is encrypted and private.
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 justify-center mt-8">
-              <button
-                onClick={() => router.push('/astrology')}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Link 
+                href="/astrology"
+                className="group flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white hover:bg-white/15 transition-all duration-300 text-sm"
               >
+                <ChevronRight className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
                 Leave Session
-              </button>
+              </Link>
               <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="group flex items-center gap-2 px-4 py-2 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30 text-yellow-400 rounded-full hover:bg-yellow-500/30 transition-all duration-300 disabled:opacity-50 text-sm"
               >
-                Refresh Status
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
+                Refresh
+              </button>
+            </div>
+
+            {/* Help Section */}
+            <div className="mt-4 text-center">
+              <button className="group inline-flex items-center gap-1 text-gray-400 hover:text-white transition-colors duration-300 text-xs">
+                <HelpCircle className="w-3 h-3 group-hover:scale-110 transition-transform duration-300" />
+                <span>Need help? Contact support</span>
               </button>
             </div>
           </div>

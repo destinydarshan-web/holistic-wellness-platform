@@ -13,6 +13,7 @@ interface ExpertProfile {
   bio: string
   experience_years: number
   price_per_minute: number
+  hourly_rate: number
   specialties: string[]
   is_profile_complete: boolean
   is_online: boolean
@@ -20,7 +21,7 @@ interface ExpertProfile {
   updated_at?: string
 }
 
-const SPECIALIZATIONS = [
+const ASTROLOGY_SPECIALIZATIONS = [
   'Vedic Astrology',
   'Western Astrology',
   'Numerology',
@@ -33,10 +34,67 @@ const SPECIALIZATIONS = [
   'Remedial Astrology'
 ]
 
+const YOGA_SPECIALIZATIONS = [
+  'Hatha Yoga',
+  'Vinyasa Flow',
+  'Ashtanga Yoga',
+  'Iyengar Yoga',
+  'Bikram Yoga',
+  'Kundalini Yoga',
+  'Yin Yoga',
+  'Restorative Yoga',
+  'Power Yoga',
+  'Prenatal Yoga',
+  'Aerial Yoga',
+  'Acro Yoga',
+  'Meditation & Mindfulness',
+  'Yoga Therapy',
+  'Kids Yoga',
+  'Senior Yoga',
+  'Corporate Wellness',
+  'Yoga Nidra',
+  'Breathwork',
+  'Alignment & Posture',
+  'Stress Relief Yoga',
+  'Flexibility Training',
+  'Yoga Philosophy',
+  'Ayurvedic Yoga',
+  'Yoga Retreats',
+  'Yoga Teacher Training',
+  'Yoga Workshops'
+]
+
+const COUNSELLING_SPECIALIZATIONS = [
+  'Cognitive Behavioral Therapy',
+  'Relationship Counselling',
+  'Career Counselling',
+  'Mental Health Counselling',
+  'Family Therapy',
+  'Stress Management',
+  'Anxiety & Depression',
+  'Life Coaching',
+  'Substance Abuse Counselling',
+  'Grief Counselling'
+]
+
 export default function ExpertProfilePage() {
   const { user, profile } = useAuth()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Determine specializations based on specialization
+  const getSpecializations = () => {
+    if (profile?.specialization === 'astrologer') {
+      return ASTROLOGY_SPECIALIZATIONS
+    } else if (profile?.specialization === 'counsellor') {
+      return COUNSELLING_SPECIALIZATIONS
+    } else if (profile?.specialization === 'yoga_trainer') {
+      return YOGA_SPECIALIZATIONS
+    } else {
+      return []
+    }
+  }
+  
   const [profileData, setProfileData] = useState<ExpertProfile>({
     id: user?.id || '',
     display_name: '',
@@ -44,6 +102,7 @@ export default function ExpertProfilePage() {
     bio: '',
     experience_years: 0,
     price_per_minute: 299,
+    hourly_rate: 17940, // Default hourly rate (299 * 60)
     specialties: [],
     is_profile_complete: false,
     is_online: false
@@ -87,8 +146,25 @@ export default function ExpertProfilePage() {
       
       console.log('=== DEBUG: Fetching profile for user:', user.id)
       
-      const { data, error } = await supabase
-        .from("expert_astrologers")
+      // Determine table name based on specialization
+      let tableName = ""
+      console.log('=== DEBUG: Profile object (fetch) ===', profile)
+      console.log('=== DEBUG: Profile role (fetch) ===', profile?.role)
+      console.log('=== DEBUG: Profile specialization (fetch) ===', profile?.specialization)
+      console.log('=== DEBUG: Profile specialization type (fetch) ===', typeof profile?.specialization)
+      
+      if (profile?.specialization === 'counsellor') {
+        tableName = "expert_counsellors"
+      } else if (profile?.specialization === 'yoga_trainer') {
+        tableName = "expert_yoga"
+      } else {
+        tableName = "expert_astrologers" // Default for astrologer
+      }
+      
+      console.log('=== DEBUG: Fetching from table ===', tableName)
+      
+      let { data, error } = await supabase
+        .from(tableName)
         .select("*")
         .eq("id", user.id)
         .single()
@@ -97,11 +173,64 @@ export default function ExpertProfilePage() {
       console.log('Data:', data)
       console.log('Error:', error)
 
+      // If error and it's a counsellor or yoga trainer, try the other tables as fallback
+      if (error && (profile?.specialization === 'counsellor' || profile?.specialization === 'yoga_trainer')) {
+        console.log(`=== DEBUG: Error fetching from ${tableName}, trying fallback tables ===`)
+        
+        // Try expert_astrologers as fallback
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("expert_astrologers")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+        
+        console.log('=== DEBUG: Fallback fetch result ===')
+        console.log('Fallback Data:', fallbackData)
+        console.log('Fallback Error:', fallbackError)
+        
+        if (!fallbackError && fallbackData) {
+          // Use fallback data
+          data = fallbackData
+          error = null
+          console.log('=== DEBUG: Using fallback data from expert_astrologers ===')
+        } else if (profile?.specialization === 'counsellor') {
+          // For counsellors, also try expert_counsellors
+          const { data: secondFallback, error: secondFallbackError } = await supabase
+            .from("expert_counsellors")
+            .select("*")
+            .eq("id", user.id)
+            .single()
+          
+          if (!secondFallbackError && secondFallback) {
+            data = secondFallback
+            error = null
+            console.log('=== DEBUG: Using second fallback data from expert_counsellors ===')
+          }
+        }
+      }
+
       if (error) {
-        console.error('=== DEBUG: Error loading profile ===', error)
+        // Only log error if it's not a "no rows found" error
+        if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
+          console.error('=== DEBUG: Error loading profile ===', error)
+          console.log('=== DEBUG: Error details ===', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
+        } else {
+          // Expected case - profile doesn't exist yet
+          console.log('=== DEBUG: Profile does not exist yet (expected) ===')
+        }
+        
+        // Handle different error types
         if (error.code === 'PGRST116') {
           // No rows found - profile doesn't exist yet
           console.log('=== DEBUG: Profile does not exist yet, using defaults ===')
+        } else if (error.message?.includes('No rows found')) {
+          // Profile doesn't exist in this table yet
+          console.log('=== DEBUG: Profile not found in table, using defaults ===')
         } else {
           // Other error
           console.error('=== DEBUG: Database error ===', error)
@@ -120,6 +249,7 @@ export default function ExpertProfilePage() {
           bio: data.bio || '',
           experience_years: data.experience_years || 0,
           price_per_minute: data.price_per_minute || 299,
+          hourly_rate: data.hourly_rate || (data.price_per_minute || 299) * 60,
           specialties: data.specialties || [],
           is_profile_complete: data.is_profile_complete || false,
           is_online: data.is_online || false
@@ -173,22 +303,84 @@ export default function ExpertProfilePage() {
       if (profileData.bio !== undefined) updateData.bio = profileData.bio
       if (profileData.experience_years !== undefined) updateData.experience_years = profileData.experience_years
       if (profileData.price_per_minute !== undefined) updateData.price_per_minute = profileData.price_per_minute
-      if (profileData.specialties) updateData.specialties = profileData.specialties
+      if (profileData.hourly_rate !== undefined) updateData.hourly_rate = profileData.hourly_rate
+      if (profileData.specialties) {
+        updateData.specialties = profileData.specialties
+        console.log('=== DEBUG: Specialties being saved ===', profileData.specialties)
+        console.log('=== DEBUG: Specialties type ===', typeof profileData.specialties)
+        console.log('=== DEBUG: Specialties length ===', profileData.specialties.length)
+      }
       if (profileData.avatar_url !== undefined) updateData.avatar_url = profileData.avatar_url
       if (profileData.is_online !== undefined) updateData.is_online = profileData.is_online
 
+      // Check if profile is complete
+      const isComplete = 
+        profileData.display_name && 
+        profileData.bio && 
+        profileData.experience_years !== undefined && 
+        profileData.price_per_minute !== undefined &&
+        profileData.specialties && 
+        profileData.specialties.length > 0
+      
+      updateData.is_profile_complete = isComplete
+      
+      console.log('=== DEBUG: Profile completeness check ===')
+      console.log('Display name:', !!profileData.display_name)
+      console.log('Bio:', !!profileData.bio)
+      console.log('Experience years:', profileData.experience_years !== undefined)
+      console.log('Price per minute:', profileData.price_per_minute !== undefined)
+      console.log('Specialties:', profileData.specialties?.length || 0)
+      console.log('Is complete:', isComplete)
+
       console.log('=== DEBUG: Update data ===', updateData)
 
-      // Try update first, then insert if not exists
-      const { data, error } = await supabase
-        .from('expert_astrologers')
+      // Determine table name based on specialization
+      let tableName = ""
+      console.log('=== DEBUG: Profile object ===', profile)
+      console.log('=== DEBUG: Profile role ===', profile?.role)
+      console.log('=== DEBUG: Profile specialization ===', profile?.specialization)
+      console.log('=== DEBUG: Profile specialization type ===', typeof profile?.specialization)
+      
+      if (profile?.specialization === 'counsellor') {
+        tableName = "expert_counsellors"
+      } else if (profile?.specialization === 'yoga_trainer') {
+        tableName = "expert_yoga"
+      } else if (profile?.specialization === 'astrologer') {
+        tableName = "expert_astrologers"
+      } else {
+        // Default fallback - but this should not happen with proper role setup
+        console.warn('=== DEBUG: Unknown specialization, defaulting to expert_astrologers ===', profile?.specialization)
+        tableName = "expert_astrologers"
+      }
+      
+      // Additional safeguard: Prevent counsellors from saving to expert_astrologers
+      if (profile?.specialization === 'counsellor' && tableName === 'expert_astrologers') {
+        console.error('=== DEBUG: ERROR: Attempting to save counsellor to expert_astrologers table ===')
+        setSaveMessage({
+          type: 'error',
+          message: 'System error: Counsellors cannot be saved to astrologers table. Please contact support.'
+        })
+        setSaving(false)
+        return
+      }
+      
+console.log('=== DEBUG: Saving to table ===', tableName)
+
+      const query = supabase
+        .from(tableName)
         .upsert(updateData)
         .select()
         .single()
 
+      const result = await query
+      const data = result.data
+      const error = result.error
+
       console.log('=== DEBUG: Save Response ===')
       console.log('Data:', data)
       console.log('Error:', error)
+      console.log('Specialties in saved data:', data?.specialties)
+      console.log('Specialties type in saved data:', typeof data?.specialties)
 
       if (error) {
         console.error('=== DEBUG: Save Error ===', error)
@@ -196,19 +388,19 @@ export default function ExpertProfilePage() {
           type: 'error',
           message: `Failed to save profile: ${error.message}`
         })
+        setSaving(false)
         return
       }
 
       console.log('=== DEBUG: Profile saved successfully ===')
       setSaveMessage({
         type: 'success',
-        message: 'Profile updated successfully!'
+        message: 'Profile saved successfully!'
       })
-
-      // Update local state with saved data
-      if (data) {
-        setProfileData(data)
-      }
+      
+      // Reload profile to verify the save
+      console.log('=== DEBUG: Reloading profile to verify save ===')
+      await loadProfile()
 
     } catch (err: any) {
       console.error('=== DEBUG: Unexpected error in handleSave ===', err)
@@ -442,7 +634,7 @@ export default function ExpertProfilePage() {
               Specialties *
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {SPECIALIZATIONS.map((specialty) => (
+              {getSpecializations().map((specialty: string) => (
                 <button
                   key={specialty}
                   onClick={() => handleSpecialtyToggle(specialty)}
@@ -464,19 +656,37 @@ export default function ExpertProfilePage() {
               <DollarSign className="w-5 h-5 text-yellow-500" />
               Pricing
             </h3>
-            <div className="max-w-xs">
-              <label className="block text-sm font-medium text-white/80 mb-2">
-                Price per Minute (₹) *
-              </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3.5 w-5 h-5 text-white/40" />
-                <input
-                  type="number"
-                  value={profileData.price_per_minute}
-                  onChange={(e) => handleInputChange('price_per_minute', parseInt(e.target.value) || 0)}
-                  className="w-full pl-10 pr-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
-                  placeholder="299"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Price per Minute (₹) *
+                </label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3.5 w-5 h-5 text-white/40" />
+                  <input
+                    type="number"
+                    value={profileData.price_per_minute}
+                    onChange={(e) => handleInputChange('price_per_minute', parseInt(e.target.value) || 0)}
+                    className="w-full pl-10 pr-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
+                    placeholder="299"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Hourly Rate (₹) *
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-3.5 w-5 h-5 text-white/40" />
+                  <input
+                    type="number"
+                    value={profileData.hourly_rate || 17940}
+                    onChange={(e) => handleInputChange('hourly_rate', parseInt(e.target.value) || 17940)}
+                    className="w-full pl-10 pr-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
+                    placeholder="17940"
+                  />
+                </div>
+                <p className="text-xs text-white/50 mt-1">For appointment bookings (1 hour)</p>
               </div>
             </div>
           </div>
