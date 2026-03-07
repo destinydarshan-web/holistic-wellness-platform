@@ -138,10 +138,37 @@ export default function LoginPage() {
 
           console.log("Profile created successfully")
 
-          // Create expert_astrologers entry for astrologers with default values
+          // Create expert entry in correct table based on specialization
           if (formData.role === 'expert' || formData.role === 'astrologer') {
+            let tableName = 'expert_astrologers' // default fallback
+            let roleLabel = 'Expert'
+            
+            // Determine correct table based on role and specialization
+            if (formData.role === 'expert') {
+              // For expert role, check specialization to determine table
+              if (formData.specialization === 'meditation_expert') {
+                tableName = 'expert_meditation'
+                roleLabel = 'Meditation Expert'
+              } else if (formData.specialization === 'counsellor') {
+                tableName = 'expert_counsellors'
+                roleLabel = 'Counsellor'
+              } else if (formData.specialization === 'yoga_trainer') {
+                tableName = 'expert_yoga'
+                roleLabel = 'Yoga Trainer'
+              } else {
+                // Default for expert role
+                tableName = 'expert_meditation'
+                roleLabel = 'Meditation Expert'
+              }
+            } else if (formData.role === 'astrologer') {
+              tableName = 'expert_astrologers'
+              roleLabel = 'Astrologer'
+            }
+            
+            console.log(`Creating ${roleLabel} profile in ${tableName} table (role: ${formData.role}, specialization: ${formData.specialization})`)
+            
             const { error: expertError } = await supabase
-              .from("expert_astrologers")
+              .from(tableName)
               .insert({
                 id: data.user.id,
                 display_name: formData.fullName,
@@ -154,10 +181,10 @@ export default function LoginPage() {
               })
 
             if (expertError) {
-              console.error("Expert profile insert failed:", expertError)
+              console.error(`${roleLabel} profile insert failed:`, expertError)
               // Don't fail the signup, just log the error
             } else {
-              console.log("Expert profile created successfully")
+              console.log(`${roleLabel} profile created successfully in ${tableName} table`)
             }
           }
 

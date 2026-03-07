@@ -1,195 +1,328 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
-import { ProductCard } from '@/components/ProductCard'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ArrowRight, Filter, SortAsc } from 'lucide-react'
-
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  category?: string
-}
-
-const products: Product[] = [
-  {
-    id: 'rudraksha-mala',
-    name: 'Rudraksha Mala',
-    description: 'Authentic 5-faced Rudraksha mala for spiritual protection and meditation. Helps in maintaining peace and harmony.',
-    price: 1299,
-    image: '/images/products/rudraksha-mala.jpg',
-    category: 'Spiritual'
-  },
-  {
-    id: 'healing-crystals-kit',
-    name: 'Healing Crystals Kit',
-    description: 'Complete set of 7 chakra healing crystals with guidebook. Perfect for energy balancing and meditation practices.',
-    price: 2499,
-    image: '/images/products/healing-crystals-kit.jpg',
-    category: 'Spiritual'
-  },
-  {
-    id: 'chakra-balancing-incense',
-    name: 'Chakra Balancing Incense',
-    description: 'Handcrafted natural incense sticks for chakra alignment. Includes 7 fragrances for each energy center.',
-    price: 599,
-    image: '/images/products/chakra-incense.jpg',
-    category: 'Meditation'
-  },
-  {
-    id: 'meditation-cushion',
-    name: 'Meditation Cushion',
-    description: 'Ergonomic meditation cushion with buckwheat filling. Provides comfortable support for extended meditation sessions.',
-    price: 1899,
-    image: '/images/products/meditation-cushion.jpg',
-    category: 'Meditation'
-  },
-  {
-    id: 'spiritual-journal',
-    name: 'Spiritual Journal',
-    description: 'Guided journal for self-reflection and spiritual growth. Includes prompts and exercises for inner exploration.',
-    price: 799,
-    image: '/images/products/spiritual-journal.jpg',
-    category: 'Spiritual'
-  },
-  {
-    id: 'astrology-consultation-kit',
-    name: 'Astrology Consultation Kit',
-    description: 'Complete kit for astrology consultation including birth chart analysis and personalized remedies.',
-    price: 3499,
-    image: '/images/products/astrology-kit.jpg',
-    category: 'Astrology'
-  }
-]
-
-const categories = ['All', 'Spiritual', 'Meditation', 'Astrology']
+import { Mail, Clock, Sparkles, Star, Package, Bell, ArrowRight, Check } from 'lucide-react'
 
 export default function ProductsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [sortBy, setSortBy] = useState<'default' | 'price-low-high' | 'price-high-low'>('default')
-
-  const filteredProducts = products.filter(product => {
-    if (selectedCategory === 'All') return true
-    return product.category === selectedCategory
+  const [email, setEmail] = useState('')
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [countdown, setCountdown] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
   })
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (sortBy === 'price-low-high') return a.price - b.price
-    if (sortBy === 'price-high-low') return b.price - a.price
-    return 0
-  })
+  useEffect(() => {
+    // Set launch date to 30 days from now
+    const launchDate = new Date()
+    launchDate.setDate(launchDate.getDate() + 30)
 
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category)
+    const timer = setInterval(() => {
+      const now = new Date().getTime()
+      const distance = launchDate.getTime() - now
+
+      if (distance > 0) {
+        setCountdown({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        })
+      } else {
+        clearInterval(timer)
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (email) {
+      setIsSubscribed(true)
+      setTimeout(() => setIsSubscribed(false), 3000)
+    }
   }
 
-  const handleSortChange = () => {
-    if (sortBy === 'default') setSortBy('price-low-high')
-    else if (sortBy === 'price-low-high') setSortBy('price-high-low')
-    else setSortBy('default')
-  }
+  const features = [
+    {
+      icon: <Package className="w-6 h-6" />,
+      title: "Curated Spiritual Products",
+      description: "Hand-selected items from authentic sources"
+    },
+    {
+      icon: <Star className="w-6 h-6" />,
+      title: "Quality Assured",
+      description: "Every product tested for authenticity and effectiveness"
+    },
+    {
+      icon: <Sparkles className="w-6 h-6" />,
+      title: "Expert Recommendations",
+      description: "Products approved by our team of spiritual experts"
+    },
+    {
+      icon: <Bell className="w-6 h-6" />,
+      title: "Launch Notifications",
+      description: "Be the first to know when we go live"
+    }
+  ]
+
+  const categories = [
+    { name: "Rudraksha & Malas", color: "from-orange-400 to-red-500" },
+    { name: "Healing Crystals", color: "from-purple-400 to-pink-500" },
+    { name: "Meditation Essentials", color: "from-blue-400 to-cyan-500" },
+    { name: "Spiritual Books", color: "from-green-400 to-emerald-500" },
+    { name: "Incense & Aromatherapy", color: "from-yellow-400 to-orange-500" },
+    { name: "Yoga Accessories", color: "from-indigo-400 to-purple-500" }
+  ]
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-black">
       <Navigation />
-
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
-          <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Spiritual Wellness Products
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8">
-              Discover carefully selected products to enhance your spiritual journey, meditation practice, and overall well-being.
-            </p>
-            
-            {/* Category Filter Tabs */}
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCategory === category
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
-            {/* Sort Button */}
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={handleSortChange}
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                <SortAsc className="w-4 h-4 mr-2" />
-                {sortBy === 'default' ? 'Sort' : sortBy === 'price-low-high' ? 'Price: Low to High' : 'Price: High to Low'}
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Products Grid */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            {sortedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-                {sortedProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    id={product.id}
-                    name={product.name}
-                    description={product.description}
-                    price={product.price}
-                    image={product.image}
-                    category={product.category}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground text-lg">
-                  No products found in {selectedCategory} category.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
+      
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-[#fdce20]/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-[#d8b4fe]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-[#fdce20]/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+        
+        <div className="relative z-10 px-4 py-24 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Need Personalized Recommendations?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Our experts can help you choose the perfect products based on your spiritual needs and wellness goals.
-            </p>
-            <Button 
-              asChild
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3"
-            >
-              <a href="/contact" className="inline-flex items-center">
-                Get Personalized Guidance
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </a>
-            </Button>
+            {/* Coming Soon Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-full mb-8">
+              <Sparkles className="w-5 h-5 text-[#fdce20]" />
+              <span className="text-[#d8b4fe] font-medium">Coming Soon</span>
+            </div>
+            
+            {/* Main Heading */}
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
+              <span className="text-[#fdce20]">
+                Spiritual Marketplace
+              </span>
+            </h1>
+            
+            
+            
+            {/* Countdown Timer */}
+            <div className="mb-16">
+              <h3 className="text-lg text-white/60 mb-6">Launching in</h3>
+              <div className="grid grid-cols-4 gap-4 sm:gap-8 max-w-2xl mx-auto">
+                <div className="text-center">
+                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
+                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.days}</div>
+                    <div className="text-sm text-[#d8b4fe]">Days</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
+                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.hours}</div>
+                    <div className="text-sm text-[#d8b4fe]">Hours</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
+                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.minutes}</div>
+                    <div className="text-sm text-[#d8b4fe]">Minutes</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
+                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.seconds}</div>
+                    <div className="text-sm text-[#d8b4fe]">Seconds</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Email Signup */}
+            <div className="max-w-md mx-auto" id="email-form">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-[#fdce20] focus:ring-2 focus:ring-[#fdce20]/20"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-[#fdce20] text-black font-semibold rounded-xl hover:bg-[#d8b4fe] transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  {isSubscribed ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Subscribed!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-5 h-5" />
+                      <span>Notify Me</span>
+                    </>
+                  )}
+                </button>
+              </form>
+              <p className="text-sm text-white/60 mt-3">Get notified when we launch. No spam, ever.</p>
+            </div>
           </div>
-        </section>
-      </main>
-
+        </div>
+      </div>
+      
+      {/* Features Section */}
+      <div className="px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">What to Expect</h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              We're carefully curating the best spiritual products from around the world
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300"
+              >
+                <div className="w-12 h-12 bg-[#fdce20]/20 rounded-xl flex items-center justify-center text-[#fdce20] mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-white/60 text-sm">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Categories Preview */}
+      <div className="px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Product Categories</h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              Explore our carefully selected spiritual and wellness products
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category, index) => (
+              <div
+                key={index}
+                className="relative overflow-hidden rounded-2xl group cursor-pointer"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-80`}></div>
+                <div className="relative z-10 p-8 text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">{category.name}</h3>
+                  <div className="flex items-center justify-center text-white/80 group-hover:text-white transition-colors">
+                    <span className="text-sm">Coming Soon</span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Visual Product Showcase */}
+      <div className="px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Featured Products</h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              A glimpse of what's coming to our spiritual marketplace
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Product Cards */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden group">
+              <div className="h-48 bg-[#fdce20]/20 flex items-center justify-center">
+                <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Package className="w-12 h-12 text-[#fdce20]" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-2">Rudraksha Malas</h3>
+                <p className="text-white/60 text-sm mb-4">Authentic, energized rudraksha beads for meditation and spiritual protection</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#fdce20] font-semibold">Coming Soon</span>
+                  <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden group">
+              <div className="h-48 bg-[#d8b4fe]/20 flex items-center justify-center">
+                <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Star className="w-12 h-12 text-[#d8b4fe]" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-2">Healing Crystals</h3>
+                <p className="text-white/60 text-sm mb-4">Hand-selected crystals for energy healing, chakra balancing, and meditation</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#d8b4fe] font-semibold">Coming Soon</span>
+                  <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden group">
+              <div className="h-48 bg-[#fdce20]/20 flex items-center justify-center">
+                <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Sparkles className="w-12 h-12 text-[#fdce20]" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-2">Meditation Essentials</h3>
+                <p className="text-white/60 text-sm mb-4">Cushions, incense, and accessories for your daily meditation practice</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#fdce20] font-semibold">Coming Soon</span>
+                  <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* CTA Section */}
+      <div className="px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-3xl p-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Be the First to Know
+            </h2>
+            <p className="text-xl text-white/80 mb-8">
+              Join our waitlist and get exclusive early access to our launch collection
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => document.getElementById('email-form')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-8 py-4 bg-[#fdce20] text-black font-semibold rounded-xl hover:bg-[#d8b4fe] transition-all duration-300 transform hover:scale-105"
+              >
+                Get Early Access
+              </button>
+              <button className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300">
+                Learn More
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <Footer />
     </div>
   )

@@ -82,8 +82,7 @@ export async function GET(request: NextRequest) {
       const { data: counsellorData, error: counsellorError } = await supabase
         .from("expert_counsellors")
         .select("*")
-        // Temporarily remove this filter to see all counsellors
-        // .eq("is_profile_complete", true)
+        .eq("is_profile_complete", true)
         .limit(1)
       
       console.log('expert_counsellors test:', { counsellorData, counsellorError })
@@ -94,14 +93,16 @@ export async function GET(request: NextRequest) {
         
         let query = supabase
           .from("expert_counsellors")
-          .select("*")
-          // Temporarily remove this filter to see all counsellors
-          // .eq("is_profile_complete", true)
+          .select(`
+            *,
+            profiles!inner(status, full_name)
+          `)
+          .eq("is_profile_complete", true)
         
-        // Simple filter for counsellors with counselling specializations
-        query = query.contains("specialties", ["Career Counselling"])
+        // Join with profiles table to filter by status
+        query = query.eq("profiles.status", "approved")
         
-        console.log('=== DEBUG: Using simple counselling filter ===')
+        console.log('=== DEBUG: Using proper counselling filter with profiles join ===')
         
         // Apply mode filter - handle specialties properly for PostgreSQL arrays
         if (actualMode !== 'all') {
@@ -323,6 +324,113 @@ export async function GET(request: NextRequest) {
             .select("*")
             .eq("status", "approved")
             .eq("specialization", "yoga_trainer")
+          
+          // Apply mode filter - handle specialties properly for PostgreSQL arrays
+          if (mode !== 'all') {
+            query = query.or(`specialties.cs.{${mode}},specialization.ilike.%${mode}%`)
+          }
+          
+          // Apply price filters
+          if (minPrice > 0) {
+            query = query.gte("price_per_minute", minPrice)
+          }
+          
+          if (maxPrice < 5000) {
+            query = query.lte("price_per_minute", maxPrice)
+          }
+          
+          // Apply sorting
+          if (sortBy === 'rating') {
+            query = query.order("created_at", { ascending: false })
+          } else if (sortBy === 'price-low') {
+            query = query.order("price_per_minute", { ascending: true })
+          } else if (sortBy === 'price-high') {
+            query = query.order("price_per_minute", { ascending: false })
+          } else {
+            query = query.order("created_at", { ascending: false })
+          }
+          
+          const result = await query
+          data = result.data
+          error = result.error
+        }
+      }
+    } else if (service === 'meditation') {
+      // Handle meditation service - try expert_meditation table first
+      console.log('=== DEBUG: Trying expert_meditation table for meditation ===')
+      
+      const { data: meditationData, error: meditationError } = await supabase
+        .from("expert_meditation")
+        .select("*")
+        .eq("is_profile_complete", true)
+        .limit(1)
+      
+      console.log('expert_meditation test:', { meditationData, meditationError })
+      
+      if (!meditationError) {
+        // Use expert_meditation table
+        console.log('=== DEBUG: Using expert_meditation table ===')
+        
+        let query = supabase
+          .from("expert_meditation")
+          .select(`
+            *,
+            profiles!inner(status, full_name)
+          `)
+          .eq("is_profile_complete", true)
+        
+        // Join with profiles table to filter by status
+        query = query.eq("profiles.status", "approved")
+        
+        // Apply mode filter - handle specialties properly for PostgreSQL arrays
+        if (actualMode !== 'all') {
+          // Use contains for array filtering only (ilike doesn't work on arrays)
+          query = query.contains("specialties", [actualMode])
+        }
+        
+        // Apply price filters
+        if (minPrice > 0) {
+          query = query.gte("price_per_minute", minPrice)
+        }
+        
+        if (maxPrice < 5000) {
+          query = query.lte("price_per_minute", maxPrice)
+        }
+        
+        // Apply sorting
+        if (sortBy === 'rating') {
+          query = query.order("created_at", { ascending: false })
+        } else if (sortBy === 'price-low') {
+          query = query.order("price_per_minute", { ascending: true })
+        } else if (sortBy === 'price-high') {
+          query = query.order("price_per_minute", { ascending: false })
+        } else {
+          query = query.order("created_at", { ascending: false })
+        }
+        
+        const result = await query
+        data = result.data
+        error = result.error
+        
+      } else {
+        // Try profiles table as fallback
+        console.log('=== DEBUG: Trying profiles table for meditation ===')
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("status", "approved")
+          .eq("role", "expert")
+          .limit(1)
+        
+        console.log('profiles meditation test:', { profilesData, profilesError })
+        
+        if (!profilesError) {
+          // Use profiles table
+          let query = supabase
+            .from("profiles")
+            .select("*")
+            .eq("status", "approved")
+            .eq("role", "expert")
           
           // Apply mode filter - handle specialties properly for PostgreSQL arrays
           if (mode !== 'all') {

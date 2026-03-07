@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { User, Camera, Save, AlertCircle, Upload, Star, Briefcase, Clock, DollarSign, MessageCircle, Phone, Video } from 'lucide-react'
+import { User, Camera, Save, AlertCircle, Upload, Star, Briefcase, Clock, DollarSign, MessageCircle, Phone, Video, CheckCircle } from 'lucide-react'
 
 interface ExpertProfile {
   id: string
@@ -64,6 +64,19 @@ const YOGA_SPECIALIZATIONS = [
   'Yoga Workshops'
 ]
 
+const MEDITATION_SPECIALIZATIONS = [
+  'Mindfulness',
+  'Breathing',
+  'Guided Meditation',
+  'Transcendental',
+  'Vipassana',
+  'Zen Meditation',
+  'Chakra Healing',
+  'Yoga Nidra',
+  'Loving Kindness',
+  'Stress Relief'
+]
+
 const COUNSELLING_SPECIALIZATIONS = [
   'Cognitive Behavioral Therapy',
   'Relationship Counselling',
@@ -90,6 +103,11 @@ export default function ExpertProfilePage() {
       return COUNSELLING_SPECIALIZATIONS
     } else if (profile?.specialization === 'yoga_trainer') {
       return YOGA_SPECIALIZATIONS
+    } else if (profile?.specialization === 'meditation_expert') {
+      return MEDITATION_SPECIALIZATIONS
+    } else if (profile?.role === 'expert') {
+      // Default for expert role to meditation
+      return MEDITATION_SPECIALIZATIONS
     } else {
       return []
     }
@@ -111,6 +129,7 @@ export default function ExpertProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -157,8 +176,17 @@ export default function ExpertProfilePage() {
         tableName = "expert_counsellors"
       } else if (profile?.specialization === 'yoga_trainer') {
         tableName = "expert_yoga"
+      } else if (profile?.specialization === 'meditation_expert') {
+        tableName = "expert_meditation"
+      } else if (profile?.specialization === 'astrologer') {
+        tableName = "expert_astrologers"
+      } else if (profile?.role === 'expert') {
+        // Default for expert role to meditation
+        tableName = "expert_meditation"
+      } else if (profile?.role === 'astrologer') {
+        tableName = "expert_astrologers"
       } else {
-        tableName = "expert_astrologers" // Default for astrologer
+        tableName = "expert_astrologers" // Default fallback
       }
       
       console.log('=== DEBUG: Fetching from table ===', tableName)
@@ -345,8 +373,13 @@ export default function ExpertProfilePage() {
         tableName = "expert_counsellors"
       } else if (profile?.specialization === 'yoga_trainer') {
         tableName = "expert_yoga"
+      } else if (profile?.specialization === 'meditation_expert') {
+        tableName = "expert_meditation"
       } else if (profile?.specialization === 'astrologer') {
         tableName = "expert_astrologers"
+      } else if (profile?.role === 'expert') {
+        // Default for expert role to meditation
+        tableName = "expert_meditation"
       } else {
         // Default fallback - but this should not happen with proper role setup
         console.warn('=== DEBUG: Unknown specialization, defaulting to expert_astrologers ===', profile?.specialization)
@@ -397,6 +430,9 @@ console.log('=== DEBUG: Saving to table ===', tableName)
         type: 'success',
         message: 'Profile saved successfully!'
       })
+      
+      // Show confirmation modal
+      setShowConfirmationModal(true)
       
       // Reload profile to verify the save
       console.log('=== DEBUG: Reloading profile to verify save ===')
@@ -450,27 +486,102 @@ console.log('=== DEBUG: Saving to table ===', tableName)
       reader.onload = async () => {
         const base64 = reader.result as string
         
-        // Compress base64 by reducing quality and removing metadata
-        const compressedBase64 = base64
-          .replace(/^data:image\/[a-z]+;base64,/, 'data:image/jpeg;base64,')
-          .substring(0, 500000) // Limit to ~500KB
+        // Validate base64 format
+        if (!base64 || !base64.startsWith('data:image/')) {
+          setSaveMessage({
+            type: 'error',
+            message: 'Invalid image format'
+          })
+          setUploading(false)
+          return
+        }
         
         console.log('=== DEBUG: Storing avatar URL in database ===')
         console.log('Original base64 length:', base64.length)
-        console.log('Compressed base64 length:', compressedBase64.length)
         
-        // Update profile with compressed avatar
+        // Store the original base64 (no compression to avoid corruption)
+        // If needed for very large files, implement proper image compression
+        let finalBase64 = base64
+        
+        // Only compress if file is very large (>1MB in base64)
+        if (base64.length > 1000000) {
+          // Convert to JPEG and reduce quality using canvas
+          const img = new Image()
+          img.onload = () => {
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            
+            // Reduce dimensions for large images
+            const maxSize = 800
+            let { width, height } = img
+            
+            if (width > height) {
+              if (width > maxSize) {
+                height = (height * maxSize) / width
+                width = maxSize
+              }
+            } else {
+              if (height > maxSize) {
+                width = (width * maxSize) / height
+                height = maxSize
+              }
+            }
+            
+            canvas.width = width
+            canvas.height = height
+            
+            ctx?.drawImage(img, 0, 0, width, height)
+            
+            // Compress to JPEG with 0.7 quality
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7)
+            
+            console.log('Compressed base64 length:', compressedBase64.length)
+            
+            // Update profile with compressed avatar
+            setProfileData(prev => ({
+              ...prev,
+              avatar_url: compressedBase64
+            }))
+            
+            setSaveMessage({
+              type: 'success',
+              message: 'Avatar uploaded and compressed successfully!'
+            })
+            setUploading(false)
+          }
+          
+          img.onerror = () => {
+            setSaveMessage({
+              type: 'error',
+              message: 'Failed to process image'
+            })
+            setUploading(false)
+          }
+          
+          img.src = base64
+          return
+        }
+        
+        // For smaller images, use original
         setProfileData(prev => ({
           ...prev,
-          avatar_url: compressedBase64
+          avatar_url: finalBase64
         }))
         
         setSaveMessage({
           type: 'success',
           message: 'Avatar uploaded successfully!'
         })
+        setUploading(false)
       }
       
+      reader.onerror = () => {
+        setSaveMessage({
+          type: 'error',
+          message: 'Failed to read image file'
+        })
+        setUploading(false)
+      }
       reader.readAsDataURL(file)
       
     } catch (error) {
@@ -492,12 +603,26 @@ console.log('=== DEBUG: Saving to table ===', tableName)
   }
 
   const handleSpecialtyToggle = (specialty: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      specialties: prev.specialties.includes(specialty)
-        ? prev.specialties.filter(s => s !== specialty)
-        : [...prev.specialties, specialty]
-    }))
+    setProfileData(prev => {
+      // If specialty is already selected, remove it
+      if (prev.specialties.includes(specialty)) {
+        return {
+          ...prev,
+          specialties: prev.specialties.filter(s => s !== specialty)
+        }
+      }
+      
+      // If not selected and we have less than 3, add it
+      if (prev.specialties.length < 3) {
+        return {
+          ...prev,
+          specialties: [...prev.specialties, specialty]
+        }
+      }
+      
+      // If we already have 3, don't add more
+      return prev
+    })
   }
 
   const handleOnlineToggle = () => {
@@ -516,12 +641,12 @@ console.log('=== DEBUG: Saving to table ===', tableName)
   }
 
   return (
-    <div className="min-h-screen bg-[#0F0F14] py-8">
+    <div className="min-h-screen bg-[#0F0F14] py-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Complete Your Profile</h1>
           <p className="text-white/60">
-            Fill in your details to get listed in the astrology marketplace
+            Fill in your details to get listed in our marketplace
           </p>
         </div>
 
@@ -570,7 +695,7 @@ console.log('=== DEBUG: Saving to table ===', tableName)
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">{profileData.display_name || 'Your Name'}</h2>
-                <p className="text-white/60">Expert Astrologer</p>
+                
               </div>
             </div>
           </div>
@@ -615,15 +740,26 @@ console.log('=== DEBUG: Saving to table ===', tableName)
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-white/80 mb-2">
-                Bio
+                Bio <span className="text-gray-400 text-xs">(max 60 characters)</span>
               </label>
-              <textarea
-                value={profileData.bio}
-                onChange={(e) => handleInputChange('bio', e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
-                placeholder="Tell us about yourself and your expertise..."
-              />
+              <div className="relative">
+                <textarea
+                  value={profileData.bio}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value.length <= 60) {
+                      handleInputChange('bio', value)
+                    }
+                  }}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
+                  placeholder="Tell us about yourself and your expertise..."
+                  maxLength={60}
+                />
+                <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                  {profileData.bio.length}/60
+                </div>
+              </div>
             </div>
           </div>
 
@@ -631,16 +767,19 @@ console.log('=== DEBUG: Saving to table ===', tableName)
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-500" />
-              Specialties *
+              Specialties * <span className="text-gray-400 text-sm font-normal">(select max 3)</span>
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {getSpecializations().map((specialty: string) => (
                 <button
                   key={specialty}
                   onClick={() => handleSpecialtyToggle(specialty)}
+                  disabled={!profileData.specialties.includes(specialty) && profileData.specialties.length >= 3}
                   className={`px-4 py-2 rounded-lg border transition-colors ${
                     profileData.specialties.includes(specialty)
                       ? 'bg-yellow-500 text-black border-yellow-500'
+                      : profileData.specialties.length >= 3 && !profileData.specialties.includes(specialty)
+                      ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
                       : 'bg-[#0F0F14] text-white/70 border-white/20 hover:border-white/40'
                   }`}
                 >
@@ -648,6 +787,9 @@ console.log('=== DEBUG: Saving to table ===', tableName)
                 </button>
               ))}
             </div>
+            {profileData.specialties.length >= 3 && (
+              <p className="mt-2 text-sm text-yellow-500">Maximum 3 specialties selected</p>
+            )}
           </div>
 
           {/* Pricing */}
@@ -656,37 +798,102 @@ console.log('=== DEBUG: Saving to table ===', tableName)
               <DollarSign className="w-5 h-5 text-yellow-500" />
               Pricing
             </h3>
+            
+            {/* Price Presets */}
+            <div className="mb-6">
+              <p className="text-sm text-white/60 mb-3">Quick presets (per minute):</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'Budget', price: 199 },
+                  { label: 'Standard', price: 299 },
+                  { label: 'Premium', price: 499 },
+                  { label: 'Expert', price: 799 }
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    onClick={() => {
+                      handleInputChange('price_per_minute', preset.price)
+                      // Don't auto-calculate hourly rate - let user set it manually
+                    }}
+                    className={`px-3 py-1.5 rounded-lg border transition-all ${
+                      profileData.price_per_minute === preset.price
+                        ? 'bg-yellow-500 text-black border-yellow-500'
+                        : 'bg-white/5 text-white/70 border-white/20 hover:border-white/40'
+                    }`}
+                  >
+                    {preset.label} (₹{preset.price})
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Price per Minute (₹) *
+                  <span className="text-gray-400 text-xs ml-2">Min: ₹50, Max: ₹1999</span>
                 </label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3.5 w-5 h-5 text-white/40" />
                   <input
                     type="number"
                     value={profileData.price_per_minute}
-                    onChange={(e) => handleInputChange('price_per_minute', parseInt(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 0
+                      if (value >= 50 && value <= 1999) {
+                        handleInputChange('price_per_minute', value)
+                        // Don't auto-calculate hourly rate - let user set it manually
+                      }
+                    }}
+                    min={50}
+                    max={1999}
                     className="w-full pl-10 pr-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
                     placeholder="299"
                   />
                 </div>
+                <p className="text-xs text-white/50 mt-1">For chat sessions (per minute)</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Hourly Rate (₹) *
+                  <span className="text-gray-400 text-xs ml-2">Editable</span>
                 </label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-3.5 w-5 h-5 text-white/40" />
                   <input
                     type="number"
-                    value={profileData.hourly_rate || 17940}
-                    onChange={(e) => handleInputChange('hourly_rate', parseInt(e.target.value) || 17940)}
+                    value={profileData.hourly_rate || (profileData.price_per_minute * 60)}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 0
+                      if (value >= 3000 && value <= 119940) { // Min: 50*60, Max: 1999*60
+                        handleInputChange('hourly_rate', value)
+                      }
+                    }}
+                    min={3000}
+                    max={119940}
                     className="w-full pl-10 pr-4 py-3 bg-[#0F0F14] border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
                     placeholder="17940"
                   />
                 </div>
                 <p className="text-xs text-white/50 mt-1">For appointment bookings (1 hour)</p>
+                <p className="text-xs text-yellow-500 mt-1">
+                  💡 Tip: Min: ₹3,000, Max: ₹119,940 (based on per-minute rate range)
+                </p>
+              </div>
+            </div>
+
+            {/* Price Summary */}
+            <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+              <h4 className="text-sm font-medium text-white/80 mb-3">Price Summary</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-white/60">Per Minute:</span>
+                  <span className="ml-2 text-yellow-500 font-semibold">₹{profileData.price_per_minute}</span>
+                </div>
+                <div>
+                  <span className="text-white/60">Per Hour:</span>
+                  <span className="ml-2 text-yellow-500 font-semibold">₹{profileData.hourly_rate || (profileData.price_per_minute * 60)}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -719,8 +926,15 @@ console.log('=== DEBUG: Saving to table ===', tableName)
             </p>
           </div>
 
-          {/* Save Button */}
-          <div className="flex justify-end">
+          {/* Save and Cancel Buttons */}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => router.push('/expert-dashboard')}
+              disabled={saving}
+              className="px-6 py-3 bg-black text-[#fdce20] font-semibold rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-red-500"
+            >
+              Cancel
+            </button>
             <button
               onClick={handleSave}
               disabled={saving}
@@ -741,6 +955,40 @@ console.log('=== DEBUG: Saving to table ===', tableName)
           </div>
         </div>
       </div>
+
+      {/* Success Confirmation Modal */}
+      {showConfirmationModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#0F0F14] border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Profile Saved Successfully!</h3>
+              <p className="text-white/60 mb-6">
+                Your profile has been updated and is now live. Users can discover and book sessions with you based on your expertise.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowConfirmationModal(false)
+                    router.push('/expert-dashboard')
+                  }}
+                  className="flex-1 px-4 py-3 bg-yellow-500 text-black font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
+                >
+                  Go to Dashboard
+                </button>
+                <button
+                  onClick={() => setShowConfirmationModal(false)}
+                  className="flex-1 px-4 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  Continue Editing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

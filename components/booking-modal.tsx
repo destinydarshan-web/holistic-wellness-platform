@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { MessageCircle, Phone } from 'lucide-react'
 
 interface BookingModalProps {
@@ -120,22 +119,21 @@ export function BookingModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-sm font-medium text-white mb-2">
                   Select Expert (Optional)
                 </label>
-                <Select value={formData.expert} onValueChange={(value) => handleChange('expert', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Any expert" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Any expert">Any expert</SelectItem>
-                    {experts.map((expert) => (
-                      <SelectItem key={expert} value={expert}>
-                        {expert}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  value={formData.expert}
+                  onChange={(e) => handleChange('expert', e.target.value)}
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#d8b4fe]/50 focus:border-[#d8b4fe]"
+                >
+                  <option value="" className="bg-black text-white">Any expert</option>
+                  {experts.map((expert) => (
+                    <option key={expert} value={expert} className="bg-black text-white">
+                      {expert}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -151,21 +149,21 @@ export function BookingModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-sm font-medium text-white mb-2">
                   Preferred Time
                 </label>
-                <Select value={formData.time} onValueChange={(value) => handleChange('time', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select time slot" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  value={formData.time}
+                  onChange={(e) => handleChange('time', e.target.value)}
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#d8b4fe]/50 focus:border-[#d8b4fe]"
+                >
+                  <option value="" className="bg-black text-white">Select time slot</option>
+                  {timeSlots.map((slot) => (
+                    <option key={slot} value={slot} className="bg-black text-white">
+                      {slot}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

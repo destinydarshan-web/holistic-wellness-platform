@@ -2,10 +2,10 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
-import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Briefcase, DollarSign, Camera, Upload, AlertCircle, User, MapPin, Calendar, X } from 'lucide-react'
+import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Calendar, User, MapPin, DollarSign, X } from 'lucide-react'
 
-interface CounsellorCardProps {
-  counsellor: {
+interface MeditationExpertCardProps {
+  expert: {
     id: string
     display_name: string
     avatar_url: string
@@ -22,7 +22,7 @@ interface CounsellorCardProps {
   }
 }
 
-export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
+export default function MeditationExpertCard({ expert }: MeditationExpertCardProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
@@ -62,13 +62,13 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
 
       // Show confirmation modal with wallet balance
       setConfirmationData({
-        expert: counsellor,
+        expert: expert,
         date: selectedDate,
         time: selectedTime,
         notes: notes,
-        cost: counsellor.hourly_rate,
+        cost: expert.hourly_rate,
         walletBalance: wallet.balance,
-        hasSufficientBalance: wallet.balance >= counsellor.hourly_rate
+        hasSufficientBalance: wallet.balance >= expert.hourly_rate
       })
       setShowConfirmationModal(true)
       
@@ -90,14 +90,14 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
         .insert({
           user_id: user.id,
           expert_id: confirmationData.expert?.id || '',
-          service_category: 'counselling',
+          service_category: 'meditation',
           appointment_date: confirmationData.date,
           appointment_time: confirmationData.time,
           duration_minutes: 60,
           amount_paid: confirmationData.cost,
           hourly_rate: confirmationData.cost,
-          status: 'pending', // Changed to pending
-          payment_status: 'pending', // Changed to pending
+          status: 'pending',
+          payment_status: 'pending',
           notes: confirmationData.notes
         })
         .select()
@@ -107,9 +107,9 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
         throw new Error(appointmentError.message)
       }
 
-      // Create notification for counsellor
+      // Create notification for expert
       try {
-        console.log('=== DEBUG: Sending notification to counsellor ===')
+        console.log('=== DEBUG: Sending notification to expert ===')
         const notificationResponse = await fetch('/api/notifications', {
           method: 'POST',
           headers: {
@@ -118,7 +118,7 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
           body: JSON.stringify({
             expert_id: confirmationData.expert?.id || '',
             user_id: user.id,
-            type: 'appointment_request', // Changed to appointment_request
+            type: 'appointment_request',
             message: `New appointment request by ${user?.email || 'user'} for ${confirmationData.date} at ${confirmationData.time}`,
             appointment_id: appointment.id
           })
@@ -128,17 +128,17 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
         console.log('Notification response:', notificationData)
 
         if (notificationResponse.ok && notificationData.success) {
-          console.log('✅ Notification sent to counsellor successfully')
+          console.log('✅ Notification sent to expert successfully')
           if (notificationData.warning) {
             console.log('⚠️ Notification warning:', notificationData.warning)
           }
         } else {
-          console.error('❌ Failed to send notification to counsellor')
+          console.error('❌ Failed to send notification to expert')
           console.error('Response status:', notificationResponse.status)
           console.error('Response data:', notificationData)
         }
       } catch (notificationError) {
-        console.error('Error sending notification to counsellor:', notificationError)
+        console.error('Error sending notification to expert:', notificationError)
       }
 
       // Close confirmation modal
@@ -158,74 +158,49 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
     }
   }
 
-  // Generate time slots for the selected date with better UX
-  const generateTimeSlots = () => {
-    const slots: Array<{
-      value: string;
-      display: string;
-      period: string;
-    }> = []
-    const periods = [
-      { label: 'Morning', start: 9, end: 11 },
-      { label: 'Afternoon', start: 12, end: 16 },
-      { label: 'Evening', start: 17, end: 21 }
-    ]
-    
-    periods.forEach(period => {
-      for (let hour = period.start; hour <= period.end; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-          const ampm = hour < 12 ? 'AM' : 'PM'
-          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-          const displayTime = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`
-          slots.push({
-            value: time,
-            display: displayTime,
-            period: period.label
-          })
-        }
-      }
-    })
-    
-    return slots
-  }
-
-  const timeSlots = generateTimeSlots()
-
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
       {/* Header - Avatar, Name */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-            {counsellor.avatar_url ? (
-              <img src={counsellor.avatar_url} alt={counsellor.display_name} className="w-16 h-16 rounded-full object-cover" />
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
+            {expert.avatar_url ? (
+              <img 
+                src={expert.avatar_url} 
+                alt={expert.display_name} 
+                className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => {
+                  // Fallback to emoji if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl">🧘</span>';
+                }}
+              />
             ) : (
-              <User className="w-8 h-8 text-white/40" />
+              <span className="text-2xl">🧘</span>
             )}
           </div>
-          {counsellor.is_online && (
+          {expert.is_online && (
             <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white/10"></div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-white truncate">{counsellor.display_name}</h3>
+          <h3 className="text-lg font-semibold text-white truncate">{expert.display_name}</h3>
           <div className="flex items-center gap-2 mb-1">
             <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-yellow-400 font-semibold">4.8</span>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-[#fdce20] fill-[#fdce20]" />
+              ))}
             </div>
-            <span className="text-white/40 text-sm">•</span>
-            <span className="text-white text-sm">{counsellor.experience_years} years</span>
+            <span className="text-purple-400 font-semibold">5.0</span>
           </div>
-          <p className="text-gray-300 text-sm line-clamp-2 break-words">{counsellor.bio}</p>
+          <p className="text-gray-300 text-sm line-clamp-2">{expert.bio}</p>
         </div>
       </div>
 
       {/* Specialties */}
       <div className="mb-4">
         <div className="flex flex-wrap gap-2">
-          {counsellor.specialties.map((specialty, index) => (
+          {expert.specialties.map((specialty, index) => (
             <span
               key={index}
               className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full"
@@ -241,20 +216,18 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-gray-300">
             <Clock className="w-4 h-4" />
-            <span className="text-sm">{counsellor.experience_years} years exp.</span>
+            <span className="text-sm">{expert.experience_years} years exp.</span>
           </div>
         </div>
-      </div>
-
-      {/* Pricing */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="text-center">
-          <h4 className="text-sm font-medium text-white/80 mb-1">Per Minute</h4>
-          <p className="text-xl font-bold text-[#fdce20]">{formatPrice(counsellor.price_per_minute)}</p>
-        </div>
-        <div className="text-center">
-          <h4 className="text-sm font-medium text-white/80 mb-1">Per Hour</h4>
-          <p className="text-xl font-bold text-[#fdce20]">{formatPrice(counsellor.hourly_rate)}</p>
+        <div className="flex gap-4">
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-white/80 mb-1">Per Minute</h4>
+            <p className="text-lg font-semibold text-[#fdce20]">{formatPrice(expert.price_per_minute)}</p>
+          </div>
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-white/80 mb-1">Per Hour</h4>
+            <p className="text-lg font-semibold text-[#fdce20]">{formatPrice(expert.hourly_rate || (expert.price_per_minute * 60))}</p>
+          </div>
         </div>
       </div>
 
@@ -285,7 +258,7 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
           <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f172a] rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold font-serif text-white">Book & Pay</h3>
+              <h3 className="text-xl font-bold font-serif text-white">Book Meditation Session</h3>
               <button
                 onClick={() => setShowAppointmentModal(false)}
                 className="text-white/60 hover:text-white transition-colors"
@@ -294,27 +267,22 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
               </button>
             </div>
             
-            {/* Counsellor Info */}
+            {/* Expert Info */}
             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#fdce20]/20 to-amber-500/20 rounded-full flex items-center justify-center">
-                {counsellor.avatar_url ? (
-                  <img src={counsellor.avatar_url} alt={counsellor.display_name} className="w-10 h-10 rounded-full object-cover" />
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full flex items-center justify-center">
+                {expert.avatar_url ? (
+                  <img src={expert.avatar_url} alt={expert.display_name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
-                  <User className="w-5 h-5 text-[#fdce20]" />
+                  <User className="w-5 h-5 text-purple-400" />
                 )}
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-white text-sm">{counsellor.display_name}</p>
-                <p className="text-white/60 text-xs">Professional Counsellor</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[#fdce20] font-bold text-sm">{formatPrice(counsellor.hourly_rate)}</p>
-                <p className="text-white/50 text-xs">per hour</p>
+              <div>
+                <p className="font-semibold text-white text-sm">{expert.display_name}</p>
+                <p className="text-white/60 text-xs">Meditation Expert</p>
               </div>
             </div>
 
-            {/* Form Fields */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4">
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Select Date</label>
                 <input
@@ -322,79 +290,55 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Select Time</label>
-                <div className="space-y-3">
-                  {['Morning', 'Afternoon', 'Evening'].map((period) => (
-                    <div key={period} className="space-y-2">
-                      <h4 className="text-xs font-semibold text-[#fdce20] uppercase tracking-wide">{period}</h4>
-                      <div className="grid grid-cols-3 gap-2">
-                        {timeSlots
-                          .filter(slot => slot.period === period)
-                          .map((slot) => (
-                            <button
-                              key={slot.value}
-                              type="button"
-                              onClick={() => setSelectedTime(slot.value)}
-                              className={`px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
-                                selectedTime === slot.value
-                                  ? 'bg-[#fdce20] text-black'
-                                  : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
-                              }`}
-                            >
-                              {slot.display}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {selectedTime && (
-                  <div className="mt-3 p-2 bg-[#fdce20]/10 rounded-lg">
-                    <p className="text-sm text-[#fdce20] font-medium">
-                      Selected: {timeSlots.find(s => s.value === selectedTime)?.display}
-                    </p>
-                  </div>
-                )}
+                <select
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#d8b4fe]/50 focus:border-[#d8b4fe]"
+                >
+                  <option value="" className="bg-black text-white">Select a time</option>
+                  <option value="09:00" className="bg-black text-white">9:00 AM</option>
+                  <option value="10:00" className="bg-black text-white">10:00 AM</option>
+                  <option value="11:00" className="bg-black text-white">11:00 AM</option>
+                  <option value="12:00" className="bg-black text-white">12:00 PM</option>
+                  <option value="14:00" className="bg-black text-white">2:00 PM</option>
+                  <option value="15:00" className="bg-black text-white">3:00 PM</option>
+                  <option value="16:00" className="bg-black text-white">4:00 PM</option>
+                  <option value="17:00" className="bg-black text-white">5:00 PM</option>
+                  <option value="18:00" className="bg-black text-white">6:00 PM</option>
+                </select>
               </div>
-              
+
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Notes (Optional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="What would you like to discuss?"
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20] resize-none"
+                  placeholder="What would you like to focus on?"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 resize-none"
                   rows={2}
                 />
               </div>
             </div>
             
-            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowAppointmentModal(false)}
-                className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors font-medium"
+                className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBookAppointment}
-                disabled={loading === 'appointment' || !selectedDate || !selectedTime}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#fdce20] to-amber-500 text-black rounded-lg hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                disabled={!selectedDate || !selectedTime || loading === 'appointment'}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-400 text-white rounded-lg hover:from-purple-600 hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading === 'appointment' ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
-                    Booking...
-                  </>
-                ) : (
-                  'Book & Pay'
-                )}
+                {loading === 'appointment' ? 'Booking...' : 'Book & Pay'}
               </button>
             </div>
           </div>

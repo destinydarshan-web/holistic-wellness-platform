@@ -26,6 +26,8 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  const [confirmationData, setConfirmationData] = useState<any>(null)
   const [showAppointmentModal, setShowAppointmentModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
@@ -46,8 +48,6 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
       return
     }
 
-    setLoading('appointment')
-    
     try {
       // Check wallet balance
       const { data: wallet, error: walletError } = await supabase
@@ -60,26 +60,45 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
         throw new Error('Unable to fetch wallet balance')
       }
 
-      if (wallet.balance < trainer.hourly_rate) {
-        alert('Insufficient wallet balance for appointment booking')
-        return
-      }
+      // Show confirmation modal with wallet balance
+      setConfirmationData({
+        expert: trainer,
+        date: selectedDate,
+        time: selectedTime,
+        notes: notes,
+        cost: trainer.hourly_rate,
+        walletBalance: wallet.balance,
+        hasSufficientBalance: wallet.balance >= trainer.hourly_rate
+      })
+      setShowConfirmationModal(true)
+      
+    } catch (error: any) {
+      console.error('Error preparing appointment confirmation:', error)
+      alert(`Failed to prepare appointment: ${error.message}`)
+    }
+  }
 
-      // Create appointment
+  const handleConfirmAppointment = async () => {
+    if (!confirmationData || !user) return
+
+    try {
+      setLoading('appointment')
+      
+      // Create appointment with pending status
       const { data: appointment, error: appointmentError } = await supabase
         .from('appointments')
         .insert({
           user_id: user.id,
-          expert_id: trainer.id,
+          expert_id: confirmationData.expert?.id || '',
           service_category: 'yoga',
-          appointment_date: selectedDate,
-          appointment_time: selectedTime,
+          appointment_date: confirmationData.date,
+          appointment_time: confirmationData.time,
           duration_minutes: 60,
-          amount_paid: trainer.hourly_rate,
-          hourly_rate: trainer.hourly_rate,
-          status: 'upcoming',
-          payment_status: 'paid',
-          notes: notes
+          amount_paid: confirmationData.cost,
+          hourly_rate: confirmationData.cost,
+          status: 'pending',
+          payment_status: 'pending',
+          notes: confirmationData.notes
         })
         .select()
         .single()
@@ -88,84 +107,48 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
         throw new Error(appointmentError.message)
       }
 
-      // Deduct from wallet
-      const { error: deductError } = await supabase
-        .from('user_wallet')
-        .update({ balance: wallet.balance - trainer.hourly_rate })
-        .eq("user_id", user.id)
-
-      if (deductError) {
-        throw new Error('Failed to process payment')
-      }
-
       // Create notification for trainer
-        try {
-          console.log('=== DEBUG: Sending notification to trainer ===')
-          const notificationResponse = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              expert_id: trainer.id,
-              user_id: user.id,
-              type: 'appointment_booked',
-              message: `New appointment booked by ${user.email} for ${selectedDate} at ${selectedTime}`,
-              appointment_id: appointment.id
-            })
+      try {
+        console.log('=== DEBUG: Sending notification to trainer ===')
+        const notificationResponse = await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            expert_id: confirmationData.expert?.id || '',
+            user_id: user.id,
+            type: 'appointment_request',
+            message: `New appointment request by ${user?.email || 'user'} for ${confirmationData.date} at ${confirmationData.time}`,
+            appointment_id: appointment.id
           })
-
-          const notificationData = await notificationResponse.json()
-          console.log('Notification response:', notificationData)
-
-          if (notificationResponse.ok && notificationData.success) {
-            console.log('✅ Notification sent to trainer successfully')
-            if (notificationData.warning) {
-              console.log('⚠️ Notification warning:', notificationData.warning)
-            }
-          } else {
-            console.error('❌ Failed to send notification to trainer')
-            console.error('Response status:', notificationResponse.status)
-            console.error('Response data:', notificationData)
-          }
-        } catch (notificationError) {
-          console.error('Error sending notification to trainer:', notificationError)
-        }
-
-        // Create transaction record
-      console.log('Creating transaction record...')
-      const transactionData = {
-        user_id: user.id,
-        type: 'debit',
-        amount: trainer.hourly_rate,
-        description: `Appointment booking with ${trainer.display_name} - ${selectedDate} ${selectedTime}`,
-        booking_id: appointment.id
-      }
-      console.log('Transaction data:', transactionData)
-      
-      const { error: transactionError, data: transactionDataResult } = await supabase
-        .from('transactions')
-        .insert(transactionData)
-        .select()
-
-      if (transactionError) {
-        console.error('Failed to create transaction record:', transactionError)
-        console.error('Transaction error details:', {
-          message: transactionError.message,
-          details: transactionError.details,
-          hint: transactionError.hint,
-          code: transactionError.code
         })
-        // Don't throw error here, just log it - appointment is still successful
-      } else {
-        console.log('Transaction record created successfully:', transactionDataResult)
+
+        const notificationData = await notificationResponse.json()
+        console.log('Notification response:', notificationData)
+
+        if (notificationResponse.ok && notificationData.success) {
+          console.log('✅ Notification sent to trainer successfully')
+          if (notificationData.warning) {
+            console.log('⚠️ Notification warning:', notificationData.warning)
+          }
+        } else {
+          console.error('❌ Failed to send notification to trainer')
+          console.error('Response status:', notificationResponse.status)
+          console.error('Response data:', notificationData)
+        }
+      } catch (notificationError) {
+        console.error('Error sending notification to trainer:', notificationError)
       }
 
-      alert('Appointment booked successfully! Amount deducted from wallet.')
-      setShowAppointmentModal(false)
+      // Close confirmation modal
+      setShowConfirmationModal(false)
+      setConfirmationData(null)
       setSelectedDate('')
       setSelectedTime('')
       setNotes('')
+      
+      alert('Appointment request sent! Waiting for expert confirmation.')
       
     } catch (error: any) {
       console.error('Appointment booking error:', error)
@@ -175,63 +158,90 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
     }
   }
 
-  // Generate time slots for selected date
+  // Generate time slots for selected date with better UX
   const generateTimeSlots = () => {
-    const slots = []
-    for (let hour = 9; hour <= 21; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        slots.push(time)
+    const slots: Array<{
+      value: string;
+      display: string;
+      period: string;
+    }> = []
+    const periods = [
+      { label: 'Morning', start: 6, end: 11 },
+      { label: 'Afternoon', start: 12, end: 16 },
+      { label: 'Evening', start: 17, end: 21 }
+    ]
+    
+    periods.forEach(period => {
+      for (let hour = period.start; hour <= period.end; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+          const ampm = hour < 12 ? 'AM' : 'PM'
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+          const displayTime = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`
+          slots.push({
+            value: time,
+            display: displayTime,
+            period: period.label
+          })
+        }
       }
-    }
+    })
+    
     return slots
   }
 
   const timeSlots = generateTimeSlots()
 
   return (
-    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-xl border border-white/20 p-4 hover:border-[#fdce20]/30 hover:from-[#fdce20]/5 hover:to-white/10 transition-all duration-500 shadow-lg hover:shadow-xl hover:shadow-[#fdce20]/10">
-      {/* Expert Header */}
-      <div className="flex items-start gap-4 mb-6">
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+      {/* Header - Avatar, Name */}
+      <div className="flex items-start gap-4 mb-4">
         <div className="relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center ring-2 ring-white/10">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
             {trainer.avatar_url ? (
-              <img src={trainer.avatar_url} alt={trainer.display_name} className="w-16 h-16 rounded-full object-cover" />
+              <img 
+                src={trainer.avatar_url} 
+                alt={trainer.display_name} 
+                className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => {
+                  // Fallback to emoji if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl">🧘</span>';
+                }}
+              />
             ) : (
-              <User className="w-8 h-8 text-white/40" />
+              <span className="text-2xl">🧘</span>
             )}
           </div>
           {trainer.is_online && (
-            <div className="absolute bottom-0 right-0 w-4 h-4 bg-gradient-to-br from-green-400 to-green-500 rounded-full border-2 border-white/10"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white/10"></div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-bold text-white mb-2 truncate">{trainer.display_name}</h3>
-          <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-lg font-semibold text-white truncate">{trainer.display_name}</h3>
+          <div className="flex items-center gap-2 mb-1">
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-4 h-4 text-[#fdce20] fill-[#fdce20]" />
               ))}
             </div>
-            <span className="text-sm text-gray-300">5.0</span>
+            <span className="text-purple-400 font-semibold">5.0</span>
           </div>
-          <p className="text-gray-300 text-sm line-clamp-2">{trainer.bio}</p>
+          <p className="text-gray-300 text-sm line-clamp-2 break-words">{trainer.bio}</p>
         </div>
       </div>
 
       {/* Specialties */}
       <div className="mb-4">
         <div className="flex flex-wrap gap-2">
-          {trainer.specialties.slice(0, 2).map((specialty, index) => (
-            <span key={index} className="px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 text-xs rounded-full">
+          {trainer.specialties.map((specialty, index) => (
+            <span
+              key={index}
+              className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full"
+            >
               {specialty}
             </span>
           ))}
-          {trainer.specialties.length > 2 && (
-            <span className="px-3 py-1 bg-white/10 text-gray-400 text-xs rounded-full">
-              +{trainer.specialties.length - 2} more
-            </span>
-          )}
         </div>
       </div>
 
@@ -242,14 +252,18 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
             <Clock className="w-4 h-4" />
             <span className="text-sm">{trainer.experience_years} years exp.</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <MapPin className="w-4 h-4" />
-            <span className="text-sm">Online</span>
-          </div>
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="text-center">
+          <h4 className="text-sm font-medium text-white/80 mb-1">Per Minute</h4>
+          <p className="text-xl font-bold text-[#fdce20]">{formatPrice(trainer.price_per_minute)}</p>
         </div>
         <div className="text-center">
           <h4 className="text-sm font-medium text-white/80 mb-1">Per Hour</h4>
-          <p className="text-xl font-bold text-green-400">{formatPrice(trainer.hourly_rate)}</p>
+          <p className="text-xl font-bold text-[#fdce20]">{formatPrice(trainer.hourly_rate)}</p>
         </div>
       </div>
 
@@ -262,13 +276,13 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
         >
           {loading === 'appointment' ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
               Booking...
             </>
           ) : (
             <>
               <Calendar size={16} />
-              Book Appointment
+              Book & Pay
             </>
           )}
         </button>
@@ -291,20 +305,16 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
             
             {/* Trainer Info */}
             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#fdce20]/20 to-amber-500/20 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full flex items-center justify-center">
                 {trainer.avatar_url ? (
                   <img src={trainer.avatar_url} alt={trainer.display_name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
-                  <User className="w-5 h-5 text-[#fdce20]" />
+                  <User className="w-5 h-5 text-purple-400" />
                 )}
               </div>
-              <div className="flex-1">
+              <div>
                 <p className="font-semibold text-white text-sm">{trainer.display_name}</p>
                 <p className="text-white/60 text-xs">Yoga Instructor</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[#fdce20] font-bold text-sm">{formatPrice(trainer.hourly_rate)}</p>
-                <p className="text-white/50 text-xs">per hour</p>
               </div>
             </div>
 
@@ -323,18 +333,38 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
               
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Select Time</label>
-                <select
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
-                >
-                  <option value="">Select a time</option>
-                  {timeSlots.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
+                <div className="space-y-3">
+                  {['Morning', 'Afternoon', 'Evening'].map((period) => (
+                    <div key={period} className="space-y-2">
+                      <h4 className="text-xs font-semibold text-[#fdce20] uppercase tracking-wide">{period}</h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        {timeSlots
+                          .filter(slot => slot.period === period)
+                          .map((slot) => (
+                            <button
+                              key={slot.value}
+                              type="button"
+                              onClick={() => setSelectedTime(slot.value)}
+                              className={`px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                selectedTime === slot.value
+                                  ? 'bg-[#fdce20] text-black'
+                                  : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {slot.display}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
                   ))}
-                </select>
+                </div>
+                {selectedTime && (
+                  <div className="mt-3 p-2 bg-[#fdce20]/10 rounded-lg">
+                    <p className="text-sm text-[#fdce20] font-medium">
+                      Selected: {timeSlots.find(s => s.value === selectedTime)?.display}
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div>
@@ -370,6 +400,92 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
                 ) : (
                   'Book Session'
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmationModal && confirmationData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f172a] rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold font-serif text-white">Confirm Appointment</h3>
+              <button
+                onClick={() => setShowConfirmationModal(false)}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Appointment Details */}
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#fdce20]/20 to-amber-500/20 rounded-full flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[#fdce20]" />
+                </div>
+                <div>
+                  <div className="font-medium text-white">{confirmationData.expert.display_name}</div>
+                  <div className="text-sm text-white/60">{confirmationData.service_category}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-white/60">Date & Time</label>
+                  <div className="font-medium text-white">
+                    {confirmationData.date} at {confirmationData.time}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60">Duration</label>
+                  <div className="font-medium text-white">
+                    60 minutes
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-white/60">Session Cost</label>
+                  <div className="font-medium text-[#fdce20]">
+                    ₹{confirmationData.cost}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60">Wallet Balance</label>
+                  <div className={`font-medium ${confirmationData.hasSufficientBalance ? 'text-green-400' : 'text-red-400'}`}>
+                    ₹{confirmationData.walletBalance}
+                  </div>
+                </div>
+              </div>
+
+              {!confirmationData.hasSufficientBalance && (
+                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm">
+                    Insufficient wallet balance. Please add funds to book this appointment.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmationModal(false)}
+                className="flex-1 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAppointment}
+                disabled={!confirmationData.hasSufficientBalance}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-[#fdce20] to-amber-500 text-black rounded-lg hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                Confirm Appointment
               </button>
             </div>
           </div>

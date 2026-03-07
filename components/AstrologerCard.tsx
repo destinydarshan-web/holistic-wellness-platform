@@ -29,6 +29,7 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
+  const [notes, setNotes] = useState('')
 
   const handleSessionStart = async (sessionType: 'chat' | 'voice' | 'video') => {
     if (!user?.id) {
@@ -271,155 +272,125 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-xl border border-white/20 p-2 hover:border-yellow-500/30 hover:from-yellow-500/5 hover:to-white/10 transition-all duration-500 shadow-lg hover:shadow-xl hover:shadow-yellow-500/10">
-      {/* Header - Avatar, Name, Online Status */}
-      <div className="flex items-start gap-3 mb-2">
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+      {/* Header - Avatar, Name */}
+      <div className="flex items-start gap-4 mb-4">
         <div className="relative">
-          <div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-white/10">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
             {astrologer.avatar_url ? (
               <img 
                 src={astrologer.avatar_url} 
-                alt={astrologer.display_name}
-                className="w-full h-full object-cover"
+                alt={astrologer.display_name} 
+                className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => {
+                  // Fallback to emoji if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl">🧘</span>';
+                }}
               />
             ) : (
-              <User className="w-4 h-4 text-gray-400" />
+              <span className="text-2xl">🧘</span>
             )}
           </div>
-          
-          {/* Online Status Indicator */}
           {astrologer.is_online && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-green-500 rounded-full border-2 border-white/20 shadow-lg"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white/10"></div>
           )}
         </div>
-        
         <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-white truncate">{astrologer.display_name}</h3>
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-bold text-white truncate">{astrologer.display_name}</h3>
-            {astrologer.is_profile_complete && (
-              <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-            )}
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-[#fdce20] fill-[#fdce20]" />
+              ))}
+            </div>
+            <span className="text-purple-400 font-semibold">4.8</span>
           </div>
-          <p className="text-white/50 text-[10px]">Expert Astrologer</p>
-        </div>
-      </div>
-
-      {/* Rating and Experience */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1">
-          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-          <span className="text-sm font-semibold text-white">4.5</span>
-          <span className="text-white/30 text-xs">({astrologer.experience_years || 150})</span>
-        </div>
-        <div className="text-white/50 text-xs">
-          {formatExperience(astrologer.experience_years)}
+          <p className="text-gray-300 text-sm line-clamp-2 break-words">{astrologer.bio}</p>
         </div>
       </div>
 
       {/* Specialties */}
-      <div className="mb-2">
-        <div className="flex flex-wrap gap-1 mb-1">
-          {(astrologer.specialties || []).slice(0, 2).map((specialty, index) => (
-            <span 
+      <div className="mb-4">
+        <div className="flex flex-wrap gap-2">
+          {astrologer.specialties.map((specialty, index) => (
+            <span
               key={index}
-              className="px-1.5 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs rounded-full border border-yellow-500/20"
+              className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full"
             >
               {specialty}
             </span>
           ))}
-          {(astrologer.specialties || []).length > 2 && (
-            <span className="text-white/40 text-xs">+{(astrologer.specialties || []).length - 2}</span>
-          )}
         </div>
       </div>
 
-      {/* Bio */}
-      <div className="mb-3">
-        <p className="text-white/60 text-xs leading-relaxed line-clamp-2">
-          {astrologer.bio || 'Experienced astrologer providing guidance and insights to help you navigate life\'s challenges.'}
-        </p>
-      </div>
-
-      {/* Pricing */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white/50 text-xs mb-0.5">Per Min</p>
-            <p className="text-lg font-bold text-yellow-400">{formatPrice(astrologer.price_per_minute)}</p>
+      {/* Experience & Location */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-gray-300">
+            <Clock className="w-4 h-4" />
+            <span className="text-sm">{astrologer.experience_years} years exp.</span>
           </div>
-          <div className="text-right">
-            <p className="text-white/50 text-xs mb-0.5">Per Hour</p>
-            <p className="text-sm font-bold text-green-400">{formatPrice(astrologer.hourly_rate)}</p>
+        </div>
+        <div className="flex gap-4">
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-white/80 mb-1">Per Minute</h4>
+            <p className="text-lg font-semibold text-[#fdce20]">{formatPrice(astrologer.price_per_minute)}</p>
+          </div>
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-white/80 mb-1">Per Hour</h4>
+            <p className="text-lg font-semibold text-[#fdce20]">{formatPrice(astrologer.hourly_rate || (astrologer.price_per_minute * 60))}</p>
           </div>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="space-y-1.5">
-        {/* Appointment Booking Button */}
-        <button 
-          onClick={() => setShowAppointmentModal(true)}
-          disabled={loading === 'appointment'}
-          className="w-full py-2 px-3 rounded-lg bg-transparent text-white font-semibold border border-[#fdce20] hover:bg-[#fdce20] hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-        >
-          {loading === 'appointment' ? (
-            <>
-              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Booking...
-            </>
-          ) : (
-            <>
-              <Calendar size={14} />
-              Book
-            </>
-          )}
-        </button>
-
-        {astrologer.is_online && astrologer.modes.includes('chat') && (
+      <div className="space-y-3">
+        {/* Chat Button */}
+        {astrologer.is_online && (
           <button 
             onClick={() => handleSessionStart('chat')}
             disabled={loading === 'chat'}
-            className="w-full py-2 px-3 rounded-lg bg-[#fdce20] text-black font-semibold hover:bg-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-md"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-[#fdce20] to-amber-500 text-black font-semibold hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading === 'chat' ? (
               <>
-                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Starting...
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                Connecting...
               </>
             ) : (
               <>
-                <MessageCircle size={14} />
-                Chat
+                <MessageCircle size={16} />
+                Chat Now
               </>
             )}
           </button>
         )}
         
-        {astrologer.is_online && astrologer.modes.includes('voice') && (
-          <button 
-            onClick={() => handleSessionStart('voice')}
-            disabled={loading === 'voice'}
-            className="w-full py-2 px-3 rounded-lg bg-white/10 text-white/80 font-medium hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-white/10"
-          >
-            {loading === 'voice' ? (
-              <>
-                <div className="w-3 h-3 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div>
-                Connecting...
-              </>
-            ) : (
-              <>
-                <Phone size={14} />
-                Call
-              </>
-            )}
-          </button>
-        )}
+        {/* Appointment Button */}
+        <button 
+          onClick={() => setShowAppointmentModal(true)}
+          disabled={loading === 'appointment'}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-[#fdce20] to-amber-500 text-black font-semibold hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {loading === 'appointment' ? (
+            <>
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+              Booking...
+            </>
+          ) : (
+            <>
+              <Calendar size={16} />
+              Book Appointment
+            </>
+          )}
+        </button>
       </div>
 
       {/* Offline Message */}
       {!astrologer.is_online && (
-        <div className="text-center py-2 px-3 bg-white/5 rounded-lg border border-white/10 mt-2">
-          <p className="text-white/50 text-xs">Currently offline</p>
+        <div className="w-full py-3 rounded-xl bg-white/5 border border-white/10 mt-4 flex items-center justify-center">
+          <p className="text-white/50 text-sm font-medium">Currently offline</p>
         </div>
       )}
 
@@ -475,18 +446,18 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
                 <select
                   value={selectedTime}
                   onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
                 >
-                  <option value="">Select a time</option>
-                  <option value="09:00">9:00 AM</option>
-                  <option value="10:00">10:00 AM</option>
-                  <option value="11:00">11:00 AM</option>
-                  <option value="12:00">12:00 PM</option>
-                  <option value="14:00">2:00 PM</option>
-                  <option value="15:00">3:00 PM</option>
-                  <option value="16:00">4:00 PM</option>
-                  <option value="17:00">5:00 PM</option>
-                  <option value="18:00">6:00 PM</option>
+                  <option value="" className="bg-black text-white">Select a time</option>
+                  <option value="09:00" className="bg-black text-white">9:00 AM</option>
+                  <option value="10:00" className="bg-black text-white">10:00 AM</option>
+                  <option value="11:00" className="bg-black text-white">11:00 AM</option>
+                  <option value="12:00" className="bg-black text-white">12:00 PM</option>
+                  <option value="14:00" className="bg-black text-white">2:00 PM</option>
+                  <option value="15:00" className="bg-black text-white">3:00 PM</option>
+                  <option value="16:00" className="bg-black text-white">4:00 PM</option>
+                  <option value="17:00" className="bg-black text-white">5:00 PM</option>
+                  <option value="18:00" className="bg-black text-white">6:00 PM</option>
                 </select>
               </div>
             </div>

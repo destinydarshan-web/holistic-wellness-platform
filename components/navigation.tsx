@@ -74,14 +74,22 @@ export function Navigation() {
         console.log("Logout successful");
       }
       
-      // Navigate to home
-      router.push("/");
+      // Add a small delay to ensure state is cleared before navigation
+      setTimeout(() => {
+        // Navigate to home
+        router.push("/");
+        // Force a refresh to ensure all state is cleared
+        window.location.reload();
+      }, 100);
       
     } catch (error) {
       console.error("Logout exception:", error);
       
       // Emergency fallback
-      router.push("/");
+      setTimeout(() => {
+        router.push("/");
+        window.location.reload();
+      }, 100);
     }
   };
 
@@ -214,6 +222,14 @@ export function Navigation() {
                           <span className="text-sm">Dashboard</span>
                         </Link>
                         <Link
+                          href="/user/calendar"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          <Calendar size={16} />
+                          <span className="text-sm">My Calendar</span>
+                        </Link>
+                        <Link
                           href="/appointments"
                           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
                           onClick={() => setIsUserDropdownOpen(false)}
@@ -244,12 +260,12 @@ export function Navigation() {
                           <span className="text-sm">Edit Profile</span>
                         </Link>
                         <Link
-                          href="/expert/availability"
+                          href="/expert/calendar"
                           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
                           onClick={() => setIsUserDropdownOpen(false)}
                         >
                           <Calendar size={16} />
-                          <span className="text-sm">Availability</span>
+                          <span className="text-sm">My Calendar</span>
                         </Link>
                         <Link
                           href="/expert/earnings"
@@ -448,12 +464,12 @@ export function Navigation() {
                             <span>Edit Profile</span>
                           </Link>
                           <Link
-                            href="/expert/availability"
+                            href="/expert/calendar"
                             onClick={() => setIsOpen(false)}
                             className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide hover:border-l-2 hover:border-l-yellow-400 hover:shadow-sm"
                           >
                             <Calendar size={16} />
-                            <span>Availability</span>
+                            <span>My Calendar</span>
                           </Link>
                           <Link
                             href="/expert/earnings"

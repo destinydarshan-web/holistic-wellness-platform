@@ -36,6 +36,7 @@ export default function ChatSessionPage() {
   const [session, setSession] = useState<LiveSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [expertName, setExpertName] = useState<string>('Expert')
   const sessionId = params.sessionId as string
 
   // 3️⃣ Add Initial Status Check (Important)
@@ -154,6 +155,29 @@ export default function ChatSessionPage() {
     fetchSession()
   }, [user?.id, params.sessionId])
 
+  // Fetch expert name when session is loaded
+  useEffect(() => {
+    if (session?.expert_id) {
+      fetchExpertName(session.expert_id)
+    }
+  }, [session?.expert_id])
+
+  const fetchExpertName = async (expertId: string) => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('expert_astrologers')
+        .select('display_name')
+        .eq('id', expertId)
+        .single()
+
+      if (data && !error) {
+        setExpertName(data.display_name || 'Expert')
+      }
+    } catch (error) {
+      console.error('Error fetching expert name:', error)
+    }
+  }
+
   const handleRefresh = async () => {
     setRefreshing(true)
     try {
@@ -248,17 +272,17 @@ export default function ChatSessionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] pt-20">
+    <div className="h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] pt-20 flex flex-col overflow-hidden">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,200,0,0.03),_transparent_60%)]"></div>
       </div>
 
       {/* Header */}
-      <div className="relative bg-white/5 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+      <div className="relative bg-white/5 backdrop-blur-xl border-b border-white/10 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1">
               <div className="relative">
                 <div className="absolute inset-0 bg-white/10 rounded-full blur-lg opacity-50"></div>
                 <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-2 rounded-full">
@@ -272,7 +296,7 @@ export default function ChatSessionPage() {
             </div>
             
             <div className="flex items-center gap-2">
-              <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(session.status)}`}>
+              <div className={`hidden sm:flex px-3 py-1 rounded-full text-xs font-medium items-center gap-1 ${getStatusColor(session.status)}`}>
                 {getStatusIcon(session.status)}
                 <span className="capitalize">{session.status}</span>
               </div>
@@ -290,24 +314,16 @@ export default function ChatSessionPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-4 sm:p-6">
+      <div className="flex-1 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 overflow-hidden">
+        <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-4 sm:p-6 h-full flex flex-col overflow-hidden">
           {/* Waiting State */}
-          <div className="text-center py-4 sm:py-6">
-            {/* Animated Waiting Icon */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4">
-              <div className="absolute inset-0 bg-yellow-500/20 rounded-full blur-lg opacity-50 animate-pulse"></div>
-              <div className="relative bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/30 rounded-full flex items-center justify-center">
-                <Clock className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 animate-pulse" />
-              </div>
-            </div>
-            
+          <div className="text-center py-4 sm:py-6 flex-1 flex flex-col justify-center items-center overflow-hidden">
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-              Waiting for expert to accept...
+              Waiting for {expertName} to accept...
             </h2>
             
             <p className="text-gray-300 mb-4 max-w-xl mx-auto text-sm">
-              Your chat session has been created. The expert will be notified and will join shortly.
+              Your chat session has been created. {expertName} will be notified and will join shortly.
             </p>
 
             {/* Session Details Card */}
@@ -349,7 +365,6 @@ export default function ChatSessionPage() {
               <div className="flex items-start gap-2">
                 <Shield className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
                 <div className="text-left">
-                  <h4 className="text-white font-medium mb-1 text-sm">Secure & Private</h4>
                   <p className="text-gray-300 text-xs">
                     Your conversation is encrypted and private.
                   </p>
@@ -366,14 +381,6 @@ export default function ChatSessionPage() {
                 <ChevronRight className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
                 Leave Session
               </Link>
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="group flex items-center gap-2 px-4 py-2 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30 text-yellow-400 rounded-full hover:bg-yellow-500/30 transition-all duration-300 disabled:opacity-50 text-sm"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
-                Refresh
-              </button>
             </div>
 
             {/* Help Section */}

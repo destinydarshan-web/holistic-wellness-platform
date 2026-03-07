@@ -3,27 +3,44 @@ import { supabase } from '@/lib/supabaseClient'
 
 // Helper function to determine service type and table
 const getServiceTypeAndTable = (specialties: string[], userRole?: string) => {
+  console.log('=== DEBUG: Service Type Detection ===')
+  console.log('Input specialties:', specialties)
+  console.log('Input userRole:', userRole)
+  
   const specialtiesLower = specialties.map(s => s.toLowerCase())
+  console.log('Lowercase specialties:', specialtiesLower)
   
   // Check specialties for service type indicators
   if (specialtiesLower.some(s => s.includes('astrology') || s.includes('vedic') || s.includes('tarot') || s.includes('numerology'))) {
+    console.log('Detected: ASTROLOGY from specialties')
     return { serviceType: 'astrology', table: 'expert_astrologers' }
   }
   if (specialtiesLower.some(s => s.includes('anxiety') || s.includes('depression') || s.includes('counselling') || s.includes('therapy'))) {
+    console.log('Detected: COUNSELLING from specialties')
     return { serviceType: 'counselling', table: 'expert_counsellors' }
   }
   if (specialtiesLower.some(s => s.includes('yoga') || s.includes('vinyasa') || s.includes('ashtanga') || s.includes('hatha'))) {
+    console.log('Detected: YOGA from specialties')
     return { serviceType: 'yoga', table: 'expert_yoga' }
   }
   if (specialtiesLower.some(s => s.includes('meditation') || s.includes('mindfulness') || s.includes('breathing') || s.includes('vipassana'))) {
+    console.log('Detected: MEDITATION from specialties')
     return { serviceType: 'meditation', table: 'expert_meditation' }
   }
   
   // Fallback to role-based detection
-  if (userRole === 'astrologer') return { serviceType: 'astrology', table: 'expert_astrologers' }
-  if (userRole === 'expert') return { serviceType: 'meditation', table: 'expert_meditation' } // Default for experts
+  console.log('No specialty-based detection, falling back to role-based detection')
+  if (userRole === 'astrologer') {
+    console.log('Detected: ASTROLOGY from role')
+    return { serviceType: 'astrology', table: 'expert_astrologers' }
+  }
+  if (userRole === 'expert') {
+    console.log('Detected: MEDITATION from role (expert role defaults to meditation)')
+    return { serviceType: 'meditation', table: 'expert_meditation' }
+  }
   
   // Default fallback
+  console.log('Using default fallback: MEDITATION')
   return { serviceType: 'meditation', table: 'expert_meditation' }
 }
 
@@ -94,9 +111,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if this is a profile completion (all required fields filled)
-    const isProfileComplete = display_name && 
-                              price_per_minute && 
-                              specialties && 
+    const isProfileComplete = !!display_name && 
+                              !!price_per_minute && 
+                              !!specialties && 
                               specialties.length > 0
     
     console.log('=== DEBUG: Profile Completion Check ===')
@@ -106,6 +123,25 @@ export async function POST(request: NextRequest) {
       specialties: !!specialties && specialties.length > 0,
       isProfileComplete
     })
+    console.log('isProfileComplete value:', isProfileComplete, typeof isProfileComplete)
+    
+    // Validate boolean fields
+    const validatedData = {
+      id,
+      display_name: display_name || '',
+      bio: bio || '',
+      experience_years: experience_years || 0,
+      price_per_minute: price_per_minute || 0,
+      specialties: specialties || [],
+      avatar_url: avatar_url || '',
+      is_profile_complete: isProfileComplete, // This should be boolean
+      updated_at: new Date().toISOString()
+    }
+    
+    console.log('=== DEBUG: Validated Data for Upsert ===')
+    console.log('is_profile_complete:', validatedData.is_profile_complete, typeof validatedData.is_profile_complete)
+    console.log('experience_years:', validatedData.experience_years, typeof validatedData.experience_years)
+    console.log('price_per_minute:', validatedData.price_per_minute, typeof validatedData.price_per_minute)
     
     console.log('=== DEBUG: Upserting Expert Profile ===')
     console.log('ID:', id)
@@ -120,14 +156,30 @@ export async function POST(request: NextRequest) {
     
     // Determine service type and correct table
     const { serviceType, table } = getServiceTypeAndTable(specialties || [], user.user_metadata?.role)
-    console.log('=== DEBUG: Service Type Detection ===')
+    console.log('=== DEBUG: Service Type Detection Results ===')
     console.log('Service Type:', serviceType)
     console.log('Using Table:', table)
+    console.log('User Role from metadata:', user.user_metadata?.role)
+    console.log('Specialties provided:', specialties)
+    
+    // Additional check: Force meditation for 'expert' role regardless of specialties
+    let finalTable = table
+    let finalServiceType = serviceType
+    
+    if (user.user_metadata?.role === 'expert') {
+      console.log('User role is "expert" - forcing to meditation table')
+      finalTable = 'expert_meditation'
+      finalServiceType = 'meditation'
+    }
+    
+    console.log('=== DEBUG: Final Table Selection ===')
+    console.log('Final Service Type:', finalServiceType)
+    console.log('Final Table:', finalTable)
     
     // Check if expert entry exists in the correct table
     console.log('=== DEBUG: Checking Existing Profile ===')
     const { data: existingProfile, error: checkError } = await supabase
-      .from(table)
+      .from(finalTable)
       .select("*")
       .eq("id", user.id)
       .single()
@@ -137,18 +189,8 @@ export async function POST(request: NextRequest) {
     
     // Upsert expert profile to the correct table
     const { data, error } = await supabase
-      .from(table)
-      .upsert({
-        id,
-        display_name,
-        bio,
-        experience_years,
-        price_per_minute,
-        specialties,
-        avatar_url,
-        is_profile_complete: isProfileComplete,
-        updated_at: new Date().toISOString()
-      }, {
+      .from(finalTable)
+      .upsert(validatedData, {
         onConflict: 'id'
       })
       .select()

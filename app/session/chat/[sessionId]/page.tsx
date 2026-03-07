@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { Navigation } from "@/components/navigation";
-import { MessageCircle, Clock, User, Send, DollarSign, Star, Phone, Video, Users, CheckCircle } from "lucide-react";
+import { MessageCircle, Clock, User, Send, DollarSign, Star, Phone, Video, Users, CheckCircle, X } from "lucide-react";
 
 interface Message {
   id: string;
@@ -51,6 +51,7 @@ export default function ChatPage() {
   const [isEndingSession, setIsEndingSession] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageSending, setMessageSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timer effect
@@ -332,9 +333,12 @@ export default function ChatPage() {
       return;
     }
 
-    setMessageSending(true);
+    // Clear any previous errors
+    setSendError(null);
+
     const messageContent = newMessage.trim();
-    setNewMessage("");
+    setNewMessage(""); // Clear input immediately for better UX
+    setMessageSending(true);
 
     const messageData = {
       session_id: sessionId,
@@ -346,42 +350,58 @@ export default function ChatPage() {
 
     try {
       console.log('=== DEBUG: Attempting database insert ===');
-      console.log('=== DEBUG: Message data ===', messageData);
       
-      // Add timeout to prevent hanging using AbortController
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        controller.abort();
-      }, 10000); // 10 second timeout
-
       const { data, error } = await supabase
         .from("messages")
         .insert(messageData)
-        .abortSignal(controller.signal);
-
-      // Clear timeout if successful
-      clearTimeout(timeoutId);
+        .select();
 
       console.log('=== DEBUG: Insert result ===', { data, error });
 
       if (error) {
-        if (error.name === 'AbortError') {
-          console.error('Insert timeout - possible RLS policy issue');
-          alert('Message sending timed out. Please check your connection and try again.');
+        console.error("Insert error:", error);
+        // Restore message on error
+        setNewMessage(messageContent);
+        
+        // Set error state for UI feedback
+        let errorMessage = 'Failed to send message';
+        if (error.message.includes('permission denied') || error.message.includes('row level security')) {
+          errorMessage = 'Permission denied. Please check your connection and try again.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Message sending timed out. Please try again.';
         } else {
-          console.error("Insert error:", error);
-          alert('Failed to send message: ' + error.message);
+          errorMessage = 'Failed to send message: ' + error.message;
         }
-        setNewMessage(messageContent); // Restore message on error
-        setMessageSending(false);
-        return;
+        
+        setSendError(errorMessage);
+        
+        // Auto-clear error after 5 seconds
+        setTimeout(() => setSendError(null), 5000);
+        
       } else {
         console.log('=== DEBUG: Message sent successfully ===');
+        // Message sent successfully - realtime will handle adding it to the UI
       }
     } catch (error) {
       console.error('Send message error:', error);
-      alert('Failed to send message. Please try again.');
-      setNewMessage(messageContent); // Restore message on error
+      // Restore message on error
+      setNewMessage(messageContent);
+      
+      // Set error state for UI feedback
+      let errorMessage = 'Failed to send message';
+      if (error instanceof Error) {
+        if (error.message.includes('timeout') || error.message.includes('AbortError')) {
+          errorMessage = 'Message sending timed out. Please check your connection and try again.';
+        } else {
+          errorMessage = 'An unexpected error occurred. Please try again.';
+        }
+      }
+      
+      setSendError(errorMessage);
+      
+      // Auto-clear error after 5 seconds
+      setTimeout(() => setSendError(null), 5000);
+      
     } finally {
       console.log('=== DEBUG: Setting messageSending to false ===');
       setMessageSending(false);
@@ -827,47 +847,58 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] flex flex-col overflow-hidden">
       <Navigation />
       
-      {/* Chat Header - Fixed at Top */}
-      <div className="fixed top-16 left-0 right-0 bg-[#1e293b] border-b border-white/10 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 z-30 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,200,0,0.03),_transparent_60%)]"></div>
+      </div>
+      
+      {/* Chat Header - Enhanced Design */}
+      <div className="relative z-10 fixed top-16 left-0 right-0 bg-gradient-to-r from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-xl border-b border-[#fdce20]/20 px-2 sm:px-4 lg:px-6 py-2 sm:py-4 flex-shrink-0">
+        <div className="flex items-center justify-between gap-1 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0">
+            <div className="flex items-center gap-1 sm:gap-3">
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 bg-[#fdce20]/20 rounded-full blur-lg opacity-50"></div>
+                <div className="relative bg-gradient-to-br from-[#fdce20]/20 to-[#d8b4fe]/20 backdrop-blur-sm border border-[#fdce20]/30 w-5 h-5 sm:w-10 sm:h-10 rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-2.5 h-2.5 sm:w-5 sm:h-5 text-[#fdce20]" />
+                </div>
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm sm:text-lg font-semibold text-white truncate">
-                  {isExpert ? 'Consultation Session' : otherParticipant?.display_name || 'Expert'}
+                <h2 className="text-xs sm:text-lg font-semibold text-white truncate">
+                  {isExpert ? 'Consultation' : (otherParticipant?.display_name || 'Expert')}
                 </h2>
-                <p className="text-xs sm:text-sm text-white/60 truncate">
+                <p className="text-xs text-[#d8b4fe] truncate hidden sm:inline">
                   {isExpert ? 'User' : 'Expert Astrologer'} • {sessionInfo?.session_type || 'Chat'}
+                </p>
+                <p className="text-xs text-[#d8b4fe] truncate sm:hidden">
+                  {isExpert ? 'User' : 'Expert'} • {sessionInfo?.session_type || 'Chat'}
                 </p>
               </div>
             </div>
           </div>
           
-          {/* Timer and Cost - Mobile Optimized */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          {/* Timer and Cost - Same Row Layout */}
+          <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
             {timerStarted && (
-              <div className="flex items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-1 sm:gap-2 bg-white/10 px-2 py-1 sm:px-3 sm:py-2 rounded-lg">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400" />
-                  <span className="text-xs sm:text-sm text-white font-mono">{formatTime(elapsedTime)}</span>
+              <div className="flex items-center gap-0.5 sm:gap-2">
+                <div className="flex items-center gap-0.5 bg-gradient-to-r from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-sm border border-[#fdce20]/30 px-1 py-0.5 sm:px-3 sm:py-2 rounded-lg">
+                  <Clock className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-[#fdce20]" />
+                  <span className="text-xs text-white font-mono">{formatTime(elapsedTime)}</span>
                 </div>
                 {sessionInfo?.price_per_minute && (
-                  <div className="hidden sm:flex items-center gap-2 bg-green-500/20 px-3 py-2 rounded-lg border border-green-500/30">
-                    <DollarSign className="w-4 h-4 text-green-400" />
-                    <span className="text-green-400 font-semibold">₹{sessionCost}</span>
+                  <div className="flex items-center gap-0.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 px-1 py-0.5 sm:px-3 sm:py-2 rounded-lg">
+                    <DollarSign className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-green-400" />
+                    <span className="text-green-400 font-semibold text-xs">₹{sessionCost}</span>
                   </div>
                 )}
               </div>
             )}
             <button
               onClick={endSession}
-              className="px-2 py-1 sm:px-4 sm:py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors text-xs sm:text-sm font-medium"
+              className="px-2 py-0.5 sm:px-4 sm:py-2 w-16 sm:w-auto bg-gradient-to-r from-red-500/20 to-red-600/20 backdrop-blur-sm border border-red-500/30 text-red-400 rounded-lg hover:from-red-500/30 hover:to-red-600/30 transition-all duration-300 text-xs sm:text-sm font-medium hover:scale-105"
             >
               <span className="hidden sm:inline">End Session</span>
               <span className="sm:hidden">End</span>
@@ -876,21 +907,32 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 pb-32 sm:pb-32">
+      {/* Messages Area - Enhanced Design */}
+      <div className="relative z-0 flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 pb-32 sm:pb-32 mt-16">
         <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-8 sm:py-12">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6">
+                <div className="absolute inset-0 bg-[#fdce20]/20 rounded-full blur-lg opacity-50 animate-pulse"></div>
+                <div className="relative bg-gradient-to-br from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-sm border border-[#fdce20]/30 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto">
+                  <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 text-[#fdce20]" />
+                </div>
               </div>
-              <p className="text-white/60 text-sm sm:text-base">
-                {isExpert ? 'Waiting for user to start the conversation...' : 'Start the conversation by sending a message'}
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">
+                {isExpert ? 'Waiting for user to start the conversation...' : 'Start the conversation'}
+              </h3>
+              <p className="text-[#d8b4fe] text-sm sm:text-base mb-4">
+                {isExpert ? 'The session will begin when the user sends their first message' : 'Send your first message to begin the consultation'}
               </p>
               {!isExpert && (
-                <p className="text-white/40 text-xs sm:text-sm mt-2">
-                  The timer will start when you send your first message
-                </p>
+                <div className="bg-gradient-to-r from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-sm border border-[#fdce20]/30 rounded-xl p-4 max-w-md mx-auto">
+                  <div className="flex items-center gap-3 text-sm">
+                    <Clock className="w-4 h-4 text-[#fdce20]" />
+                    <p className="text-white/80">
+                      The timer will start when you send your first message
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -907,17 +949,17 @@ export default function ChatPage() {
                 className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} animate-fadeIn`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className={`max-w-[85%] sm:max-w-lg lg:max-w-xl ${isOwnMessage ? 'order-2' : 'order-1'}`}>
-                  <div className={`px-3 py-2 sm:px-4 sm:py-3 rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
+                <div className={`w-[70%] ${isOwnMessage ? 'order-2' : 'order-1'}`}>
+                  <div className={`px-4 py-3 sm:px-5 sm:py-3 rounded-2xl transition-all duration-200 ${
                     isOwnMessage 
-                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg shadow-yellow-500/20' 
-                      : 'bg-white/10 text-white border border-white/20 backdrop-blur-sm'
+                      ? 'bg-[#fdce20] text-black' 
+                      : 'bg-white/10 text-white'
                   }`}>
-                    <p className="text-xs sm:text-sm font-medium mb-1 opacity-90 truncate">
+                    <p className="text-xs sm:text-sm font-medium mb-1 opacity-80 truncate">
                       {displayName}
                     </p>
                     <p className="text-sm sm:text-base break-words leading-relaxed">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${isOwnMessage ? 'text-black/70' : 'text-white/60'}`}>
+                    <p className={`text-xs mt-1 ${isOwnMessage ? 'text-black/60' : 'text-white/60'}`}>
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -926,11 +968,11 @@ export default function ChatPage() {
             );
           })}
           
-          {/* Typing Indicator */}
+          {/* Typing Indicator - Clean Design */}
           {otherUserTyping && (
             <div className="flex justify-start animate-fadeIn">
-              <div className="max-w-[85%] sm:max-w-lg lg:max-w-xl order-1">
-                <div className="px-3 py-2 sm:px-4 sm:py-3 rounded-2xl bg-white/10 text-white border border-white/20 backdrop-blur-sm">
+              <div className="w-[70%] order-1">
+                <div className="px-4 py-3 sm:px-5 sm:py-3 rounded-2xl bg-white/10 text-white">
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                     <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -944,8 +986,23 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Fixed Message Input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1e293b] border-t border-white/10 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 z-40">
+      {/* Fixed Message Input - Enhanced Design */}
+      <div className="relative z-10 fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e293b] to-[#0f172a] backdrop-blur-xl border-t border-[#fdce20]/20 px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+        {/* Error Display */}
+        {sendError && (
+          <div className="max-w-4xl mx-auto mb-3">
+            <div className="bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-2 flex items-center justify-between">
+              <p className="text-red-400 text-sm">{sendError}</p>
+              <button
+                onClick={() => setSendError(null)}
+                className="text-red-400 hover:text-red-300 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end gap-2 sm:gap-3">
             <div className="flex-1 relative">
@@ -962,30 +1019,34 @@ export default function ChatPage() {
                   }
                 }}
                 placeholder={isExpert ? "Type your response..." : "Type your message..."}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 resize-none transition-all duration-200 pr-10 sm:pr-12 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-gradient-to-br from-white/10 to-white/5 border border-[#d8b4fe]/30 rounded-xl text-white placeholder-[#d8b4fe]/60 focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 focus:bg-white/10 resize-none transition-all duration-300 pr-10 sm:pr-12 text-sm sm:text-base backdrop-blur-sm"
                 rows={1}
                 disabled={messageSending}
               />
               {messageSending && (
                 <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-[#fdce20] border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
             <button
               onClick={sendMessage}
               disabled={!newMessage.trim() || messageSending}
-              className="px-3 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-black rounded-xl font-semibold hover:shadow-lg hover:shadow-yellow-500/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2 transform hover:scale-[1.05] active:scale-[0.95] text-sm sm:text-base"
+              className={`px-4 py-[11px] rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 h-[44px] sm:h-[48px] ${
+                sendError 
+                  ? 'bg-red-500 text-white hover:bg-red-600' 
+                  : 'bg-gradient-to-r from-[#fdce20] to-amber-500 text-black hover:from-[#fdce20] hover:to-amber-500'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {messageSending ? (
                 <>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                   <span className="hidden sm:inline">Sending...</span>
                 </>
               ) : (
                 <>
-                  <Send className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Send</span>
+                  <Send className="w-4 h-5" />
+                  <span className="hidden sm:inline">{sendError ? 'Retry' : 'Send'}</span>
                 </>
               )}
             </button>
@@ -993,38 +1054,47 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* End Session Confirmation Dialog */}
+      {/* End Session Confirmation Dialog - Enhanced */}
       {showEndConfirmation && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1e293b] border border-white/20 rounded-xl p-4 sm:p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg sm:text-xl font-semibold text-white mb-4">End Session</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gradient-to-br from-[#1e293b] to-[#0f172a] border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6 max-w-md w-full mx-4 shadow-2xl shadow-[#fdce20]/10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500/20 to-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-full flex items-center justify-center">
+                <X className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-white">End Session</h3>
+            </div>
             
-            <div className="space-y-3 mb-6">
+            <div className="space-y-4 mb-6">
               <p className="text-white/80 text-sm sm:text-base">
                 Are you sure you want to end this consultation session?
               </p>
               
               {timerStarted && sessionInfo?.price_per_minute && (
-                <div className="bg-white/10 rounded-lg p-3">
-                  <p className="text-white/80 text-sm mb-2">Session Summary:</p>
-                  <div className="flex justify-between text-white text-sm">
-                    <span>Duration:</span>
-                    <span>{Math.ceil(elapsedTime / 60)} minutes</span>
-                  </div>
-                  <div className="flex justify-between text-white text-sm">
-                    <span>Rate:</span>
-                    <span>₹{sessionInfo.price_per_minute}/min</span>
-                  </div>
-                  <div className="flex justify-between text-yellow-400 font-semibold pt-2 border-t border-white/20 text-sm">
-                    <span>Total Cost:</span>
-                    <span>₹{Math.ceil(elapsedTime / 60) * sessionInfo.price_per_minute}</span>
+                <div className="bg-gradient-to-br from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-sm border border-[#fdce20]/30 rounded-xl p-4">
+                  <p className="text-white/80 text-sm mb-3 font-medium">Session Summary:</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-white text-sm">
+                      <span>Duration:</span>
+                      <span>{Math.ceil(elapsedTime / 60)} minutes</span>
+                    </div>
+                    <div className="flex justify-between text-white text-sm">
+                      <span>Rate:</span>
+                      <span>₹{sessionInfo.price_per_minute}/min</span>
+                    </div>
+                    <div className="flex justify-between text-[#fdce20] font-semibold pt-2 border-t border-[#fdce20]/30 text-sm">
+                      <span>Total Cost:</span>
+                      <span>₹{Math.ceil(elapsedTime / 60) * sessionInfo.price_per_minute}</span>
+                    </div>
                   </div>
                 </div>
               )}
               
-              <p className="text-white/60 text-xs sm:text-sm">
-                This action will end the session for both participants and process any payments.
-              </p>
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3">
+                <p className="text-white/60 text-xs sm:text-sm">
+                  This action will end the session for both participants and process any payments.
+                </p>
+              </div>
             </div>
             
             <div className="flex gap-3">
@@ -1033,7 +1103,7 @@ export default function ChatPage() {
                   console.log('=== DEBUG: Cancel button clicked ===');
                   cancelEndSession();
                 }}
-                className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm sm:text-base"
+                className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-br from-white/10 to-white/5 text-white rounded-xl hover:from-white/20 hover:to-white/10 transition-all duration-300 text-sm sm:text-base border border-white/20"
               >
                 Cancel
               </button>
@@ -1042,7 +1112,7 @@ export default function ChatPage() {
                   console.log('=== DEBUG: Confirm End Session button clicked ===');
                   confirmEndSession();
                 }}
-                className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base"
+                className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 text-sm sm:text-base shadow-lg shadow-red-500/20"
               >
                 End Session
               </button>
@@ -1051,25 +1121,30 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Session Ending Loading Overlay */}
+      {/* Session Ending Loading Overlay - Enhanced */}
       {isEndingSession && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#1e293b] border border-white/20 rounded-xl p-6 max-w-sm w-full mx-4 text-center">
-            <div className="w-12 h-12 border-3 border-[#fbcc1e] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold text-white mb-2">Ending Session</h3>
-            <p className="text-white/60 text-sm">Please wait while we process your session...</p>
-            <div className="mt-4 space-y-2 text-left text-xs text-white/40">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#fbcc1e] rounded-full animate-pulse"></div>
-                <span>Updating session status</span>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gradient-to-br from-[#1e293b] to-[#0f172a] border border-[#fdce20]/30 rounded-2xl p-6 max-w-sm w-full mx-4 text-center shadow-2xl shadow-[#fdce20]/10">
+            <div className="relative w-16 h-16 mx-auto mb-6">
+              <div className="absolute inset-0 bg-[#fdce20]/20 rounded-full blur-lg opacity-50"></div>
+              <div className="relative bg-gradient-to-br from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-sm border border-[#fdce20]/30 w-16 h-16 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 border-3 border-[#fdce20] border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-white/20 rounded-full"></div>
-                <span>Processing payment</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-3">Ending Session</h3>
+            <p className="text-[#d8b4fe] text-sm mb-6">Please wait while we process your session...</p>
+            <div className="space-y-3 text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-[#fdce20] rounded-full animate-pulse"></div>
+                <span className="text-white/80 text-sm">Updating session status</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-white/20 rounded-full"></div>
-                <span>Updating earnings</span>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-[#d8b4fe] rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                <span className="text-white/60 text-sm">Processing payment</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-white/40 rounded-full" style={{ animationDelay: '600ms' }}></div>
+                <span className="text-white/60 text-sm">Updating earnings</span>
               </div>
             </div>
           </div>

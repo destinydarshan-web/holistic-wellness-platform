@@ -313,11 +313,11 @@ export default function AppointmentsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-white/10 text-white border border-white/20'
-      case 'confirmed': return 'bg-white/10 text-white border border-white/20'
-      case 'completed': return 'bg-white/10 text-white border border-white/20'
-      case 'cancelled': return 'bg-white/10 text-white border border-white/20'
-      case 'rescheduled': return 'bg-white/10 text-white border border-white/20'
+      case 'pending': return 'bg-[#d8b4fe]/20 text-[#d8b4fe] border border-[#d8b4fe]/30'
+      case 'confirmed': return 'bg-[#fdce20]/20 text-[#fdce20] border border-[#fdce20]/30'
+      case 'completed': return 'bg-green-500/20 text-green-400 border border-green-500/30'
+      case 'cancelled': return 'bg-red-500/20 text-red-400 border border-red-500/30'
+      case 'rescheduled': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
       case 'astrologer_rejected': return 'bg-red-500/20 text-red-400 border border-red-500/30'
       default: return 'bg-white/10 text-white border border-white/20'
     }
@@ -440,26 +440,26 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Header */}
-      <div className="relative bg-white/5 backdrop-blur-xl border-b border-white/10">
+      <div className="relative bg-gradient-to-r from-[#fdce20]/10 to-[#d8b4fe]/10 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-lg opacity-50"></div>
-                <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-full">
-                  <Calendar className="w-8 h-8 text-white" />
+                <div className="absolute inset-0 bg-[#fdce20]/20 rounded-full blur-lg opacity-50"></div>
+                <div className="relative bg-gradient-to-br from-[#fdce20]/20 to-[#d8b4fe]/20 backdrop-blur-sm border border-[#fdce20]/30 p-3 rounded-full">
+                  <Calendar className="w-8 h-8 text-[#fdce20]" />
                 </div>
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">My Appointments</h1>
-                <p className="text-gray-300 text-sm sm:text-base">Manage your spiritual consultations</p>
+                <p className="text-[#d8b4fe] text-sm sm:text-base">Manage all your Appointments at one place </p>
               </div>
             </div>
             <Link 
               href="/dashboard" 
-              className="group flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white hover:bg-white/15 transition-all duration-300"
+              className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#fdce20]/20 to-[#d8b4fe]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-full text-white hover:from-[#fdce20]/30 hover:to-[#d8b4fe]/30 transition-all duration-300 hover:scale-105"
             >
-              <ChevronRight className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" />
+              <ChevronRight className="w-5 h-5 text-[#fdce20] group-hover:rotate-180 transition-transform duration-300" />
               <span className="hidden sm:inline">Back to Dashboard</span>
               <span className="sm:hidden">Dashboard</span>
             </Link>
@@ -471,7 +471,7 @@ export default function AppointmentsPage() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {/* Cancelled by User */}
-          <div className="group relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+          <div className="group relative bg-gradient-to-br from-red-500/10 to-red-600/10 backdrop-blur-xl rounded-2xl border border-red-500/20 p-6 hover:from-red-500/15 hover:to-red-600/15 transition-all duration-300 hover:scale-105">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -482,92 +482,92 @@ export default function AppointmentsPage() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-white">{appointments.filter(apt => apt.status === 'cancelled').length}</p>
-                  <p className="text-gray-300 text-sm">Cancelled by User</p>
+                  <p className="text-red-300 text-sm">Cancelled by User</p>
                 </div>
               </div>
               <AlertCircle className="w-6 h-6 text-red-400" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-200">
+              <p className="text-lg font-medium text-red-200">
                 {appointments.filter(apt => apt.status === 'cancelled').length > 0 ? `${appointments.filter(apt => apt.status === 'cancelled').length} cancelled` : 'No cancelled'}
               </p>
             </div>
           </div>
 
           {/* Pending */}
-          <div className="group relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+          <div className="group relative bg-gradient-to-br from-[#d8b4fe]/10 to-[#d8b4fe]/15 backdrop-blur-xl rounded-2xl border border-[#d8b4fe]/20 p-6 hover:from-[#d8b4fe]/15 hover:to-[#d8b4fe]/20 transition-all duration-300 hover:scale-105">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-white/10 rounded-full blur-lg opacity-50"></div>
-                  <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-full">
-                    <Clock className="w-6 h-6 text-white" />
+                  <div className="absolute inset-0 bg-[#d8b4fe]/20 rounded-full blur-lg opacity-50"></div>
+                  <div className="relative bg-[#d8b4fe]/10 backdrop-blur-sm border border-[#d8b4fe]/30 p-3 rounded-full">
+                    <Clock className="w-6 h-6 text-[#d8b4fe]" />
                   </div>
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-white">{appointments.filter(apt => apt.status === 'pending' || apt.status === 'upcoming').length}</p>
-                  <p className="text-gray-300 text-sm">Pending</p>
+                  <p className="text-[#d8b4fe] text-sm">Pending</p>
                 </div>
               </div>
-              <Bell className="w-6 h-6 text-white/60" />
+              <Bell className="w-6 h-6 text-[#d8b4fe]" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-200">
+              <p className="text-lg font-medium text-[#d8b4fe]">
                 {appointments.filter(apt => apt.status === 'pending' || apt.status === 'upcoming').length > 0 ? `${appointments.filter(apt => apt.status === 'pending' || apt.status === 'upcoming').length} pending` : 'No pending'}
               </p>
             </div>
           </div>
 
           {/* Confirmed */}
-          <div className="group relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+          <div className="group relative bg-gradient-to-br from-[#fdce20]/10 to-[#fdce20]/15 backdrop-blur-xl rounded-2xl border border-[#fdce20]/20 p-6 hover:from-[#fdce20]/15 hover:to-[#fdce20]/20 transition-all duration-300 hover:scale-105">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-white/10 rounded-full blur-lg opacity-50"></div>
-                  <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-full">
-                    <CheckCircle className="w-6 h-6 text-white" />
+                  <div className="absolute inset-0 bg-[#fdce20]/20 rounded-full blur-lg opacity-50"></div>
+                  <div className="relative bg-[#fdce20]/10 backdrop-blur-sm border border-[#fdce20]/30 p-3 rounded-full">
+                    <CheckCircle className="w-6 h-6 text-[#fdce20]" />
                   </div>
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-white">{appointments.filter(apt => apt.status === 'confirmed').length}</p>
-                  <p className="text-gray-300 text-sm">Confirmed</p>
+                  <p className="text-[#fdce20] text-sm">Confirmed</p>
                 </div>
               </div>
-              <CheckCircle className="w-6 h-6 text-green-400" />
+              <CheckCircle className="w-6 h-6 text-[#fdce20]" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-200">
+              <p className="text-lg font-medium text-[#fdce20]">
                 {appointments.filter(apt => apt.status === 'confirmed').length > 0 ? `${appointments.filter(apt => apt.status === 'confirmed').length} confirmed` : 'No confirmed'}
               </p>
             </div>
           </div>
 
           {/* Completed */}
-          <div className="group relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+          <div className="group relative bg-gradient-to-br from-green-500/10 to-green-600/10 backdrop-blur-xl rounded-2xl border border-green-500/20 p-6 hover:from-green-500/15 hover:to-green-600/15 transition-all duration-300 hover:scale-105">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-white/10 rounded-full blur-lg opacity-50"></div>
-                  <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-full">
-                    <CheckCircle className="w-6 h-6 text-white" />
+                  <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg opacity-50"></div>
+                  <div className="relative bg-green-500/10 backdrop-blur-sm border border-green-500/30 p-3 rounded-full">
+                    <CheckCircle className="w-6 h-6 text-green-400" />
                   </div>
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-white">{appointments.filter(apt => apt.status === 'completed').length}</p>
-                  <p className="text-gray-300 text-sm">Completed</p>
+                  <p className="text-green-300 text-sm">Completed</p>
                 </div>
               </div>
-              <Star className="w-6 h-6 text-blue-400" />
+              <Star className="w-6 h-6 text-green-400" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-200">
+              <p className="text-lg font-medium text-green-200">
                 {appointments.filter(apt => apt.status === 'completed').length > 0 ? `${appointments.filter(apt => apt.status === 'completed').length} completed` : 'No completed'}
               </p>
             </div>
           </div>
 
           {/* Rejected by Astrologer */}
-          <div className="group relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+          <div className="group relative bg-gradient-to-br from-red-500/10 to-red-600/10 backdrop-blur-xl rounded-2xl border border-red-500/20 p-6 hover:from-red-500/15 hover:to-red-600/15 transition-all duration-300 hover:scale-105">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -578,13 +578,13 @@ export default function AppointmentsPage() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-white">{appointments.filter(apt => apt.status === 'astrologer_rejected').length}</p>
-                  <p className="text-gray-300 text-sm">Rejected by Astrologer</p>
+                  <p className="text-red-300 text-sm">Rejected by Astrologer</p>
                 </div>
               </div>
               <AlertCircle className="w-6 h-6 text-red-400" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-200">
+              <p className="text-lg font-medium text-red-200">
                 {appointments.filter(apt => apt.status === 'astrologer_rejected').length > 0 ? `${appointments.filter(apt => apt.status === 'astrologer_rejected').length} rejected` : 'No rejected'}
               </p>
             </div>
@@ -594,19 +594,19 @@ export default function AppointmentsPage() {
 
       {/* Filters and Controls */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6">
+        <div className="bg-gradient-to-r from-[#fdce20]/5 to-[#d8b4fe]/5 backdrop-blur-xl rounded-3xl border border-[#fdce20]/20 p-6">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Search */}
             <div className="flex-1">
               <div className="relative group">
-                <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-focus-within:opacity-20 transition-opacity duration-300"></div>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                <div className="absolute inset-0 bg-[#fdce20]/10 rounded-xl opacity-0 group-focus-within:opacity-20 transition-opacity duration-300"></div>
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#d8b4fe] z-10" />
                 <input
                   type="text"
                   placeholder="Search appointments by expert name or notes..."
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="relative w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-white/20 focus:ring-2 focus:ring-white/10 transition-all duration-300"
+                  className="relative w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-[#d8b4fe]/20 rounded-xl text-white placeholder-[#d8b4fe]/60 focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 transition-all duration-300"
                 />
               </div>
             </div>
@@ -616,7 +616,7 @@ export default function AppointmentsPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="w-full px-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 focus:ring-2 focus:ring-white/10 transition-all duration-300 appearance-none cursor-pointer"
+                className="w-full px-4 py-4 bg-white/5 backdrop-blur-sm border border-[#d8b4fe]/20 rounded-xl text-white focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 transition-all duration-300 appearance-none cursor-pointer"
               >
                 <option value="all" className="bg-[#0b0f19]">All Status</option>
                 <option value="pending" className="bg-[#0b0f19]">Pending</option>
@@ -633,7 +633,7 @@ export default function AppointmentsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => handleSort(e.target.value as 'date' | 'status' | 'expert')}
-                className="w-full px-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 focus:ring-2 focus:ring-white/10 transition-all duration-300 appearance-none cursor-pointer"
+                className="w-full px-4 py-4 bg-white/5 backdrop-blur-sm border border-[#d8b4fe]/20 rounded-xl text-white focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 transition-all duration-300 appearance-none cursor-pointer"
               >
                 <option value="date" className="bg-[#0b0f19]">Sort by Date</option>
                 <option value="status" className="bg-[#0b0f19]">Sort by Status</option>
@@ -646,7 +646,7 @@ export default function AppointmentsPage() {
               <select
                 value={viewMode}
                 onChange={(e) => handleViewMode(e.target.value as 'grid' | 'list')}
-                className="w-full px-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 focus:ring-2 focus:ring-white/10 transition-all duration-300 appearance-none cursor-pointer"
+                className="w-full px-4 py-4 bg-white/5 backdrop-blur-sm border border-[#d8b4fe]/20 rounded-xl text-white focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 transition-all duration-300 appearance-none cursor-pointer"
               >
                 <option value="grid" className="bg-[#0b0f19]">Grid View</option>
                 <option value="list" className="bg-[#0b0f19]">List View</option>
@@ -673,7 +673,7 @@ export default function AppointmentsPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/astrology"
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-yellow-500 text-black rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#fdce20] to-[#d8b4fe] text-black rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <Sparkles className="w-5 h-5" />
                 <span>Book Consultation</span>
@@ -682,7 +682,7 @@ export default function AppointmentsPage() {
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white hover:bg-white/15 transition-all duration-300"
+                  className="px-8 py-4 bg-gradient-to-r from-[#d8b4fe]/20 to-[#fdce20]/20 backdrop-blur-sm border border-[#d8b4fe]/30 rounded-full text-white hover:from-[#d8b4fe]/30 hover:to-[#fdce20]/30 transition-all duration-300 hover:scale-105"
                 >
                   Clear Search
                 </button>
@@ -695,8 +695,8 @@ export default function AppointmentsPage() {
               <div
                 key={appointment.id}
                 onClick={() => handleAppointmentClick(appointment)}
-                className={`group relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300 cursor-pointer ${
-                  selectedAppointment?.id === appointment.id ? 'ring-2 ring-yellow-400/50' : ''
+                className={`group relative bg-gradient-to-br from-[#fdce20]/5 to-[#d8b4fe]/5 backdrop-blur-xl rounded-2xl border border-[#d8b4fe]/20 p-6 hover:from-[#fdce20]/10 hover:to-[#d8b4fe]/10 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-xl ${
+                  selectedAppointment?.id === appointment.id ? 'ring-2 ring-[#fdce20]/50 shadow-lg shadow-[#fdce20]/20' : ''
                 }`}
               >
                 {/* Header */}
@@ -710,17 +710,17 @@ export default function AppointmentsPage() {
                           className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
                         />
                       ) : (
-                        <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-                          <Users className="w-8 h-8 text-white/60" />
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#d8b4fe]/20 to-[#fdce20]/20 backdrop-blur-sm border border-[#d8b4fe]/30 flex items-center justify-center">
+                          <Users className="w-8 h-8 text-[#d8b4fe]" />
                         </div>
                       )}
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white/20 flex items-center justify-center">
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-[#fdce20] to-[#d8b4fe] rounded-full border-2 border-white/20 flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white">{appointment.expert?.display_name || 'Expert'}</h3>
-                      <p className="text-gray-300 text-sm">{appointment.expert?.primary_specialization || appointment.expert?.specialization || 'Spiritual Guide'}</p>
+                      <p className="text-[#d8b4fe] text-sm">{appointment.expert?.primary_specialization || appointment.expert?.specialization || 'Spiritual Guide'}</p>
                     </div>
                   </div>
 
@@ -733,8 +733,8 @@ export default function AppointmentsPage() {
 
                 {/* Date & Time */}
                 <div className="relative mb-6">
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <Calendar className="w-5 h-5 text-white/60" />
+                  <div className="flex items-center gap-3 text-[#d8b4fe]">
+                    <Calendar className="w-5 h-5 text-[#fdce20]" />
                     <span className="text-white font-medium">{formatDateTime(appointment.appointment_date, appointment.appointment_time)}</span>
                   </div>
                 </div>
@@ -750,8 +750,8 @@ export default function AppointmentsPage() {
                 {/* Notes */}
                 {appointment.notes && (
                   <div className="relative mb-6">
-                    <p className="text-sm text-gray-300 mb-2">Notes:</p>
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+                    <p className="text-sm text-[#d8b4fe] mb-2">Notes:</p>
+                    <div className="bg-gradient-to-br from-[#fdce20]/5 to-[#d8b4fe]/5 backdrop-blur-sm border border-[#d8b4fe]/20 rounded-xl p-4">
                       <p className="text-white">{appointment.notes}</p>
                     </div>
                   </div>
@@ -765,7 +765,7 @@ export default function AppointmentsPage() {
                         e.stopPropagation()
                         router.push(`/appointments/${appointment.id}/reschedule`)
                       }}
-                      className="flex-1 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/15 transition-all duration-300"
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-[#d8b4fe]/20 to-[#fdce20]/20 backdrop-blur-sm border border-[#d8b4fe]/30 text-white rounded-xl hover:from-[#d8b4fe]/30 hover:to-[#fdce20]/30 transition-all duration-300 hover:scale-105"
                     >
                       <RefreshCw className="w-4 h-4" />
                       Reschedule
@@ -777,7 +777,7 @@ export default function AppointmentsPage() {
                       e.stopPropagation()
                       router.push(`/appointments/${appointment.id}/edit`)
                     }}
-                    className="flex-1 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/15 transition-all duration-300"
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-[#d8b4fe]/20 to-[#fdce20]/20 backdrop-blur-sm border border-[#d8b4fe]/30 text-white rounded-xl hover:from-[#d8b4fe]/30 hover:to-[#fdce20]/30 transition-all duration-300 hover:scale-105"
                   >
                     <Edit className="w-4 h-4" />
                     Edit
@@ -789,7 +789,7 @@ export default function AppointmentsPage() {
                         e.stopPropagation()
                         handleCancelAppointment(appointment.id)
                       }}
-                      className="flex-1 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/15 transition-all duration-300"
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500/20 to-red-600/20 backdrop-blur-sm border border-red-500/30 text-white rounded-xl hover:from-red-500/30 hover:to-red-600/30 transition-all duration-300 hover:scale-105"
                     >
                       <X className="w-4 h-4" />
                       Cancel
@@ -801,7 +801,7 @@ export default function AppointmentsPage() {
                       e.stopPropagation()
                       router.push(`/chat/${appointment.expert_id}`)
                     }}
-                    className="flex-1 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/15 transition-all duration-300"
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-[#d8b4fe]/20 to-[#fdce20]/20 backdrop-blur-sm border border-[#d8b4fe]/30 text-white rounded-xl hover:from-[#d8b4fe]/30 hover:to-[#fdce20]/30 transition-all duration-300 hover:scale-105"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Contact
@@ -816,9 +816,9 @@ export default function AppointmentsPage() {
               <div
                 key={appointment.id}
                 onClick={() => handleAppointmentClick(appointment)}
-                className="group relative bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 hover:bg-white/15 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl cursor-pointer"
+                className="group relative bg-gradient-to-br from-[#fdce20]/5 to-[#d8b4fe]/5 backdrop-blur-xl rounded-3xl border border-[#d8b4fe]/20 p-8 hover:from-[#fdce20]/10 hover:to-[#d8b4fe]/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl cursor-pointer"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#d8b4fe] to-[#fdce20] rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                 
                 {/* Header */}
                 <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -831,17 +831,17 @@ export default function AppointmentsPage() {
                           className="w-20 h-20 rounded-full object-cover border-3 border-white/30"
                         />
                       ) : (
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                          <Users className="w-10 h-10 text-white" />
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#d8b4fe]/20 to-[#fdce20]/20 backdrop-blur-sm border border-[#d8b4fe]/30 flex items-center justify-center">
+                          <Users className="w-10 h-10 text-[#d8b4fe]" />
                         </div>
                       )}
-                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-3 border-white/30 flex items-center justify-center">
+                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-[#fdce20] to-[#d8b4fe] rounded-full border-3 border-white/30 flex items-center justify-center">
                         <div className="w-3 h-3 bg-white rounded-full"></div>
                       </div>
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white mb-2">{appointment.expert?.display_name || 'Expert'}</h3>
-                      <p className="text-purple-200">{appointment.expert?.primary_specialization || appointment.expert?.specialization || 'Spiritual Guide'}</p>
+                      <p className="text-[#d8b4fe]">{appointment.expert?.primary_specialization || appointment.expert?.specialization || 'Spiritual Guide'}</p>
                     </div>
                   </div>
 
@@ -851,9 +851,9 @@ export default function AppointmentsPage() {
                       {getStatusIcon(appointment.status)}
                       <span>{getStatusText(appointment.status)}</span>
                     </div>
-                    <div className="text-purple-200">
+                    <div className="text-[#d8b4fe]">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-4 h-4 text-[#fdce20]" />
                         <span>{formatDateTime(appointment.appointment_date, appointment.appointment_time)}</span>
                       </div>
                     </div>
@@ -864,7 +864,7 @@ export default function AppointmentsPage() {
                 <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mt-8">
                   <div className="text-2xl font-bold text-white">
                     <div className="flex items-center gap-3">
-                      <Zap className="w-6 h-6 text-green-400" />
+                      <Zap className="w-6 h-6 text-[#fdce20]" />
                       <span>{formatCurrency(appointment.amount_paid)}</span>
                     </div>
                   </div>

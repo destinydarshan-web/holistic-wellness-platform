@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle, Brain, SparklesIcon } from 'lucide-react'
 import Link from 'next/link'
+import MeditationExpertCard from '@/components/MeditationExpertCard'
 
 interface Expert {
   id: string
@@ -420,24 +421,7 @@ export default function MeditationPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {experts.map((expert) => (
-                <div key={expert.id} className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">🧘</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold font-serif text-white">{expert.display_name}</h3>
-                      <p className="text-sm text-gray-300">{expert.experience_years} years experience</p>
-                    </div>
-                  </div>
-                  <p className="text-gray-300 mb-4">{expert.bio}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-400 font-semibold">₹{expert.price_per_minute}/min</span>
-                    <button className="bg-purple-500 text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors">
-                      Book Session
-                    </button>
-                  </div>
-                </div>
+                <MeditationExpertCard key={expert.id} expert={expert} />
               ))}
             </div>
           )}

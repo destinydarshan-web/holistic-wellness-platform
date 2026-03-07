@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { Calendar, Users, Star, Clock, DollarSign, LogOut, Settings, AlertCircle, Bell, CheckCircle, X, MessageCircle } from 'lucide-react'
+import { Calendar, Users, Star, Clock, DollarSign, LogOut, Settings, AlertCircle, Bell, CheckCircle, X, MessageCircle, History } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import ExpertNotifications from '@/components/ExpertNotifications'
 
@@ -41,8 +41,19 @@ export default function ExpertDashboard() {
           let tableName = ""
           if (profile?.specialization === 'counsellor') {
             tableName = "expert_counsellors"
+          } else if (profile?.specialization === 'yoga_trainer') {
+            tableName = "expert_yoga"
+          } else if (profile?.specialization === 'meditation_expert') {
+            tableName = "expert_meditation"
+          } else if (profile?.specialization === 'astrologer') {
+            tableName = "expert_astrologers"
+          } else if (profile?.role === 'expert') {
+            // Default for expert role to meditation
+            tableName = "expert_meditation"
+          } else if (profile?.role === 'astrologer') {
+            tableName = "expert_astrologers"
           } else {
-            tableName = "expert_astrologers" // Default for astrologer
+            tableName = "expert_astrologers" // Default fallback
           }
           
           console.log('=== DEBUG: Loading profile from table ===', tableName)
@@ -167,7 +178,7 @@ export default function ExpertDashboard() {
       console.log('=== DEBUG: Loading Expert Dashboard Data ===')
       
       // Load real stats from database
-      const [bookingsResponse, sessionsResponse] = await Promise.allSettled([
+      const [bookingsResponse, sessionsResponse, transactionsResponse] = await Promise.allSettled([
         supabase
           .from('bookings')
           .select('*')
@@ -177,11 +188,18 @@ export default function ExpertDashboard() {
           .from('live_sessions')
           .select('*')
           .eq('expert_id', user?.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', user?.id)
+          .eq('type', 'credit')
           .order('created_at', { ascending: false })
       ])
 
       let bookings = []
       let sessions = []
+      let transactions = []
       
       if (bookingsResponse.status === 'fulfilled') {
         bookings = bookingsResponse.value.data || []
@@ -197,35 +215,26 @@ export default function ExpertDashboard() {
         console.log('Sessions table not found or error:', sessionsResponse.reason)
       }
 
+      if (transactionsResponse.status === 'fulfilled') {
+        transactions = transactionsResponse.value.data || []
+        console.log('Transactions loaded:', transactions.length)
+      } else {
+        console.log('Transactions table not found or error:', transactionsResponse.reason)
+      }
+
       // Calculate stats from real data
       const completedSessions = sessions.filter(s => s.status === 'completed').length
       const upcomingSessions = sessions.filter(s => s.status === 'accepted' || s.status === 'active').length
       const totalBookings = bookings.length
       
-      // Calculate earnings from completed sessions (more accurate than bookings)
-      const earnings = sessions
-        .filter(s => s.status === 'completed')
-        .reduce((total, session) => {
-          // Calculate session duration and earnings
-          const sessionDuration = session.started_at && session.ended_at 
-            ? Math.ceil((new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 60000)
-            : 0;
-          const sessionEarnings = sessionDuration * (session.price_per_minute || 0);
-          return total + sessionEarnings;
-        }, 0);
+      // Calculate earnings using the same logic as earnings page
+      const earnings = await calculateTotalEarnings(sessions, transactions);
 
       console.log('=== DEBUG: Expert Stats Calculated ===');
       console.log('Completed sessions:', completedSessions);
       console.log('Upcoming sessions:', upcomingSessions);
       console.log('Total bookings:', totalBookings);
       console.log('Earnings from sessions:', earnings);
-      console.log('Earnings from bookings:', bookings.filter(b => b.status === 'completed').reduce((total, b) => total + (b.amount || 0), 0));
-
-      console.log('=== DEBUG: Expert Stats Calculated ===')
-      console.log('Total bookings:', totalBookings)
-      console.log('Completed sessions:', completedSessions)
-      console.log('Upcoming sessions:', upcomingSessions)
-      console.log('Earnings:', earnings)
 
       setStats({
         totalBookings,
@@ -247,6 +256,73 @@ export default function ExpertDashboard() {
         earnings: 0
       })
       setBookings([])
+    }
+  }
+
+  const calculateTotalEarnings = async (sessions: any[], transactions: any[]) => {
+    try {
+      console.log('=== DEBUG: Calculating Total Earnings ===');
+      
+      // Process sessions and match with transactions (same logic as earnings page)
+      const earningsRecords = sessions?.map((session: any) => {
+        try {
+          // Only process completed sessions
+          if (session.status !== 'completed') {
+            return null
+          }
+
+          // Match transaction to this specific session using multiple strategies
+          let transactionAmount = 0
+          if (transactions && transactions.length > 0) {
+            let sessionTransaction = null
+            
+            // Strategy 1: Try to find transaction with session ID in description
+            sessionTransaction = transactions.find(t => 
+              t.description && t.description.includes(session.id)
+            )
+            
+            if (!sessionTransaction) {
+              // Strategy 2: Try timestamp matching around session end time
+              const sessionEndDate = session.ended_at ? new Date(session.ended_at) : new Date(session.created_at)
+              sessionTransaction = transactions.find(t => {
+                if (t.type !== 'credit') return false
+                const transactionDate = new Date(t.created_at)
+                const timeDiff = Math.abs(transactionDate.getTime() - sessionEndDate.getTime())
+                // Look for transactions within 10 minutes of session end
+                return timeDiff < 10 * 60 * 1000
+              })
+            }
+            
+            if (sessionTransaction) {
+              transactionAmount = sessionTransaction.amount
+            }
+          }
+          
+          // Only process sessions that have matching transactions
+          if (transactionAmount === 0) {
+            return null
+          }
+
+          return {
+            amount: transactionAmount
+          }
+        } catch (error) {
+          console.error('=== DEBUG: Error processing session ===', session.id, error)
+          return null
+        }
+      }).filter(Boolean) || []
+
+      console.log('=== DEBUG: Processed earnings records ===', earningsRecords.length);
+
+      // Calculate total earnings from all matched transactions
+      const totalEarnings = earningsRecords.reduce((sum, record) => sum + (record?.amount || 0), 0);
+      
+      console.log('=== DEBUG: Total earnings calculated ===', totalEarnings);
+      
+      return totalEarnings;
+    } catch (error) {
+      console.error('=== DEBUG: Error calculating total earnings ===', error);
+      return 0;
     }
   }
 
@@ -300,7 +376,7 @@ export default function ExpertDashboard() {
                   Your account has been approved. Please complete your profile to get listed.
                 </h3>
                 <p className="text-[#fdce20]/80 text-sm">
-                  Complete your profile information including display name, bio, experience, pricing, and specialties to appear in the {profile?.specialization === 'counsellor' ? 'counselling' : 'astrology'} listings.
+                  Complete your profile information including display name, bio, experience, pricing, and specialties to appear in the listings.
                 </p>
                 <button
                   onClick={() => router.push('/expert/profile')}
@@ -325,10 +401,21 @@ export default function ExpertDashboard() {
                   Profile Completed Successfully
                 </h3>
                 <p className="text-green-200 text-sm">
-                  Your profile is now live and visible to users in the {profile?.specialization === 'counsellor' ? 'counselling' : 'astrology'} listings. You can start receiving booking requests.
+                  Your profile is now live and visible to users in the listings. You can start receiving booking requests.
                 </p>
                 <button
-                  onClick={() => router.push(profile?.specialization === 'counsellor' ? '/counselling' : '/astrology')}
+                  onClick={() => {
+                    // Navigate to the appropriate service page based on specialization
+                    if (profile?.specialization === 'counsellor') {
+                      router.push('/counselling')
+                    } else if (profile?.specialization === 'yoga_trainer') {
+                      router.push('/yoga')
+                    } else if (profile?.specialization === 'meditation_expert') {
+                      router.push('/meditation')
+                    } else {
+                      router.push('/astrology')
+                    }
+                  }}
                   className="mt-4 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-400 transition-colors"
                 >
                   View Your Listing
@@ -420,18 +507,25 @@ export default function ExpertDashboard() {
           </div>
           <div className="bg-[#1C1C24] rounded-xl p-6 border border-white/10">
             <div className="flex items-center justify-between mb-2">
-              <Clock className="text-[#fbcc1e] w-8 h-8" />
-              <span className="text-2xl font-bold text-white">{stats.upcomingSessions}</span>
+              <AlertCircle className="text-[#fbcc1e] w-8 h-8" />
+              <span className="text-2xl font-bold text-white">{pendingSessions.length}</span>
             </div>
-            <p className="text-white/60">Upcoming Sessions</p>
+            <p className="text-white/60">Pending Requests</p>
           </div>
-          <div className="bg-[#1C1C24] rounded-xl p-6 border border-white/10">
+          <Link
+            href="/expert/earnings"
+            className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 cursor-pointer hover:bg-white/5 transition-colors group"
+          >
             <div className="flex items-center justify-between mb-2">
-              <DollarSign className="text-[#fbcc1e] w-8 h-8" />
-              <span className="text-2xl font-bold text-white">₹{stats.earnings.toLocaleString()}</span>
+              <span className="text-[#fbcc1e] w-8 h-8 flex items-center justify-center font-bold text-lg">₹</span>
+              <span className="text-xs text-white/60">Total</span>
             </div>
-            <p className="text-white/60">Total Earnings</p>
-          </div>
+            <p className="text-2xl font-bold text-white">₹{stats.earnings.toLocaleString()}</p>
+            <p className="text-sm text-white/60">Total earnings</p>
+            <div className="mt-2 text-xs text-[#fdce20] opacity-0 group-hover:opacity-100 transition-opacity">
+              View details →
+            </div>
+          </Link>
         </div>
 
         {/* Upcoming Sessions */}
@@ -490,9 +584,9 @@ export default function ExpertDashboard() {
         {/* Quick Actions */}
         <div>
           <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Link
-              href="/profile"
+              href="/expert/profile"
               className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors"
             >
               <Settings className="text-[#fbcc1e] w-8 h-8 mb-3" />
@@ -500,20 +594,28 @@ export default function ExpertDashboard() {
               <p className="text-white/60 text-sm">Update your expert profile</p>
             </Link>
             <Link
-              href="/schedule"
+              href="/expert/calendar"
               className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors"
             >
               <Calendar className="text-[#fbcc1e] w-8 h-8 mb-3" />
-              <h3 className="font-medium text-white mb-2">Manage Schedule</h3>
-              <p className="text-white/60 text-sm">Set your availability</p>
+              <h3 className="font-medium text-white mb-2">Calendar</h3>
+              <p className="text-white/60 text-sm">View booked appointments</p>
             </Link>
             <Link
-              href="/earnings"
+              href="/expert/reviews"
               className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors"
             >
-              <DollarSign className="text-[#fbcc1e] w-8 h-8 mb-3" />
-              <h3 className="font-medium text-white mb-2">View Earnings</h3>
-              <p className="text-white/60 text-sm">Track your income</p>
+              <Star className="text-[#fbcc1e] w-8 h-8 mb-3" />
+              <h3 className="font-medium text-white mb-2">Client Reviews</h3>
+              <p className="text-white/60 text-sm">View client feedback</p>
+            </Link>
+            <Link
+              href="/expert-dashboard/history"
+              className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors"
+            >
+              <History className="text-[#fbcc1e] w-8 h-8 mb-3" />
+              <h3 className="font-medium text-white mb-2">Session History</h3>
+              <p className="text-white/60 text-sm">View past sessions</p>
             </Link>
           </div>
         </div>

@@ -167,10 +167,34 @@ export default function ExpertProfilePage() {
       // Try to detect service type first from role
       const initialServiceType = detectServiceType([], profile?.role)
       console.log('DEBUG: Initial service type detection:', initialServiceType)
+      console.log('DEBUG: Profile role:', profile?.role)
+      console.log('DEBUG: Profile specialization:', profile?.specialization)
       
-      // Try the most likely table first
+      // For meditation experts (role='expert'), ensure we get meditation specialties and correct table
+      let finalServiceType = initialServiceType
+      console.log('DEBUG: Before forcing - finalServiceType:', finalServiceType)
+      
+      if (profile?.role === 'expert') {
+        console.log('DEBUG: User is expert, forcing meditation service type')
+        finalServiceType = 'meditation'
+        console.log('DEBUG: After forcing - finalServiceType:', finalServiceType)
+        setServiceType('meditation')
+        setFilteredSpecialties(ALL_SPECIALIZATIONS.meditation)
+        console.log('DEBUG: Set serviceType to meditation and filtered specialties')
+      } else {
+        console.log('DEBUG: User is not expert, using initial service type')
+        setServiceType(initialServiceType)
+        const filtered = ALL_SPECIALIZATIONS[initialServiceType as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
+        setFilteredSpecialties(filtered)
+      }
+      
+      // Try the most likely table first using the final service type
+      const primaryTable = getTableName(finalServiceType)
+      console.log('DEBUG: Final service type:', finalServiceType)
+      console.log('DEBUG: Primary table selected:', primaryTable)
+      
       const tables = [
-        getTableName(initialServiceType),
+        primaryTable, // Use finalServiceType instead of initialServiceType
         'expert_meditation', // fallback for meditation experts
         'expert_counsellors', 
         'expert_yoga', 
@@ -210,9 +234,16 @@ export default function ExpertProfilePage() {
         setProfileData(profileData)
         setProfileExists(true)
         
-        // Detect service type based on existing specialties
-        const detectedService = detectServiceType(profileData.specialties || [], profile?.role)
+        // Detect service type based on existing specialties and role
+        let detectedService = detectServiceType(profileData.specialties || [], profile?.role)
         console.log('DEBUG: Detected service type from profile:', detectedService)
+        
+        // For meditation experts, ensure we always use meditation service type
+        if (profile?.role === 'expert') {
+          detectedService = 'meditation'
+          console.log('DEBUG: User is expert, forcing meditation service type from profile')
+        }
+        
         setServiceType(detectedService)
         
         const filtered = ALL_SPECIALIZATIONS[detectedService as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
@@ -223,8 +254,15 @@ export default function ExpertProfilePage() {
         setProfileExists(false)
         
         // For new profiles, use role-based detection
-        const detectedService = detectServiceType([], profile?.role)
+        let detectedService = detectServiceType([], profile?.role)
         console.log('DEBUG: Detected service type for new profile:', detectedService)
+        
+        // For meditation experts, ensure we always use meditation service type
+        if (profile?.role === 'expert') {
+          detectedService = 'meditation'
+          console.log('DEBUG: User is expert, forcing meditation service type for new profile')
+        }
+        
         setServiceType(detectedService)
         
         const filtered = ALL_SPECIALIZATIONS[detectedService as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
@@ -562,6 +600,8 @@ export default function ExpertProfilePage() {
                 <div>Filtered Specialties Count: {filteredSpecialties.length}</div>
                 <div>Profile Role: {profile?.role || 'No role'}</div>
                 <div>Profile Specialties: {JSON.stringify(profileData.specialties)}</div>
+                <div>ALL_SPECIALIZATIONS.meditation: {JSON.stringify(ALL_SPECIALIZATIONS.meditation)}</div>
+                <div>Filtered Specialties: {JSON.stringify(filteredSpecialties)}</div>
               </div>
             )}
             
@@ -583,7 +623,26 @@ export default function ExpertProfilePage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-white/50">No specialties available for this service type.</p>
+                <p className="text-white/50 mb-4">No specialties available for this service type.</p>
+                
+                {/* Emergency fallback for meditation experts */}
+                {profile?.role === 'expert' && (
+                  <div className="mb-4">
+                    <p className="text-[#fdce20]/80 text-sm mb-2">Are you a meditation expert? Click below to load meditation specialties:</p>
+                    <button
+                      onClick={() => {
+                        console.log('DEBUG: Emergency fallback - forcing meditation specialties')
+                        setServiceType('meditation')
+                        setFilteredSpecialties(ALL_SPECIALIZATIONS.meditation)
+                        console.log('DEBUG: Set meditation specialties:', ALL_SPECIALIZATIONS.meditation)
+                      }}
+                      className="px-4 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-amber-400 transition-colors"
+                    >
+                      Load Meditation Specialties
+                    </button>
+                  </div>
+                )}
+                
                 <button
                   onClick={() => {
                     setServiceType('meditation')
@@ -591,7 +650,7 @@ export default function ExpertProfilePage() {
                   }}
                   className="mt-4 px-4 py-2 bg-[#fdce20]/10 text-[#fdce20] rounded-lg hover:bg-[#fdce20]/20 transition-colors border border-[#fdce20]/30"
                 >
-                  Show Meditation Specialties
+                  Load Meditation Specialties
                 </button>
                 <button
                   onClick={() => {
@@ -600,7 +659,7 @@ export default function ExpertProfilePage() {
                   }}
                   className="mt-2 ml-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
                 >
-                  Show All Specialties
+                  Load All Specialties
                 </button>
               </div>
             )}

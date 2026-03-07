@@ -569,7 +569,7 @@ export default function ExpertEarningsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-[#1C1C24] rounded-xl p-6 border border-white/10">
             <div className="flex items-center justify-between mb-2">
-              <DollarSign className="w-8 h-8 text-[#fbcc1e]" />
+              <span className="text-[#fbcc1e] w-8 h-8 flex items-center justify-center font-bold text-lg">₹</span>
               <span className="text-xs text-white/60">Total</span>
             </div>
             <p className="text-2xl font-bold text-white">₹{summary.totalEarnings.toLocaleString()}</p>
