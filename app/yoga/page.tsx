@@ -34,6 +34,38 @@ export default function YogaPage() {
   const [isModeOpen, setIsModeOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [isPriceOpen, setIsPriceOpen] = useState(false)
+
+  // All yoga specialties from expert profile
+  const yogaSpecialties = [
+    { value: 'all', label: 'All' },
+    { value: 'Aerial Yoga', label: 'Aerial Yoga' },
+    { value: 'Acro Yoga', label: 'Acro Yoga' },
+    { value: 'Alignment & Posture', label: 'Alignment & Posture' },
+    { value: 'Ashtanga Yoga', label: 'Ashtanga Yoga' },
+    { value: 'Ayurvedic Yoga', label: 'Ayurvedic Yoga' },
+    { value: 'Bikram Yoga', label: 'Bikram Yoga' },
+    { value: 'Breathwork', label: 'Breathwork' },
+    { value: 'Corporate Wellness', label: 'Corporate Wellness' },
+    { value: 'Flexibility Training', label: 'Flexibility Training' },
+    { value: 'Hatha Yoga', label: 'Hatha Yoga' },
+    { value: 'Iyengar Yoga', label: 'Iyengar Yoga' },
+    { value: 'Kids Yoga', label: 'Kids Yoga' },
+    { value: 'Kundalini Yoga', label: 'Kundalini Yoga' },
+    { value: 'Meditation & Mindfulness', label: 'Meditation & Mindfulness' },
+    { value: 'Power Yoga', label: 'Power Yoga' },
+    { value: 'Prenatal Yoga', label: 'Prenatal Yoga' },
+    { value: 'Restorative Yoga', label: 'Restorative Yoga' },
+    { value: 'Senior Yoga', label: 'Senior Yoga' },
+    { value: 'Stress Relief Yoga', label: 'Stress Relief Yoga' },
+    { value: 'Vinyasa Flow', label: 'Vinyasa Flow' },
+    { value: 'Yin Yoga', label: 'Yin Yoga' },
+    { value: 'Yoga Nidra', label: 'Yoga Nidra' },
+    { value: 'Yoga Philosophy', label: 'Yoga Philosophy' },
+    { value: 'Yoga Retreats', label: 'Yoga Retreats' },
+    { value: 'Yoga Teacher Training', label: 'Yoga Teacher Training' },
+    { value: 'Yoga Therapy', label: 'Yoga Therapy' },
+    { value: 'Yoga Workshops', label: 'Yoga Workshops' }
+  ]
   const modeRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const priceRef = useRef<HTMLDivElement>(null)
@@ -175,28 +207,17 @@ export default function YogaPage() {
                     {isModeOpen && (
                       <div className="absolute left-0 mt-2 min-w-full w-max rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                         <div className="flex flex-col gap-1">
-                          {[
-                            { value: 'all', label: 'All Styles' },
-                            { value: 'hatha', label: 'Hatha Yoga' },
-                            { value: 'vinyasa', label: 'Vinyasa Flow' },
-                            { value: 'ashtanga', label: 'Ashtanga' },
-                            { value: 'yin', label: 'Yin Yoga' },
-                            { value: 'restorative', label: 'Restorative' },
-                            { value: 'power', label: 'Power Yoga' },
-                            { value: 'meditation', label: 'Meditation' },
-                            { value: 'prenatal', label: 'Prenatal Yoga' },
-                            { value: 'kids', label: 'Kids Yoga' }
-                          ].map((specialty) => (
+                          {yogaSpecialties.map((specialty) => (
                             <button
                               key={specialty.value}
                               onClick={() => {
                                 setSelectedMode(specialty.value)
                                 setIsModeOpen(false)
                               }}
-                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                              className={`px-3 py-2 text-left text-sm transition-colors ${
                                 selectedMode === specialty.value
-                                  ? 'bg-white/10 text-white font-medium'
-                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                  ? 'bg-[#fdce20] text-black'
+                                  : 'text-white hover:bg-white/10'
                               }`}
                             >
                               {specialty.label}
@@ -318,18 +339,7 @@ export default function YogaPage() {
                     {isModeOpen && (
                       <div className="absolute left-0 mt-2 w-64 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                         <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
-                          {[
-                            { value: 'all', label: 'All Styles' },
-                            { value: 'hatha', label: 'Hatha Yoga' },
-                            { value: 'vinyasa', label: 'Vinyasa Flow' },
-                            { value: 'ashtanga', label: 'Ashtanga' },
-                            { value: 'yin', label: 'Yin Yoga' },
-                            { value: 'restorative', label: 'Restorative' },
-                            { value: 'power', label: 'Power Yoga' },
-                            { value: 'meditation', label: 'Meditation' },
-                            { value: 'prenatal', label: 'Prenatal Yoga' },
-                            { value: 'kids', label: 'Kids Yoga' }
-                          ].map((specialty) => (
+                          {yogaSpecialties.map((specialty) => (
                             <button
                               key={specialty.value}
                               onClick={() => {

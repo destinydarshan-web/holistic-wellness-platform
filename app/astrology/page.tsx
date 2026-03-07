@@ -34,6 +34,22 @@ export default function AstrologyPage() {
   const [isModeOpen, setIsModeOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [isPriceOpen, setIsPriceOpen] = useState(false)
+
+  // All astrology specialties from expert profile
+  const astrologySpecialties = [
+    { value: 'all', label: 'All Specialties' },
+    { value: 'Face Reading', label: 'Face Reading' },
+    { value: 'Horoscope Reading', label: 'Horoscope Reading' },
+    { value: 'Kundli Matching', label: 'Kundli Matching' },
+    { value: 'Numerology', label: 'Numerology' },
+    { value: 'Palmistry', label: 'Palmistry' },
+    { value: 'Remedial Astrology', label: 'Remedial Astrology' },
+    { value: 'Tarot Reading', label: 'Tarot Reading' },
+    { value: 'Vastu Shastra', label: 'Vastu Shastra' },
+    { value: 'Vedic Astrology', label: 'Vedic Astrology' },
+    { value: 'Western Astrology', label: 'Western Astrology' }
+  ]
+
   const modeRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const priceRef = useRef<HTMLDivElement>(null)
@@ -284,33 +300,17 @@ export default function AstrologyPage() {
                     {isModeOpen && (
                       <div className="absolute left-0 mt-2 min-w-full w-max rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                         <div className="flex flex-col gap-1">
-                          {[
-                            { value: 'all', label: 'All Specialties' },
-                            { value: 'horary', label: 'Horary Astrology' },
-                            { value: 'kp', label: 'KP Astrology' },
-                            { value: 'lal-kitab', label: 'Lal Kitab Astrology' },
-                            { value: 'matchmaking', label: 'Matchmaking' },
-                            { value: 'muhurta', label: 'Muhurta Astrology' },
-                            { value: 'nadi', label: 'Nadi Astrology' },
-                            { value: 'numerology', label: 'Numerology' },
-                            { value: 'palmistry', label: 'Palmistry' },
-                            { value: 'prashna', label: 'Prashna Astrology' },
-                            { value: 'remedial', label: 'Remedial Astrology' },
-                            { value: 'tarot', label: 'Tarot Reading' },
-                            { value: 'vedic', label: 'Vedic Astrology' },
-                            { value: 'vastu', label: 'Vastu Shastra' },
-                            { value: 'western', label: 'Western Astrology' }
-                          ].map((specialty) => (
+                          {astrologySpecialties.map((specialty) => (
                             <button
                               key={specialty.value}
                               onClick={() => {
                                 setSelectedMode(specialty.value)
                                 setIsModeOpen(false)
                               }}
-                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                              className={`px-3 py-2 text-left text-sm transition-colors ${
                                 selectedMode === specialty.value
-                                  ? 'bg-white/10 text-white font-medium'
-                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                  ? 'bg-[#fdce20] text-black'
+                                  : 'text-white hover:bg-white/10'
                               }`}
                             >
                               {specialty.label}
@@ -432,23 +432,7 @@ export default function AstrologyPage() {
                       {isModeOpen && (
                         <div className="absolute left-0 mt-2 w-64 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                           <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
-                            {[
-                              { value: 'all', label: 'All Specialties' },
-                              { value: 'horary', label: 'Horary Astrology' },
-                              { value: 'kp', label: 'KP Astrology' },
-                              { value: 'lal-kitab', label: 'Lal Kitab Astrology' },
-                              { value: 'matchmaking', label: 'Matchmaking' },
-                              { value: 'muhurta', label: 'Muhurta Astrology' },
-                              { value: 'nadi', label: 'Nadi Astrology' },
-                              { value: 'numerology', label: 'Numerology' },
-                              { value: 'palmistry', label: 'Palmistry' },
-                              { value: 'prashna', label: 'Prashna Astrology' },
-                              { value: 'remedial', label: 'Remedial Astrology' },
-                              { value: 'tarot', label: 'Tarot Reading' },
-                              { value: 'vedic', label: 'Vedic Astrology' },
-                              { value: 'vastu', label: 'Vastu Shastra' },
-                              { value: 'western', label: 'Western Astrology' }
-                            ].map((specialty) => (
+                            {astrologySpecialties.map((specialty) => (
                               <button
                                 key={specialty.value}
                                 onClick={() => {

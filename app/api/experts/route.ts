@@ -110,6 +110,11 @@ export async function GET(request: NextRequest) {
           query = query.contains("specialties", [actualMode])
         }
         
+        // Apply online filter
+        if (onlineOnly) {
+          query = query.eq("is_online", true)
+        }
+        
         // Apply price filters
         if (minPrice > 0) {
           query = query.gte("price_per_minute", minPrice)
@@ -281,6 +286,11 @@ export async function GET(request: NextRequest) {
           query = query.contains("specialties", [actualMode])
         }
         
+        // Apply online filter
+        if (onlineOnly) {
+          query = query.eq("is_online", true)
+        }
+        
         // Apply price filters
         if (minPrice > 0) {
           query = query.gte("price_per_minute", minPrice)
@@ -386,6 +396,11 @@ export async function GET(request: NextRequest) {
         if (actualMode !== 'all') {
           // Use contains for array filtering only (ilike doesn't work on arrays)
           query = query.contains("specialties", [actualMode])
+        }
+        
+        // Apply online filter
+        if (onlineOnly) {
+          query = query.eq("is_online", true)
         }
         
         // Apply price filters
@@ -645,3 +660,4 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+

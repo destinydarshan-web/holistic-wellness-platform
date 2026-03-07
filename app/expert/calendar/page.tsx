@@ -166,10 +166,13 @@ export default function ExpertCalendar() {
   }
 
   const getAppointmentsForDate = (date: Date): Appointment[] => {
-    const dateStr = date.toISOString().split('T')[0]
+    // Fixed: Use local date string format for consistent comparison
+    const dateStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
     return appointments.filter(apt => {
       if (statusFilter !== 'all' && apt.status !== statusFilter) return false
-      return apt.appointment_date === dateStr
+      // Fixed: Use same date string format
+      const aptDate = new Date(apt.appointment_date).getFullYear() + '-' + String(new Date(apt.appointment_date).getMonth() + 1).padStart(2, '0') + '-' + String(new Date(apt.appointment_date).getDate()).padStart(2, '0')
+      return aptDate === dateStr
     })
   }
 
@@ -451,14 +454,6 @@ export default function ExpertCalendar() {
                   <div>
                     <p className="text-sm text-white/60 mb-1">Amount</p>
                     <p className="text-white font-medium">₹{selectedAppointment.amount_paid}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-white/60 mb-1">Session Type</p>
-                  <div className="flex items-center gap-2 text-white">
-                    {getSessionIcon(selectedAppointment.session_type)}
-                    <span className="capitalize">{selectedAppointment.session_type || 'Chat'}</span>
                   </div>
                 </div>
               </div>

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: 'Holistic Wellness Platform | Astrology, Counselling, Yoga & Meditation',
   description: 'Balance your mind, body and soul. Discover inner peace and wellness with our platform offering astrology guidance, professional counselling, yoga sessions, and meditation practices.',
   generator: 'v0.app',
-  themeColor: "#fdce20",
+  themeColor: "black",
   viewport: {
     width: 'device-width',
     initialScale: 1,

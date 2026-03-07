@@ -199,29 +199,57 @@ export default function AppointmentsPage() {
         if (expertIds.length > 0) {
           // Try a simpler query first to see if the table exists
           try {
-            const { data: allExperts, error: allExpertsError } = await supabase
+            const { data: testExperts, error: testExpertsError } = await supabase
               .from('expert_astrologers')
               .select('id, display_name')
               .limit(5)
 
-            console.log('=== DEBUG: All experts test ===', { allExperts, allExpertsError })
+            console.log('=== DEBUG: All experts test ===', { testExperts, testExpertsError })
 
-            if (allExpertsError) {
-              console.log('=== DEBUG: Expert astrologers table error ===', allExpertsError)
+            if (testExpertsError) {
+              console.log('=== DEBUG: Expert astrologers table error ===', testExpertsError)
               // Set appointments without expert info if table doesn't exist
               setAppointments(appointmentsData || [])
               return
             }
 
             console.log('=== DEBUG: Fetching experts for IDs ===', expertIds)
-            const { data: expertsData, error: expertsError } = await supabase
-              .from('expert_astrologers')
-              .select('id, display_name, avatar_url')
-              .in('id', expertIds)
+            
+            // Fetch experts from all possible tables
+            const [astrologersData, counsellorsData, yogaData, meditationData] = await Promise.allSettled([
+              supabase.from('expert_astrologers').select('id, display_name, avatar_url').in('id', expertIds),
+              supabase.from('expert_counsellors').select('id, display_name, avatar_url').in('id', expertIds),
+              supabase.from('expert_yoga').select('id, display_name, avatar_url').in('id', expertIds),
+              supabase.from('expert_meditation').select('id, display_name, avatar_url').in('id', expertIds)
+            ])
 
-            if (!expertsError && expertsData) {
-              console.log('=== DEBUG: Experts data fetched ===', expertsData)
-              const expertMap = expertsData.reduce((acc, expert) => {
+            console.log('=== DEBUG: Expert data results ===', {
+              astrologers: astrologersData.status === 'fulfilled' ? astrologersData.value.data : astrologersData.reason,
+              counsellors: counsellorsData.status === 'fulfilled' ? counsellorsData.value.data : counsellorsData.reason,
+              yoga: yogaData.status === 'fulfilled' ? yogaData.value.data : yogaData.reason,
+              meditation: meditationData.status === 'fulfilled' ? meditationData.value.data : meditationData.reason
+            })
+
+            // Combine all expert data
+            const allExperts = []
+            
+            if (astrologersData.status === 'fulfilled' && astrologersData.value.data) {
+              allExperts.push(...astrologersData.value.data.map(e => ({ ...e, type: 'astrologer' })))
+            }
+            if (counsellorsData.status === 'fulfilled' && counsellorsData.value.data) {
+              allExperts.push(...counsellorsData.value.data.map(e => ({ ...e, type: 'counsellor' })))
+            }
+            if (yogaData.status === 'fulfilled' && yogaData.value.data) {
+              allExperts.push(...yogaData.value.data.map(e => ({ ...e, type: 'yoga_trainer' })))
+            }
+            if (meditationData.status === 'fulfilled' && meditationData.value.data) {
+              allExperts.push(...meditationData.value.data.map(e => ({ ...e, type: 'meditation_expert' })))
+            }
+
+            console.log('=== DEBUG: Combined experts ===', allExperts)
+
+            if (allExperts.length > 0) {
+              const expertMap = allExperts.reduce((acc, expert) => {
                 acc[expert.id] = expert
                 return acc
               }, {} as Record<string, any>)
@@ -231,11 +259,11 @@ export default function AppointmentsPage() {
                 expert: expertMap[appointment.expert_id] || null
               }))
 
+              console.log('=== DEBUG: Appointments with expert data ===', appointmentsWithExperts)
               setAppointments(appointmentsWithExperts)
               return
             } else {
-              console.log('=== DEBUG: Experts fetch error ===', expertsError)
-              // Set appointments without expert info on error
+              console.log('=== DEBUG: No experts found in any table ===')
               setAppointments(appointmentsData || [])
               return
             }

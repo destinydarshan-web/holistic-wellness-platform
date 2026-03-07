@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Briefcase, DollarSign, Camera, Upload, AlertCircle, User, MapPin, Calendar, X } from 'lucide-react'
+import { showNotification } from './Notification'
 
 interface CounsellorCardProps {
   counsellor: {
@@ -148,11 +149,11 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
       setSelectedTime('')
       setNotes('')
       
-      alert('Appointment request sent! Waiting for expert confirmation.')
+      showNotification('Appointment request sent! Waiting for expert confirmation.', 'success')
       
     } catch (error: any) {
       console.error('Appointment booking error:', error)
-      alert(`Failed to book appointment: ${error.message}`)
+      showNotification(`Failed to book appointment: ${error.message}`, 'error')
     } finally {
       setLoading(null)
     }
@@ -273,7 +274,7 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
           ) : (
             <>
               <Calendar size={16} />
-              Book & Pay
+              Book Appointment
             </>
           )}
         </button>
@@ -285,7 +286,7 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
           <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f172a] rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold font-serif text-white">Book & Pay</h3>
+              <h3 className="text-xl font-bold font-serif text-white">Book Counselling Session</h3>
               <button
                 onClick={() => setShowAppointmentModal(false)}
                 className="text-white/60 hover:text-white transition-colors"
@@ -305,7 +306,7 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-white text-sm">{counsellor.display_name}</p>
-                <p className="text-white/60 text-xs">Professional Counsellor</p>
+                <p className="text-white/60 text-xs">Expert Counsellor</p>
               </div>
               <div className="text-right">
                 <p className="text-[#fdce20] font-bold text-sm">{formatPrice(counsellor.hourly_rate)}</p>
@@ -328,48 +329,32 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
               
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Select Time</label>
-                <div className="space-y-3">
-                  {['Morning', 'Afternoon', 'Evening'].map((period) => (
-                    <div key={period} className="space-y-2">
-                      <h4 className="text-xs font-semibold text-[#fdce20] uppercase tracking-wide">{period}</h4>
-                      <div className="grid grid-cols-3 gap-2">
-                        {timeSlots
-                          .filter(slot => slot.period === period)
-                          .map((slot) => (
-                            <button
-                              key={slot.value}
-                              type="button"
-                              onClick={() => setSelectedTime(slot.value)}
-                              className={`px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
-                                selectedTime === slot.value
-                                  ? 'bg-[#fdce20] text-black'
-                                  : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
-                              }`}
-                            >
-                              {slot.display}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {selectedTime && (
-                  <div className="mt-3 p-2 bg-[#fdce20]/10 rounded-lg">
-                    <p className="text-sm text-[#fdce20] font-medium">
-                      Selected: {timeSlots.find(s => s.value === selectedTime)?.display}
-                    </p>
-                  </div>
-                )}
+                <select
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
+                >
+                  <option value="" className="bg-black text-white">Select a time</option>
+                  <option value="09:00" className="bg-black text-white">9:00 AM</option>
+                  <option value="10:00" className="bg-black text-white">10:00 AM</option>
+                  <option value="11:00" className="bg-black text-white">11:00 AM</option>
+                  <option value="12:00" className="bg-black text-white">12:00 PM</option>
+                  <option value="14:00" className="bg-black text-white">2:00 PM</option>
+                  <option value="15:00" className="bg-black text-white">3:00 PM</option>
+                  <option value="16:00" className="bg-black text-white">4:00 PM</option>
+                  <option value="17:00" className="bg-black text-white">5:00 PM</option>
+                  <option value="18:00" className="bg-black text-white">6:00 PM</option>
+                </select>
               </div>
-              
+
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Notes (Optional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="What would you like to discuss?"
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20] resize-none"
-                  rows={2}
+                  rows={3}
+                  placeholder="Any specific concerns or topics you'd like to discuss..."
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20] placeholder-white/40 resize-none"
                 />
               </div>
             </div>
@@ -377,14 +362,19 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
             {/* Action Buttons */}
             <div className="flex gap-3">
               <button
-                onClick={() => setShowAppointmentModal(false)}
+                onClick={() => {
+                  setShowAppointmentModal(false)
+                  setSelectedDate('')
+                  setSelectedTime('')
+                  setNotes('')
+                }}
                 className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBookAppointment}
-                disabled={loading === 'appointment' || !selectedDate || !selectedTime}
+                disabled={!selectedDate || !selectedTime || loading === 'appointment'}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-[#fdce20] to-amber-500 text-black rounded-lg hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
                 {loading === 'appointment' ? (
@@ -393,7 +383,7 @@ export default function CounsellorCard({ counsellor }: CounsellorCardProps) {
                     Booking...
                   </>
                 ) : (
-                  'Book & Pay'
+                  'Book Appointment'
                 )}
               </button>
             </div>

@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Briefcase, DollarSign, Camera, Upload, AlertCircle, User, MapPin, Calendar, X } from 'lucide-react'
+import { showNotification } from './Notification'
 
 interface AstrologerCardProps {
   astrologer: {
@@ -26,6 +27,8 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  const [confirmationData, setConfirmationData] = useState<any>(null)
   const [showAppointmentModal, setShowAppointmentModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
@@ -136,8 +139,6 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       return
     }
 
-    setLoading('appointment')
-    
     try {
       // Check wallet balance
       const { data: wallet, error: walletError } = await supabase
@@ -150,25 +151,45 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         throw new Error('Unable to fetch wallet balance')
       }
 
-      if (wallet.balance < astrologer.hourly_rate) {
-        alert('Insufficient wallet balance for appointment booking')
-        return
-      }
+      // Show confirmation modal with wallet balance
+      setConfirmationData({
+        expert: astrologer,
+        date: selectedDate,
+        time: selectedTime,
+        notes: notes,
+        cost: astrologer.hourly_rate,
+        walletBalance: wallet.balance,
+        hasSufficientBalance: wallet.balance >= astrologer.hourly_rate
+      })
+      setShowConfirmationModal(true)
+      
+    } catch (error: any) {
+      console.error('Error preparing appointment confirmation:', error)
+      alert(`Failed to prepare appointment: ${error.message}`)
+    }
+  }
 
-      // Create appointment
+  const handleConfirmAppointment = async () => {
+    if (!confirmationData || !user) return
+
+    try {
+      setLoading('appointment')
+      
+      // Create appointment with pending status
       const { data: appointment, error: appointmentError } = await supabase
         .from('appointments')
         .insert({
           user_id: user.id,
-          expert_id: astrologer.id,
+          expert_id: confirmationData.expert?.id || '',
           service_category: 'astrology',
-          appointment_date: selectedDate,
-          appointment_time: selectedTime,
+          appointment_date: confirmationData.date,
+          appointment_time: confirmationData.time,
           duration_minutes: 60,
-          amount_paid: astrologer.hourly_rate,
-          hourly_rate: astrologer.hourly_rate,
-          status: 'upcoming',
-          payment_status: 'paid'
+          amount_paid: confirmationData.cost,
+          hourly_rate: confirmationData.cost,
+          status: 'pending',
+          payment_status: 'pending',
+          notes: confirmationData.notes
         })
         .select()
         .single()
@@ -177,87 +198,52 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         throw new Error(appointmentError.message)
       }
 
-      // Deduct from wallet
-      const { error: deductError } = await supabase
-        .from('user_wallet')
-        .update({ balance: wallet.balance - astrologer.hourly_rate })
-        .eq("user_id", user.id)
-
-      if (deductError) {
-        throw new Error('Failed to process payment')
-      }
-
-      // Create notification for expert
-        try {
-          console.log('=== DEBUG: Sending notification to expert ===')
-          const notificationResponse = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              expert_id: astrologer.id,
-              user_id: user.id,
-              type: 'appointment_booked',
-              message: `New appointment booked by ${user.email} for ${selectedDate} at ${selectedTime}`,
-              appointment_id: appointment.id
-            })
+      // Create notification for astrologer
+      try {
+        console.log('=== DEBUG: Sending notification to astrologer ===')
+        const notificationResponse = await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            expert_id: confirmationData.expert?.id || '',
+            user_id: user.id,
+            type: 'appointment_request',
+            message: `New appointment request by ${user?.email || 'user'} for ${confirmationData.date} at ${confirmationData.time}`,
+            appointment_id: appointment.id
           })
-
-          const notificationData = await notificationResponse.json()
-          console.log('Notification response:', notificationData)
-
-          if (notificationResponse.ok && notificationData.success) {
-            console.log('✅ Notification sent to expert successfully')
-            if (notificationData.warning) {
-              console.log('⚠️ Notification warning:', notificationData.warning)
-            }
-          } else {
-            console.error('❌ Failed to send notification to expert')
-            console.error('Response status:', notificationResponse.status)
-            console.error('Response data:', notificationData)
-          }
-        } catch (notificationError) {
-          console.error('Error sending notification to expert:', notificationError)
-        }
-
-        // Create transaction record
-      console.log('Creating transaction record...')
-      const transactionData = {
-        user_id: user.id,
-        type: 'debit',
-        amount: astrologer.hourly_rate,
-        description: `Appointment booking with ${astrologer.display_name} - ${selectedDate} ${selectedTime}`,
-        booking_id: appointment.id
-      }
-      console.log('Transaction data:', transactionData)
-      
-      const { error: transactionError, data: transactionDataResult } = await supabase
-        .from('transactions')
-        .insert(transactionData)
-        .select()
-
-      if (transactionError) {
-        console.error('Failed to create transaction record:', transactionError)
-        console.error('Transaction error details:', {
-          message: transactionError.message,
-          details: transactionError.details,
-          hint: transactionError.hint,
-          code: transactionError.code
         })
-        // Don't throw error here, just log it - appointment is still successful
-      } else {
-        console.log('Transaction record created successfully:', transactionDataResult)
+
+        const notificationData = await notificationResponse.json()
+        console.log('Notification response:', notificationData)
+
+        if (notificationResponse.ok && notificationData.success) {
+          console.log('✅ Notification sent to astrologer successfully')
+          if (notificationData.warning) {
+            console.log('⚠️ Notification warning:', notificationData.warning)
+          }
+        } else {
+          console.error('❌ Failed to send notification to astrologer')
+          console.error('Response status:', notificationResponse.status)
+          console.error('Response data:', notificationData)
+        }
+      } catch (notificationError) {
+        console.error('Error sending notification to astrologer:', notificationError)
       }
 
-      alert('Appointment booked successfully! Amount deducted from wallet.')
-      setShowAppointmentModal(false)
+      // Close confirmation modal
+      setShowConfirmationModal(false)
+      setConfirmationData(null)
       setSelectedDate('')
       setSelectedTime('')
+      setNotes('')
+      
+      showNotification('Appointment request sent! Waiting for expert confirmation.', 'success')
       
     } catch (error: any) {
       console.error('Appointment booking error:', error)
-      alert(`Failed to book appointment: ${error.message}`)
+      showNotification(`Failed to book appointment: ${error.message}`, 'error')
     } finally {
       setLoading(null)
     }
@@ -487,6 +473,92 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
                 ) : (
                   'Book & Pay'
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmationModal && confirmationData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f172a] rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold font-serif text-white">Confirm Appointment</h3>
+              <button
+                onClick={() => setShowConfirmationModal(false)}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Appointment Details */}
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#fdce20]/20 to-amber-500/20 rounded-full flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[#fdce20]" />
+                </div>
+                <div>
+                  <div className="font-medium text-white">{confirmationData.expert.display_name}</div>
+                  <div className="text-sm text-white/60">{confirmationData.expert.specialties?.[0] || 'Astrology'}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-white/60">Date & Time</label>
+                  <div className="font-medium text-white">
+                    {confirmationData.date} at {confirmationData.time}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60">Duration</label>
+                  <div className="font-medium text-white">
+                    60 minutes
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-white/60">Session Cost</label>
+                  <div className="font-medium text-[#fdce20]">
+                    ₹{confirmationData.cost}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60">Wallet Balance</label>
+                  <div className={`font-medium ${confirmationData.hasSufficientBalance ? 'text-green-400' : 'text-red-400'}`}>
+                    ₹{confirmationData.walletBalance}
+                  </div>
+                </div>
+              </div>
+
+              {!confirmationData.hasSufficientBalance && (
+                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm">
+                    Insufficient wallet balance. Please add funds to book this appointment.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmationModal(false)}
+                className="flex-1 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAppointment}
+                disabled={!confirmationData.hasSufficientBalance}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-[#fdce20] to-amber-500 text-black rounded-lg hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                Confirm Appointment
               </button>
             </div>
           </div>

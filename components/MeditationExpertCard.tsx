@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
-import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Calendar, User, MapPin, DollarSign, X } from 'lucide-react'
+import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Briefcase, DollarSign, Camera, Upload, AlertCircle, User, MapPin, Calendar, X } from 'lucide-react'
+import { showNotification } from './Notification'
 
 interface MeditationExpertCardProps {
   expert: {
@@ -148,11 +149,11 @@ export default function MeditationExpertCard({ expert }: MeditationExpertCardPro
       setSelectedTime('')
       setNotes('')
       
-      alert('Appointment request sent! Waiting for expert confirmation.')
+      showNotification('Appointment request sent! Waiting for expert confirmation.', 'success')
       
     } catch (error: any) {
       console.error('Appointment booking error:', error)
-      alert(`Failed to book appointment: ${error.message}`)
+      showNotification(`Failed to book appointment: ${error.message}`, 'error')
     } finally {
       setLoading(null)
     }
@@ -246,7 +247,7 @@ export default function MeditationExpertCard({ expert }: MeditationExpertCardPro
           ) : (
             <>
               <Calendar size={16} />
-              Book & Pay
+              Book Appointment
             </>
           )}
         </button>
@@ -269,20 +270,25 @@ export default function MeditationExpertCard({ expert }: MeditationExpertCardPro
             
             {/* Expert Info */}
             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#d8b4fe]/20 to-purple-500/20 rounded-full flex items-center justify-center">
                 {expert.avatar_url ? (
                   <img src={expert.avatar_url} alt={expert.display_name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
-                  <User className="w-5 h-5 text-purple-400" />
+                  <User className="w-5 h-5 text-[#d8b4fe]" />
                 )}
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold text-white text-sm">{expert.display_name}</p>
                 <p className="text-white/60 text-xs">Meditation Expert</p>
               </div>
+              <div className="text-right">
+                <p className="text-[#d8b4fe] font-bold text-sm">{formatPrice(expert.hourly_rate)}</p>
+                <p className="text-white/50 text-xs">per hour</p>
+              </div>
             </div>
 
-            <div className="space-y-4">
+            {/* Form Fields */}
+            <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Select Date</label>
                 <input
@@ -290,10 +296,10 @@ export default function MeditationExpertCard({ expert }: MeditationExpertCardPro
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#d8b4fe]/50 focus:border-[#d8b4fe]"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-white/80 text-sm font-medium mb-2">Select Time</label>
                 <select
@@ -319,26 +325,39 @@ export default function MeditationExpertCard({ expert }: MeditationExpertCardPro
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="What would you like to focus on?"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 resize-none"
-                  rows={2}
+                  rows={3}
+                  placeholder="Any specific meditation goals or preferences..."
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#d8b4fe]/50 focus:border-[#d8b4fe] placeholder-white/40 resize-none"
                 />
               </div>
             </div>
             
+            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
-                onClick={() => setShowAppointmentModal(false)}
-                className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+                onClick={() => {
+                  setShowAppointmentModal(false)
+                  setSelectedDate('')
+                  setSelectedTime('')
+                  setNotes('')
+                }}
+                className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBookAppointment}
                 disabled={!selectedDate || !selectedTime || loading === 'appointment'}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-400 text-white rounded-lg hover:from-purple-600 hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-400 text-white rounded-lg hover:from-purple-600 hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
-                {loading === 'appointment' ? 'Booking...' : 'Book & Pay'}
+                {loading === 'appointment' ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                    Booking...
+                  </>
+                ) : (
+                  'Book Appointment'
+                )}
               </button>
             </div>
           </div>

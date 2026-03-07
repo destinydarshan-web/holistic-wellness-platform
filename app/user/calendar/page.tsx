@@ -141,13 +141,15 @@ export default function UserCalendar() {
     // Add days of current month
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i)
-      const dateStr = date.toISOString().split('T')[0]
+      // Fixed: Use local date string instead of ISO to avoid timezone issues
+      const dateStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
       
       const dayAppointments = appointments.filter(apt => {
-        const aptDate = new Date(apt.appointment_date).toISOString().split('T')[0]
+        // Fixed: Use same date string format
+        const aptDate = new Date(apt.appointment_date).getFullYear() + '-' + String(new Date(apt.appointment_date).getMonth() + 1).padStart(2, '0') + '-' + String(new Date(apt.appointment_date).getDate()).padStart(2, '0')
         return aptDate === dateStr
       })
-
+      
       const isToday = date.toDateString() === new Date().toDateString()
 
       days.push({
@@ -177,9 +179,11 @@ export default function UserCalendar() {
   }
 
   const getAppointmentsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
+    // Fixed: Use local date string format for consistent comparison
+    const dateStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
     return appointments.filter(apt => {
-      const aptDate = new Date(apt.appointment_date).toISOString().split('T')[0]
+      // Fixed: Use same date string format
+      const aptDate = new Date(apt.appointment_date).getFullYear() + '-' + String(new Date(apt.appointment_date).getMonth() + 1).padStart(2, '0') + '-' + String(new Date(apt.appointment_date).getDate()).padStart(2, '0')
       return aptDate === dateStr
     })
   }
@@ -450,15 +454,12 @@ export default function UserCalendar() {
             {/* Appointment Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                <div className="p-2 bg-[#fdce20]/20 rounded-lg">
-                  {getServiceIcon(selectedAppointment.service_category)}
-                </div>
                 <div>
-                  <div className="font-medium text-white">
-                    {selectedAppointment.service_category}
+                  <div className="text-lg font-semibold text-white">
+                    {selectedAppointment.expert_name}
                   </div>
                   <div className="text-sm text-white/60">
-                    {selectedAppointment.session_type || 'chat'} session
+                    {selectedAppointment.service_category}
                   </div>
                 </div>
               </div>

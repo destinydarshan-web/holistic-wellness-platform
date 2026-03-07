@@ -34,6 +34,21 @@ export default function CounsellingPage() {
   const [isModeOpen, setIsModeOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [isPriceOpen, setIsPriceOpen] = useState(false)
+
+  // All counselling specialties from expert profile
+  const counsellingSpecialties = [
+    { value: 'all', label: 'All Specialties' },
+    { value: 'Anxiety & Depression', label: 'Anxiety & Depression' },
+    { value: 'Career Counselling', label: 'Career Counselling' },
+    { value: 'Cognitive Behavioral Therapy', label: 'Cognitive Behavioral Therapy' },
+    { value: 'Family Therapy', label: 'Family Therapy' },
+    { value: 'Grief Counselling', label: 'Grief Counselling' },
+    { value: 'Life Coaching', label: 'Life Coaching' },
+    { value: 'Mental Health Counselling', label: 'Mental Health Counselling' },
+    { value: 'Relationship Counselling', label: 'Relationship Counselling' },
+    { value: 'Stress Management', label: 'Stress Management' },
+    { value: 'Substance Abuse Counselling', label: 'Substance Abuse Counselling' }
+  ]
   const modeRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const priceRef = useRef<HTMLDivElement>(null)
@@ -167,7 +182,7 @@ export default function CounsellingPage() {
                       onClick={() => setIsModeOpen(!isModeOpen)}
                       className="h-8 px-3 rounded-full bg-white/5 border border-white/10 text-xs text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-colors w-full"
                     >
-                      {selectedMode === 'all' ? 'Specialties' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}
+                      {selectedMode === 'all' ? 'Specialties' : selectedMode}
                       <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -175,28 +190,17 @@ export default function CounsellingPage() {
                     {isModeOpen && (
                       <div className="absolute left-0 mt-2 min-w-full w-max rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                         <div className="flex flex-col gap-1">
-                          {[
-                            { value: 'all', label: 'All Specialties' },
-                            { value: 'anxiety', label: 'Anxiety' },
-                            { value: 'depression', label: 'Depression' },
-                            { value: 'relationships', label: 'Relationships' },
-                            { value: 'stress', label: 'Stress Management' },
-                            { value: 'career', label: 'Career Counselling' },
-                            { value: 'trauma', label: 'Trauma & PTSD' },
-                            { value: 'self-esteem', label: 'Self-Esteem' },
-                            { value: 'addiction', label: 'Addiction Recovery' },
-                            { value: 'grief', label: 'Grief & Loss' }
-                          ].map((specialty) => (
+                          {counsellingSpecialties.map((specialty) => (
                             <button
                               key={specialty.value}
                               onClick={() => {
                                 setSelectedMode(specialty.value)
                                 setIsModeOpen(false)
                               }}
-                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                              className={`px-3 py-2 text-left text-sm transition-colors ${
                                 selectedMode === specialty.value
-                                  ? 'bg-white/10 text-white font-medium'
-                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                  ? 'bg-[#fdce20] text-black'
+                                  : 'text-white hover:bg-white/10'
                               }`}
                             >
                               {specialty.label}
@@ -310,7 +314,7 @@ export default function CounsellingPage() {
                       onClick={() => setIsModeOpen(!isModeOpen)}
                       className="px-3 py-2 rounded-lg bg-white/10 text-white border border-white/20 text-sm flex items-center gap-2 hover:bg-white/15 transition-colors"
                     >
-                      {selectedMode === 'all' ? 'All Specialties' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1).replace('-', ' ')}
+                      {selectedMode === 'all' ? 'All Specialties' : selectedMode}
                       <ChevronDown size={14} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -318,18 +322,7 @@ export default function CounsellingPage() {
                     {isModeOpen && (
                       <div className="absolute left-0 mt-2 w-64 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                         <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
-                          {[
-                            { value: 'all', label: 'All Specialties' },
-                            { value: 'anxiety', label: 'Anxiety' },
-                            { value: 'depression', label: 'Depression' },
-                            { value: 'relationships', label: 'Relationships' },
-                            { value: 'stress', label: 'Stress Management' },
-                            { value: 'career', label: 'Career Counselling' },
-                            { value: 'trauma', label: 'Trauma & PTSD' },
-                            { value: 'self-esteem', label: 'Self-Esteem' },
-                            { value: 'addiction', label: 'Addiction Recovery' },
-                            { value: 'grief', label: 'Grief & Loss' }
-                          ].map((specialty) => (
+                          {counsellingSpecialties.map((specialty) => (
                             <button
                               key={specialty.value}
                               onClick={() => {

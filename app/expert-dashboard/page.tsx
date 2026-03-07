@@ -97,79 +97,213 @@ export default function ExpertDashboard() {
 
   const loadPendingSessions = async () => {
     try {
-      console.log('=== DEBUG: Loading Pending Sessions ===')
+      console.log('=== DEBUG: Loading Pending Appointments ===')
       
       const { data, error } = await supabase
-        .from('live_sessions')
+        .from('appointments')
         .select('*')
         .eq('expert_id', user?.id)
-        .in('status', ['pending', 'active'])
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error loading pending sessions:', error)
+        console.error('Error loading pending appointments:', error)
       } else {
-        console.log('Pending sessions found:', data)
-        setPendingSessions(data || [])
+        console.log('Pending appointments found:', data)
+        // Enrich with user data
+        const enrichedAppointments = await Promise.all(
+          (data || []).map(async (appointment) => {
+            if (appointment.user_id) {
+              console.log('=== DEBUG: Fetching user data for user_id ===', appointment.user_id)
+              console.log('=== DEBUG: Appointment data ===', appointment)
+              
+              try {
+                // First, let's check if user exists at all in auth.users
+                const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(appointment.user_id)
+                console.log('Auth user check:', { authUser, authError })
+                
+                // Then check profiles table (note: profiles table doesn't have email column)
+                const { data: userData, error: userError } = await supabase
+                  .from('profiles')
+                  .select('full_name, role, specialization, status, created_at')
+                  .eq('id', appointment.user_id)
+                  .maybeSingle()
+                
+                console.log('Profile data result:', { userData, userError })
+                
+                if (userError) {
+                  console.error('Error fetching user data:', userError)
+                  console.log('Error details:', JSON.stringify(userError, null, 2))
+                  
+                  // Try a broader query to see what's available
+                  const { data: allProfiles, error: allError } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, role')
+                    .limit(5)
+                  
+                  console.log('Sample profiles in database:', { allProfiles, allError })
+                  
+                  return {
+                    ...appointment,
+                    user_name: `User (${userError.code || 'Error'})`,
+                    user_email: 'error@debug.com'
+                  }
+                }
+                
+                if (!userData) {
+                  console.log('No profile found for user_id:', appointment.user_id)
+                  // Try to get email from auth.users as fallback
+                  const userEmail = (authUser as any)?.email || 'unknown@auth.com'
+                  return {
+                    ...appointment,
+                    user_name: 'User (No Profile)',
+                    user_email: userEmail
+                  }
+                }
+                
+                return {
+                  ...appointment,
+                  user_name: userData.full_name || (authUser as any)?.email?.split('@')[0] || 'Unknown User',
+                  user_email: (authUser as any)?.email || 'noemail@debug.com'
+                }
+              } catch (fetchError) {
+                console.error('Unexpected error fetching user data:', fetchError)
+                return {
+                  ...appointment,
+                  user_name: 'User (Exception)',
+                  user_email: 'exception@debug.com'
+                }
+              }
+            }
+            return appointment
+          })
+        )
+        
+        setPendingSessions(enrichedAppointments)
       }
     } catch (err) {
-      console.error('Unexpected error loading pending sessions:', err)
+      console.error('Unexpected error loading pending appointments:', err)
     }
   }
 
-  const handleAcceptSession = async (sessionId: string) => {
+  const handleAcceptSession = async (appointmentId: string) => {
     try {
-      console.log('=== DEBUG: Accepting Session ===', sessionId)
+      console.log('=== DEBUG: Accepting Appointment ===', appointmentId)
       
-      const { data, error } = await supabase
-        .from('live_sessions')
+      // Update appointment status to confirmed
+      const { data: appointmentData, error: appointmentError } = await supabase
+        .from('appointments')
         .update({ 
-          status: 'accepted'
+          status: 'confirmed',
+          payment_status: 'paid'
         })
-        .eq('id', sessionId)
+        .eq('id', appointmentId)
         .eq('expert_id', user?.id)
         .select()
+        .single()
 
-      if (error) {
-        console.error('Error accepting session:', error)
-        alert('Failed to accept session. Please try again.')
-      } else {
-        console.log('Session accepted successfully:', data)
-        // Remove from pending list
-        setPendingSessions(prev => prev.filter(session => session.id !== sessionId))
-        // Redirect expert to session chat
-        router.push(`/session/chat/${sessionId}`)
+      if (appointmentError) {
+        console.error('Error accepting appointment:', appointmentError)
+        alert('Failed to accept appointment. Please try again.')
+        return
       }
+
+      console.log('Appointment accepted successfully:', appointmentData)
+
+      // Create notification for user
+      try {
+        const userNotificationResponse = await fetch('/api/user-notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: appointmentData.user_id,
+            expert_id: user?.id,
+            type: 'appointment_confirmed',
+            message: `Your appointment request has been confirmed by ${profile?.full_name || 'Expert'}`,
+            appointment_id: appointmentId
+          })
+        })
+
+        if (userNotificationResponse.ok) {
+          console.log('✅ User notification sent successfully')
+        } else {
+          console.log('⚠️ Failed to send user notification')
+        }
+      } catch (notificationError) {
+        console.error('Error sending user notification:', notificationError)
+      }
+
+      // Remove from pending list
+      setPendingSessions(prev => prev.filter(appointment => appointment.id !== appointmentId))
+      
+      // Show success message
+      alert('Appointment accepted! User has been notified.')
+      
     } catch (err) {
-      console.error('Unexpected error accepting session:', err)
-      alert('Failed to accept session. Please try again.')
+      console.error('Unexpected error accepting appointment:', err)
+      alert('Failed to accept appointment. Please try again.')
     }
   }
 
-  const handleRejectSession = async (sessionId: string) => {
+  const handleRejectSession = async (appointmentId: string) => {
     try {
-      console.log('=== DEBUG: Rejecting Session ===', sessionId)
+      console.log('=== DEBUG: Rejecting Appointment ===', appointmentId)
       
-      const { data, error } = await supabase
-        .from('live_sessions')
+      // Update appointment status to cancelled
+      const { data: appointmentData, error: appointmentError } = await supabase
+        .from('appointments')
         .update({ 
-          status: 'rejected'
+          status: 'cancelled'
         })
-        .eq('id', sessionId)
+        .eq('id', appointmentId)
         .eq('expert_id', user?.id)
         .select()
+        .single()
 
-      if (error) {
-        console.error('Error rejecting session:', error)
-        alert('Failed to reject session. Please try again.')
-      } else {
-        console.log('Session rejected successfully:', data)
-        // Remove from pending list
-        setPendingSessions(prev => prev.filter(session => session.id !== sessionId))
+      if (appointmentError) {
+        console.error('Error rejecting appointment:', appointmentError)
+        alert('Failed to reject appointment. Please try again.')
+        return
       }
+
+      console.log('Appointment rejected successfully:', appointmentData)
+
+      // Create notification for user
+      try {
+        const userNotificationResponse = await fetch('/api/user-notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: appointmentData.user_id,
+            expert_id: user?.id,
+            type: 'appointment_cancelled',
+            message: `Your appointment request has been declined by ${profile?.full_name || 'Expert'}`,
+            appointment_id: appointmentId
+          })
+        })
+
+        if (userNotificationResponse.ok) {
+          console.log('✅ User notification sent successfully')
+        } else {
+          console.log('⚠️ Failed to send user notification')
+        }
+      } catch (notificationError) {
+        console.error('Error sending user notification:', notificationError)
+      }
+
+      // Remove from pending list
+      setPendingSessions(prev => prev.filter(appointment => appointment.id !== appointmentId))
+      
+      // Show success message
+      alert('Appointment rejected. User has been notified.')
+      
     } catch (err) {
-      console.error('Unexpected error rejecting session:', err)
-      alert('Failed to reject session. Please try again.')
+      console.error('Unexpected error rejecting appointment:', err)
+      alert('Failed to reject appointment. Please try again.')
     }
   }
 
@@ -446,29 +580,35 @@ export default function ExpertDashboard() {
               
               {showNotifications && (
                 <div className="space-y-3">
-                  {pendingSessions.map((session) => (
-                    <div key={session.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
+                  {pendingSessions.map((appointment) => (
+                    <div key={appointment.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h4 className="font-medium text-white mb-1">
-                            {session.user_name} - {session.service_category}
+                            {appointment.user_name} - {appointment.service_category}
                           </h4>
                           <p className="text-white/60 text-sm">
-                            Session ID: {session.id}
+                            Appointment ID: {appointment.id}
                           </p>
                           <p className="text-white/60 text-sm">
-                            Created: {new Date(session.created_at).toLocaleString()}
+                            Date: {appointment.appointment_date}
+                          </p>
+                          <p className="text-white/60 text-sm">
+                            Time: {appointment.appointment_time}
+                          </p>
+                          <p className="text-white/60 text-sm">
+                            Created: {new Date(appointment.created_at).toLocaleString()}
                           </p>
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleAcceptSession(session.id)}
+                            onClick={() => handleAcceptSession(appointment.id)}
                             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
                           >
                             Accept
                           </button>
                           <button
-                            onClick={() => handleRejectSession(session.id)}
+                            onClick={() => handleRejectSession(appointment.id)}
                             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
                           >
                             Reject
