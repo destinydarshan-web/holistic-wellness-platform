@@ -48,7 +48,7 @@ export default function AccountUnderReviewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-[#fdce20] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/80">Loading...</p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function AccountUnderReviewPage() {
       <div className="relative max-w-xl mx-auto rounded-2xl bg-gradient-to-b from-[#0f172a] to-[#0b1220] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-10 text-center">
         
         {/* Glowing Status Circle */}
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-400 shadow-[0_0_40px_rgba(234,179,8,0.2)]">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#fdce20]/10 flex items-center justify-center text-[#fdce20] shadow-[0_0_40px_rgba(253,206,32,0.2)]">
           <span className="text-2xl">⏳</span>
         </div>
 
@@ -96,7 +96,7 @@ export default function AccountUnderReviewPage() {
         </p>
 
         {/* Status Badge */}
-        <div className="inline-block px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs mt-6">
+        <div className="inline-block px-3 py-1 rounded-full bg-[#fdce20]/10 text-[#fdce20] text-xs mt-6">
           Status: Pending Review
         </div>
 
@@ -104,7 +104,7 @@ export default function AccountUnderReviewPage() {
         <div className="mt-8 space-y-3">
           <button
             onClick={() => router.push("/")}
-            className="w-full h-11 rounded-xl bg-yellow-500 text-black font-medium hover:bg-yellow-400 transition-all"
+            className="w-full h-11 rounded-xl bg-[#fdce20] text-black font-medium hover:bg-amber-400 transition-all"
           >
             Return to Home
           </button>

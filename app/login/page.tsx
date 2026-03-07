@@ -196,7 +196,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Destiny Darshan</h1>
+          <h1 className="text-3xl font-bold font-serif text-white mb-2">Destiny Darshan</h1>
           <p className="text-white/60">
             {isLogin ? 'Welcome back' : 'Join our wellness community'}
           </p>

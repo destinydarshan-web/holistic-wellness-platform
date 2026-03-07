@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle } from 'lucide-react'
+import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle, Brain, Smile } from 'lucide-react'
 import CounsellorCard from '@/components/CounsellorCard'
 import Link from 'next/link'
 
@@ -25,20 +25,16 @@ export default function CounsellingPage() {
   const [experts, setExperts] = useState<Expert[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [onlineOnly, setOnlineOnly] = useState(false)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [selectedMode, setSelectedMode] = useState('all')
-  const [selectedSpecialization, setSelectedSpecialization] = useState('all')
   const [priceRange, setPriceRange] = useState([0, 5000])
   const [sortBy, setSortBy] = useState('recommended')
   const [showFilters, setShowFilters] = useState(false)
   const [showPriceModal, setShowPriceModal] = useState(false)
   const [isModeOpen, setIsModeOpen] = useState(false)
-  const [isSpecializationOpen, setIsSpecializationOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [isPriceOpen, setIsPriceOpen] = useState(false)
   const modeRef = useRef<HTMLDivElement>(null)
-  const specializationRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const priceRef = useRef<HTMLDivElement>(null)
 
@@ -47,9 +43,6 @@ export default function CounsellingPage() {
     const handleClickOutside = (event: MouseEvent) => {
       if (modeRef.current && !modeRef.current.contains(event.target as Node)) {
         setIsModeOpen(false)
-      }
-      if (specializationRef.current && !specializationRef.current.contains(event.target as Node)) {
-        setIsSpecializationOpen(false)
       }
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setIsSortOpen(false)
@@ -60,13 +53,14 @@ export default function CounsellingPage() {
     }
 
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [])
 
-  // Fetch counsellors
   useEffect(() => {
     fetchCounsellors()
-  }, [onlineOnly, isOnlineOnly, selectedMode, priceRange, sortBy])
+  }, [isOnlineOnly, selectedMode, priceRange, sortBy])
 
   const fetchCounsellors = async () => {
     try {
@@ -74,612 +68,420 @@ export default function CounsellingPage() {
       setError(null)
       
       const params = new URLSearchParams({
-        onlineOnly: onlineOnly.toString(),
+        onlineOnly: isOnlineOnly.toString(),
         mode: selectedMode,
         minPrice: priceRange[0].toString(),
         maxPrice: priceRange[1].toString(),
         sortBy: sortBy,
-        service: 'counselling' // Add service filter for counsellors
+        service: 'counselling'
       })
-      
-      console.log('=== DEBUG: Frontend Fetch Counsellors ===')
-      console.log('Fetching URL:', `/api/experts?${params}`)
       
       const response = await fetch(`/api/experts?${params}`)
       
-      console.log('=== DEBUG: API Response Status ===')
-      console.log('Response status:', response.status)
-      console.log('Response ok:', response.ok)
-      console.log('Response headers:', response.headers)
-      
       if (!response.ok) {
-        const errorText = await response.text()
-        console.log('=== DEBUG: API Error Response ===')
-        console.log('Error text:', errorText)
-        throw new Error(`Failed to fetch counsellors: ${response.status} ${errorText}`)
+        throw new Error(`Failed to fetch counsellors: ${response.status}`)
       }
       
       const result = await response.json()
       
-      console.log('=== DEBUG: Counselling API Response ===')
-      console.log('Full response:', result)
-      console.log('Success:', result.success)
-      console.log('Data:', result.data)
-      console.log('Data length:', result.data?.length || 0)
-      console.log('Error:', result.error)
-      
-      // Log approved counsellors only
-      if (result.success && result.data) {
-        console.log('=== DEBUG: Approved Counsellors Only ===')
-        console.log('Approved counsellors:', result.data)
-        console.log('Specializations:', result.data.map((e: any) => e.specialization))
-        console.log('Statuses:', result.data.map((e: any) => e.status))
-        console.log('Roles:', result.data.map((e: any) => e.role))
-      }
-      
       if (result.success) {
-        console.log('=== DEBUG: Setting Counsellors State ===')
-        console.log('Counsellors fetched:', result.data)
         setExperts(result.data || [])
       } else {
-        throw new Error(result.error || 'Failed to fetch counsellors')
+        throw new Error(result.details || 'Failed to fetch counsellors')
       }
     } catch (err) {
-      console.log('=== DEBUG: Fetch Error ===')
-      console.error('Error:', err)
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error fetching counsellors:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch counsellors')
     } finally {
       setLoading(false)
     }
   }
 
-  // Display experts directly (API handles filtering)
   const displayExperts = experts
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0f172a] to-[#0b1220]">
-      {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a]/50 to-[#0b1220]/50 backdrop-blur-3xl"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center mb-12">
-           
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="flex items-center gap-2 text-white/80">
-                <Shield className="w-5 h-5 text-green-400" />
-                <span>Verified Professionals</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/80">
-                <Lock className="w-5 h-5 text-blue-400" />
-                <span>100% Confidential</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/80">
-                <Heart className="w-5 h-5 text-red-400" />
-                <span>Compassionate Care</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Topic Cards Section */}
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">Explore Counselling Topics</h2>
-            <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-track-gray-800 scrollbar-thumb-gray-600 hover:scrollbar-thumb-gray-500 md:scrollbar-visible">
-              <div className="flex gap-6 min-w-max">
-                <Link 
-                  href="/counselling/topics/depression"
-                  className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[56px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Depression</h3>
-                  </div>
-                  <div className="flex items-center text-green-400 group-hover:text-green-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/anxiety"
-                  className="bg-gradient-to-br from-green-600/20 to-blue-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Anxiety</h3>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/relationships"
-                  className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Relationships</h3>
-                  </div>
-                  <div className="flex items-center text-purple-400 group-hover:text-purple-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/pregnancy"
-                  className="bg-gradient-to-br from-pink-600/20 to-red-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Pregnancy</h3>
-                  </div>
-                  <div className="flex items-center text-pink-400 group-hover:text-pink-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/examinations"
-                  className="bg-gradient-to-br from-yellow-600/20 to-orange-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Examinations</h3>
-                  </div>
-                  <div className="flex items-center text-yellow-400 group-hover:text-yellow-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/stress-management"
-                  className="bg-gradient-to-br from-red-600/20 to-orange-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Stress Management</h3>
-                  </div>
-                  <div className="flex items-center text-red-400 group-hover:text-red-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/trauma"
-                  className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Trauma & PTSD</h3>
-                  </div>
-                  <div className="flex items-center text-indigo-400 group-hover:text-indigo-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/self-esteem"
-                  className="bg-gradient-to-br from-teal-600/20 to-green-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[56px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Self-Esteem</h3>
-                  </div>
-                  <div className="flex items-center text-teal-400 group-hover:text-teal-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/addiction"
-                  className="bg-gradient-to-br from-orange-600/20 to-red-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[70px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Addiction Recovery</h3>
-                  </div>
-                  <p className="text-gray-300 mb-3 text-xs">Support for overcoming substance abuse and dependencies.</p>
-                  <div className="flex items-center text-orange-400 group-hover:text-orange-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/counselling/topics/grief"
-                  className="bg-gradient-to-br from-gray-600/20 to-slate-600/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 group min-w-[56px]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-base font-semibold text-white">Grief & Loss</h3>
-                  </div>
-                  <div className="flex items-center text-gray-400 group-hover:text-gray-300">
-                    <span className="text-xs font-medium">Learn More</span>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
+  const SkeletonCard = () => (
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+      <div className="animate-pulse">
+        <div className="h-48 bg-white/10"></div>
+        <div className="p-4 space-y-3">
+          <div className="h-4 bg-white/10 rounded w-3/4"></div>
+          <div className="h-3 bg-white/10 rounded w-1/2"></div>
+          <div className="h-3 bg-white/10 rounded w-full"></div>
         </div>
       </div>
+    </div>
+  )
 
-      {/* Counsellor Cards Section */}
+  const EmptyState = () => (
+    <div className="text-center py-16">
+      <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Users className="w-8 h-8 text-white/40" />
+      </div>
+      <h3 className="text-xl font-semibold font-serif text-white mb-2">No Counsellors Found</h3>
+      <p className="text-gray-300">
+        Try adjusting your filters or search terms to find available counsellors.
+      </p>
+    </div>
+  )
+
+  return (
+    <div className="pt-20">
+      {/* SECTION 2 - Counsellor Listing */}
+      <section id="counsellors" className="px-6 py-15">
+        <div className="max-w-[1200px] mx-auto">
           {/* Title Section - Left Aligned */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <h1 className="text-3xl md:text-4xl font-serif text-white mb-3">
-              Meet Our Counsellors
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold font-serif text-white mb-3">
+              Meet Our <span className="text-[#fdce20]">Counsellors</span>
             </h1>
             <p className="text-lg text-gray-300">
-              Professional guidance, real support.
+              Professional support for your mental wellness journey.
             </p>
           </div>
 
-          {/* Filters Section */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#0f172a]/95 via-[#0f172a]/90 to-[#0b1220]/95 backdrop-blur-lg border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-all duration-300 mb-8">
-          {/* Top Soft Highlight Line */}
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-4">
-            <div className="flex flex-col lg:flex-row gap-6">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-focus-within:opacity-20 transition-opacity duration-300"></div>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-                <input
-                  type="text"
-                  placeholder="Search counsellors by name, specialty, or expertise..."
-                  className="relative w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-white/20 focus:ring-2 focus:ring-white/10 transition-all duration-300"
-                />
-              </div>
-            </div>
+          {/* Integrated Filter Bar */}
+          <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#0f172a]/95 via-[#0f172a]/90 to-[#0b1220]/95 backdrop-blur-lg border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-all duration-300 mb-8">
+            {/* Top Soft Highlight Line */}
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-4">
+              {/* Mobile: Compact Single Row */}
+                <div className="flex items-center justify-center gap-2 flex-nowrap w-full py-3 px-4 md:hidden">
+                  {/* Online Toggle (Mobile) */}
+                  <button
+                    onClick={() => setIsOnlineOnly(prev => !prev)}
+                    className={`flex items-center justify-center gap-2 h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 flex-1 ${
+                      isOnlineOnly
+                        ? 'bg-[#fdce20] text-black shadow-md'
+                        : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    {isOnlineOnly && (
+                      <span className="h-2 w-2 rounded-full bg-green-400"></span>
+                    )}
+                    <span>Online</span>
+                  </button>
 
-            {/* Filter Controls */}
-            <div className="flex gap-4">
-              {/* Online Only Toggle */}
-              <button
-                onClick={() => setIsOnlineOnly(!isOnlineOnly)}
-                className={`relative px-6 py-4 rounded-xl font-medium transition-all duration-300 ${
-                  isOnlineOnly 
-                    ? 'bg-yellow-500 text-black shadow-md shadow-yellow-500/25' 
-                    : 'bg-white/5 backdrop-blur-sm border border-white/10 text-gray-300 hover:bg-white/10'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isOnlineOnly ? 'bg-white' : 'bg-gray-400'}`}></div>
-                  <span>Online Only</span>
-                </div>
-              </button>
+                  {/* Specialties Dropdown (Mobile) */}
+                  <div ref={modeRef} className="relative inline-block flex-1">
+                    <button
+                      onClick={() => setIsModeOpen(!isModeOpen)}
+                      className="h-8 px-3 rounded-full bg-white/5 border border-white/10 text-xs text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-colors w-full"
+                    >
+                      {selectedMode === 'all' ? 'Specialties' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}
+                      <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-              {/* Specialization Dropdown */}
-              <div className="relative" ref={specializationRef}>
-                <button
-                  onClick={() => setIsSpecializationOpen(!isSpecializationOpen)}
-                  className="px-6 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-gray-300 hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
-                >
-                  <span>Specialization: {selectedSpecialization === 'all' ? 'All' : selectedSpecialization}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {isSpecializationOpen && (
-                  <div className="absolute top-full mt-2 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('all')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      All Specializations
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Anxiety Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Anxiety Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Depression Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Depression Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Relationship Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Relationship Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Career Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Career Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Family Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Family Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Trauma & PTSD Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Trauma & PTSD
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Addiction Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Addiction Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Self-Esteem Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Self-Esteem Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Grief Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Grief Counselling
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Life Coaching')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Life Coaching
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSpecialization('Substance Abuse Counselling')
-                        setIsSpecializationOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Substance Abuse
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Sort Dropdown */}
-              <div className="relative" ref={sortRef}>
-                <button
-                  onClick={() => setIsSortOpen(!isSortOpen)}
-                  className="px-6 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-gray-300 hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
-                >
-                  <span>Sort: {sortBy === 'recommended' ? 'Recommended' : sortBy === 'price_low' ? 'Price: Low to High' : sortBy === 'price_high' ? 'Price: High to Low' : sortBy === 'experience' ? 'Experience' : 'Rating'}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {isSortOpen && (
-                  <div className="absolute top-full mt-2 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
-                    <button
-                      onClick={() => {
-                        setSortBy('recommended')
-                        setIsSortOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Recommended
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortBy('price_low')
-                        setIsSortOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Price: Low to High
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortBy('price_high')
-                        setIsSortOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Price: High to Low
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortBy('experience')
-                        setIsSortOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Experience
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortBy('rating')
-                        setIsSortOpen(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Rating
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Price Range Dropdown */}
-              <div className="relative" ref={priceRef}>
-                <button
-                  onClick={() => setIsPriceOpen(!isPriceOpen)}
-                  className="px-6 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-gray-300 hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
-                >
-                  <span>Price Range</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {isPriceOpen && (
-                  <div className="absolute top-full mt-2 w-64 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50 p-4">
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>Min: ₹{priceRange[0]}</span>
-                        <span>Max: ₹{priceRange[1]}</span>
+                    {/* Compact Dropdown */}
+                    {isModeOpen && (
+                      <div className="absolute left-0 mt-2 min-w-full w-max rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
+                        <div className="flex flex-col gap-1">
+                          {[
+                            { value: 'all', label: 'All Specialties' },
+                            { value: 'anxiety', label: 'Anxiety' },
+                            { value: 'depression', label: 'Depression' },
+                            { value: 'relationships', label: 'Relationships' },
+                            { value: 'stress', label: 'Stress Management' },
+                            { value: 'career', label: 'Career Counselling' },
+                            { value: 'trauma', label: 'Trauma & PTSD' },
+                            { value: 'self-esteem', label: 'Self-Esteem' },
+                            { value: 'addiction', label: 'Addiction Recovery' },
+                            { value: 'grief', label: 'Grief & Loss' }
+                          ].map((specialty) => (
+                            <button
+                              key={specialty.value}
+                              onClick={() => {
+                                setSelectedMode(specialty.value)
+                                setIsModeOpen(false)
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                                selectedMode === specialty.value
+                                  ? 'bg-white/10 text-white font-medium'
+                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {specialty.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="5000"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                        className="w-full"
-                      />
-                    </div>
-                    <button
-                      onClick={() => setIsPriceOpen(false)}
-                      className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
-                    >
-                      Apply
-                    </button>
+                    )}
                   </div>
-                )}
+
+                  {/* Price Button (Mobile) */}
+                  <div ref={priceRef} className="relative inline-block flex-1">
+                    <button
+                      onClick={() => setIsPriceOpen(!isPriceOpen)}
+                      className="h-8 px-3 rounded-full bg-white/5 text-white border border-white/10 text-xs font-medium hover:bg-white/10 transition-colors w-full text-center"
+                    >
+                      ₹{priceRange[1]}
+                    </button>
+
+                    {/* Compact Price Panel */}
+                    {isPriceOpen && (
+                      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm p-4 z-50">
+                        <div className="text-sm text-white mb-3">
+                          Max Price: ₹{priceRange[1]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5000"
+                          value={priceRange[1]}
+                          onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                          className="w-full accent-[#fdce20]"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 mt-2">
+                          <span>₹0</span>
+                          <span>₹5000</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sort Dropdown (Mobile) */}
+                  <div ref={sortRef} className="relative inline-block flex-1">
+                    <button
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className="h-8 px-3 rounded-full bg-white/5 text-white border border-white/10 text-xs flex items-center justify-center gap-2 hover:bg-white/10 transition-colors w-full"
+                    >
+                      {sortBy === 'recommended' ? 'Sort' : sortBy.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()).split(' ')[0]}
+                      <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Compact Dropdown */}
+                    {isSortOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
+                        <div className="flex flex-col gap-1">
+                          {[
+                            { value: 'recommended', label: 'Recommended' },
+                            { value: 'online', label: 'Online Now' },
+                            { value: 'rating', label: 'Highest Rated' },
+                            { value: 'experience', label: 'Most Experienced' },
+                            { value: 'price-low', label: 'Lowest Price' },
+                            { value: 'price-high', label: 'Highest Price' }
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => {
+                                setSortBy(option.value)
+                                setIsSortOpen(false)
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
+                                sortBy === option.value
+                                  ? 'bg-white/10 text-white font-medium'
+                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              {/* Desktop: Full Filters */}
+              <div className="hidden md:flex items-center justify-between gap-4">
+                {/* Online Now Toggle */}
+                <button
+                  onClick={() => setIsOnlineOnly(prev => !prev)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isOnlineOnly
+                      ? 'bg-[#fdce20] text-black'
+                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/15'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${
+                    isOnlineOnly ? 'bg-green-400' : 'bg-gray-400'
+                  }`}>
+                    <div className={`w-1 h-1 rounded-full bg-white transition-transform ${
+                      isOnlineOnly ? 'translate-x-0.5' : 'translate-x-1'
+                    }`}></div>
+                  </div>
+                  <span>Online</span>
+                </button>
+
+                {/* Specialties Dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-300">Specialties:</span>
+                  <div ref={modeRef} className="relative">
+                    <button
+                      onClick={() => setIsModeOpen(!isModeOpen)}
+                      className="px-3 py-2 rounded-lg bg-white/10 text-white border border-white/20 text-sm flex items-center gap-2 hover:bg-white/15 transition-colors"
+                    >
+                      {selectedMode === 'all' ? 'All Specialties' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1).replace('-', ' ')}
+                      <ChevronDown size={14} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown */}
+                    {isModeOpen && (
+                      <div className="absolute left-0 mt-2 w-64 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
+                        <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
+                          {[
+                            { value: 'all', label: 'All Specialties' },
+                            { value: 'anxiety', label: 'Anxiety' },
+                            { value: 'depression', label: 'Depression' },
+                            { value: 'relationships', label: 'Relationships' },
+                            { value: 'stress', label: 'Stress Management' },
+                            { value: 'career', label: 'Career Counselling' },
+                            { value: 'trauma', label: 'Trauma & PTSD' },
+                            { value: 'self-esteem', label: 'Self-Esteem' },
+                            { value: 'addiction', label: 'Addiction Recovery' },
+                            { value: 'grief', label: 'Grief & Loss' }
+                          ].map((specialty) => (
+                            <button
+                              key={specialty.value}
+                              onClick={() => {
+                                setSelectedMode(specialty.value)
+                                setIsModeOpen(false)
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm leading-5 transition-colors duration-150 ${
+                                selectedMode === specialty.value
+                                  ? 'bg-white/10 text-white font-medium'
+                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {specialty.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Price Range */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-300">Price:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-white">₹{priceRange[0]}</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5000"
+                      value={priceRange[1]}
+                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                      className="w-24"
+                    />
+                    <span className="text-sm text-white">₹{priceRange[1]}</span>
+                  </div>
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-300">Sort By:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-1 rounded-lg bg-[#1a1a1a] text-white text-sm border border-white/20 focus:ring-2 focus:ring-[#fdce20]/50 appearance-none cursor-pointer"
+                  >
+                    <option value="recommended" className="bg-[#1a1a1a] text-white">Recommended</option>
+                    <option value="online" className="bg-[#1a1a1a] text-white">Online Now</option>
+                    <option value="rating" className="bg-[#1a1a1a] text-white">Highest Rated</option>
+                    <option value="experience" className="bg-[#1a1a1a] text-white">Most Experienced</option>
+                    <option value="price-low" className="bg-[#1a1a1a] text-white">Lowest Price</option>
+                    <option value="price-high" className="bg-[#1a1a1a] text-white">Highest Price</option>
+                  </select>
+                </div>
+
+                {/* Results Count */}
+                <div className="ml-auto text-sm text-gray-600">
+                  {experts.length} counsellors found
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a] to-[#0b1220] rounded-full blur-xl opacity-50 animate-pulse"></div>
-              <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 p-6 rounded-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent"></div>
-              </div>
+          {/* Expert Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
-            <p className="mt-6 text-lg text-gray-300">Loading expert counsellors...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center py-20">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-8 max-w-md mx-auto">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <HelpCircle className="w-8 h-8 text-red-400" />
+          ) : error ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-600" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Unable to Load Counsellors</h3>
-              <p className="text-gray-300 mb-4">{error}</p>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Error Loading Counsellors
+              </h2>
+              <p className="text-gray-600">{error}</p>
               <button
                 onClick={fetchCounsellors}
-                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+                className="mt-4 px-6 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-[#fdce20]/80 transition-colors"
               >
                 Try Again
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Counsellor Cards */}
-      {!loading && !error && (
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {displayExperts.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8 max-w-md mx-auto">
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-white/40" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">No Counsellors Found</h3>
-                <p className="text-gray-300">
-                  Try adjusting your filters or search terms to find available counsellors.
-                </p>
-              </div>
-            </div>
+          ) : experts.length === 0 ? (
+            <EmptyState />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {displayExperts.map((expert: Expert) => (
-                <CounsellorCard 
-                  key={expert.id} 
-                  counsellor={expert} 
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {experts.map((expert) => (
+                <CounsellorCard key={expert.id} counsellor={expert} />
               ))}
             </div>
           )}
         </div>
-      )}
+      </section>
 
-      
-      {/* Why Counselling is Essential Section */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center">Why Counselling is Essential</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <h3 className="text-xl font-semibold text-white mb-3">Mental Clarity</h3>
-            <p className="text-gray-300">Gain insights into your thoughts and emotions with professional guidance.</p>
+      {/* SECTION 3 - Trust Section */}
+      <section className="py-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold font-serif text-white mb-4">
+              Why Choose <span className="text-[#fdce20]">Our Counselling</span> Platform
+            </h2>
+            <p className="text-base text-gray-300 max-w-2xl mx-auto">
+              Experience professional mental health support with our premium features
+            </p>
           </div>
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <h3 className="text-xl font-semibold text-white mb-3">Emotional Support</h3>
-            <p className="text-gray-300">Find a safe space to express feelings without judgment.</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <h3 className="text-xl font-semibold text-white mb-3">Personal Growth</h3>
-            <p className="text-gray-300">Develop coping strategies and build resilience for life challenges.</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { 
+                icon: <Star className="w-6 h-6" />, 
+                title: 'Expert Counsellors', 
+                description: 'Licensed mental health professionals with extensive experience'
+              },
+              { 
+                icon: <Shield className="w-6 h-6" />, 
+                title: 'Confidential Support', 
+                description: 'Your privacy and confidentiality are our top priority'
+              },
+              { 
+                icon: <Heart className="w-6 h-6" />, 
+                title: 'Compassionate Care', 
+                description: 'Empathetic and understanding support for your wellness journey'
+              },
+              { 
+                icon: <CheckCircle className="w-6 h-6" />, 
+                title: 'Proven Results', 
+                description: 'Track your progress with measurable improvements in well-being'
+              }
+            ].map((feature, index) => (
+              <div 
+                key={index}
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 group"
+              >
+                <div className="w-12 h-12 bg-[#fdce20]/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-[#fdce20]/20 transition-colors duration-300">
+                  <div className="text-[#fdce20]">{feature.icon}</div>
+                </div>
+                <h3 className="text-lg font-semibold font-serif text-white mb-2 group-hover:text-[#fdce20] transition-colors duration-300">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-
-      </div>
+      </section>
+    </div>
   )
 }

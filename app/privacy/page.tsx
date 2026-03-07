@@ -8,13 +8,13 @@ export default function PrivacyPage() {
 
       <main className="flex-1 py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-foreground mb-8">
+          <h1 className="text-4xl font-bold font-serif text-foreground mb-8">
             Privacy Policy
           </h1>
 
           <div className="space-y-8 text-foreground">
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Introduction
               </h2>
               <p className="text-muted-foreground leading-relaxed">
@@ -23,13 +23,13 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Information Collection and Use
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 We collect several different types of information for various purposes to provide and improve our Service to you.
               </p>
-              <h3 className="text-lg font-semibold mb-3 text-foreground">Types of Data Collected:</h3>
+              <h3 className="text-lg font-semibold font-serif mb-3 text-foreground">Types of Data Collected:</h3>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li><strong>Personal Data:</strong> Name, email address, phone number, and other contact information</li>
                 <li><strong>Usage Data:</strong> Browser type, IP address, pages visited, and time spent on pages</li>
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Use of Data
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Security of Data
               </h2>
               <p className="text-muted-foreground leading-relaxed">
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Links to Other Sites
               </h2>
               <p className="text-muted-foreground leading-relaxed">
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Changes to This Privacy Policy
               </h2>
               <p className="text-muted-foreground leading-relaxed">
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-2xl font-semibold font-serif mb-4">
                 Contact Us
               </h2>
               <p className="text-muted-foreground leading-relaxed">

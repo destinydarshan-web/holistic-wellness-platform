@@ -25,7 +25,6 @@ export default function AstrologyPage() {
   const [experts, setExperts] = useState<Expert[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [onlineOnly, setOnlineOnly] = useState(false)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [selectedMode, setSelectedMode] = useState('all')
   const [priceRange, setPriceRange] = useState([0, 5000])
@@ -61,7 +60,7 @@ export default function AstrologyPage() {
 
   useEffect(() => {
     fetchExperts()
-  }, [onlineOnly, isOnlineOnly, selectedMode, priceRange, sortBy])
+  }, [isOnlineOnly, selectedMode, priceRange, sortBy])
 
   const fetchExperts = async () => {
     try {
@@ -69,7 +68,7 @@ export default function AstrologyPage() {
       setError(null)
       
       const params = new URLSearchParams({
-        onlineOnly: onlineOnly.toString(),
+        onlineOnly: isOnlineOnly.toString(),
         mode: selectedMode,
         minPrice: priceRange[0].toString(),
         maxPrice: priceRange[1].toString(),
@@ -189,8 +188,8 @@ export default function AstrologyPage() {
         {/* SECTION 1 - Free ASTROLOGY TOOLS */}
         <section className="px-6 py-4 mb-4">
           <div className="max-w-[1200px] mx-auto">
-            <div className="text-xs tracking-widest uppercase text-gray-400 font-medium mb-4">
-              FREE ASTROLOGY TOOLS
+            <div className="text-sm tracking-widest uppercase text-gray-400 font-medium mb-4">
+              <span className="text-[#fdce20] font-bold">FREE</span> ASTROLOGY TOOLS
             </div>
             <div className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-hide">
               {/* Daily Horoscope */}
@@ -241,8 +240,8 @@ export default function AstrologyPage() {
           <div className="max-w-[1200px] mx-auto">
             {/* Title Section - Left Aligned */}
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-serif text-white mb-3">
-                Meet Our Astrologers
+              <h1 className="text-3xl md:text-4xl font-bold font-serif text-white mb-3">
+                Meet Our <span className="text-[#fdce20]">Astrologers</span>
               </h1>
               <p className="text-lg text-gray-300">
                 Authentic guidance, real answers.
@@ -255,7 +254,7 @@ export default function AstrologyPage() {
               <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-4">
                 {/* Mobile: Compact Single Row */}
-                <div className="flex items-center gap-2 flex-nowrap w-full py-3 px-4 md:hidden">
+                <div className="flex items-center justify-center gap-2 flex-nowrap w-full py-3 px-4 md:hidden">
                   {/* Online Toggle (Mobile) */}
                   <button
                     onClick={() => setIsOnlineOnly(prev => !prev)}
@@ -271,13 +270,13 @@ export default function AstrologyPage() {
                     <span>Online</span>
                   </button>
 
-                  {/* Mode Dropdown (Mobile) */}
+                  {/* Specialties Dropdown (Mobile) */}
                   <div ref={modeRef} className="relative inline-block flex-1">
                     <button
                       onClick={() => setIsModeOpen(!isModeOpen)}
                       className="h-8 px-3 rounded-full bg-white/5 border border-white/10 text-xs text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-colors w-full"
                     >
-                      {selectedMode === 'all' ? 'Mode' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}
+                      {selectedMode === 'all' ? 'Specialties' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}
                       <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -285,20 +284,36 @@ export default function AstrologyPage() {
                     {isModeOpen && (
                       <div className="absolute left-0 mt-2 min-w-full w-max rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
                         <div className="flex flex-col gap-1">
-                          {['all', 'chat', 'call', 'video'].map((mode) => (
+                          {[
+                            { value: 'all', label: 'All Specialties' },
+                            { value: 'horary', label: 'Horary Astrology' },
+                            { value: 'kp', label: 'KP Astrology' },
+                            { value: 'lal-kitab', label: 'Lal Kitab Astrology' },
+                            { value: 'matchmaking', label: 'Matchmaking' },
+                            { value: 'muhurta', label: 'Muhurta Astrology' },
+                            { value: 'nadi', label: 'Nadi Astrology' },
+                            { value: 'numerology', label: 'Numerology' },
+                            { value: 'palmistry', label: 'Palmistry' },
+                            { value: 'prashna', label: 'Prashna Astrology' },
+                            { value: 'remedial', label: 'Remedial Astrology' },
+                            { value: 'tarot', label: 'Tarot Reading' },
+                            { value: 'vedic', label: 'Vedic Astrology' },
+                            { value: 'vastu', label: 'Vastu Shastra' },
+                            { value: 'western', label: 'Western Astrology' }
+                          ].map((specialty) => (
                             <button
-                              key={mode}
+                              key={specialty.value}
                               onClick={() => {
-                                setSelectedMode(mode)
+                                setSelectedMode(specialty.value)
                                 setIsModeOpen(false)
                               }}
                               className={`w-full text-left px-4 py-2.5 text-xs leading-5 transition-colors duration-150 ${
-                                selectedMode === mode
+                                selectedMode === specialty.value
                                   ? 'bg-white/10 text-white font-medium'
                                   : 'text-white/80 hover:bg-white/10 hover:text-white'
                               }`}
                             >
-                              {mode === 'all' ? 'All Modes' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+                              {specialty.label}
                             </button>
                           ))}
                         </div>
@@ -401,23 +416,57 @@ export default function AstrologyPage() {
                     <span>Online</span>
                   </button>
 
-                  {/* Mode Filter */}
+                  {/* Specialties Dropdown */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-300">Mode:</span>
-                    <div className="flex gap-1">
-                      {['all', 'chat', 'call', 'video'].map((mode) => (
-                        <button
-                          key={mode}
-                          onClick={() => setSelectedMode(mode)}
-                          className={`px-3 py-1 rounded-lg text-sm capitalize transition-all duration-300 ${
-                            selectedMode === mode
-                              ? 'bg-white/20 text-white border border-white/30'
-                              : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
-                          }`}
-                        >
-                          {mode === 'all' ? 'All' : mode}
-                        </button>
-                      ))}
+                    <span className="text-sm text-gray-300">Specialties:</span>
+                    <div ref={modeRef} className="relative">
+                      <button
+                        onClick={() => setIsModeOpen(!isModeOpen)}
+                        className="px-3 py-2 rounded-lg bg-white/10 text-white border border-white/20 text-sm flex items-center gap-2 hover:bg-white/15 transition-colors"
+                      >
+                        {selectedMode === 'all' ? 'All Specialties' : selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1).replace('-', ' ')}
+                        <ChevronDown size={14} className={`text-white/60 transition-transform duration-200 ${isModeOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Dropdown */}
+                      {isModeOpen && (
+                        <div className="absolute left-0 mt-2 w-64 rounded-xl bg-gradient-to-b from-[#111827] to-[#0b1220] border border-white/10 shadow-xl shadow-black/40 backdrop-blur-sm z-50 py-2">
+                          <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
+                            {[
+                              { value: 'all', label: 'All Specialties' },
+                              { value: 'horary', label: 'Horary Astrology' },
+                              { value: 'kp', label: 'KP Astrology' },
+                              { value: 'lal-kitab', label: 'Lal Kitab Astrology' },
+                              { value: 'matchmaking', label: 'Matchmaking' },
+                              { value: 'muhurta', label: 'Muhurta Astrology' },
+                              { value: 'nadi', label: 'Nadi Astrology' },
+                              { value: 'numerology', label: 'Numerology' },
+                              { value: 'palmistry', label: 'Palmistry' },
+                              { value: 'prashna', label: 'Prashna Astrology' },
+                              { value: 'remedial', label: 'Remedial Astrology' },
+                              { value: 'tarot', label: 'Tarot Reading' },
+                              { value: 'vedic', label: 'Vedic Astrology' },
+                              { value: 'vastu', label: 'Vastu Shastra' },
+                              { value: 'western', label: 'Western Astrology' }
+                            ].map((specialty) => (
+                              <button
+                                key={specialty.value}
+                                onClick={() => {
+                                  setSelectedMode(specialty.value)
+                                  setIsModeOpen(false)
+                                }}
+                                className={`w-full text-left px-4 py-2 text-sm leading-5 transition-colors duration-150 ${
+                                  selectedMode === specialty.value
+                                    ? 'bg-white/10 text-white font-medium'
+                                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                }`}
+                              >
+                                {specialty.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -440,18 +489,18 @@ export default function AstrologyPage() {
 
                   {/* Sort Dropdown */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-300">Sort:</span>
+                    <span className="text-sm text-gray-300">Sort By:</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm border border-white/20 focus:ring-2 focus:ring-yellow-400/50"
+                      className="px-3 py-1 rounded-lg bg-[#1a1a1a] text-white text-sm border border-white/20 focus:ring-2 focus:ring-yellow-400/50 appearance-none cursor-pointer"
                     >
-                      <option value="recommended">Recommended</option>
-                      <option value="online">Online Now</option>
-                      <option value="rating">Highest Rated</option>
-                      <option value="experience">Most Experienced</option>
-                      <option value="price-low">Lowest Price</option>
-                      <option value="price-high">Highest Price</option>
+                      <option value="recommended" className="bg-[#1a1a1a] text-white">Recommended</option>
+                      <option value="online" className="bg-[#1a1a1a] text-white">Online Now</option>
+                      <option value="rating" className="bg-[#1a1a1a] text-white">Highest Rated</option>
+                      <option value="experience" className="bg-[#1a1a1a] text-white">Most Experienced</option>
+                      <option value="price-low" className="bg-[#1a1a1a] text-white">Lowest Price</option>
+                      <option value="price-high" className="bg-[#1a1a1a] text-white">Highest Price</option>
                     </select>
                   </div>
 
@@ -489,7 +538,7 @@ export default function AstrologyPage() {
             ) : experts.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {experts.map((expert) => (
                   <AstrologerCard key={expert.id} astrologer={expert} />
                 ))}
@@ -499,25 +548,54 @@ export default function AstrologyPage() {
         </section>
 
         {/* SECTION 3 - Trust Section */}
-        <section className="py-12 border-t border-white/10 bg-gradient-to-b from-[#0b1220] to-[#0f172a]">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <section className="py-16 px-6">
+          <div className="max-w-6xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold font-serif text-white mb-4">
+                Why Choose <span className="text-[#fdce20]">Our Astrology</span> Platform
+              </h2>
+              <p className="text-base text-gray-300 max-w-2xl mx-auto">
+                Experience most trusted and authentic astrology guidance with our premium features
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: <Shield className="w-5 h-5 text-white/70" />, title: 'Verified Experts', description: 'All our astrologers are verified and background checked' },
-                { icon: <Lock className="w-5 h-5 text-white/70" />, title: 'Privacy Protected', description: 'Your conversations are 100% private and secure' },
-                { icon: <Heart className="w-5 h-5 text-white/70" />, title: 'Satisfaction Guaranteed', description: 'Get a refund if you\'re not satisfied with session' },
-                { icon: <HelpCircle className="w-5 h-5 text-white/70" />, title: '24/7 Support', description: 'Our support team is always here to help you' }
-              ].map((badge, index) => (
-                <div
+                { 
+                  icon: <Star className="w-6 h-6" />, 
+                  title: 'Expert Astrologers', 
+                  description: 'Vedic and Western astrology experts with decades of experience'
+                },
+                { 
+                  icon: <Sparkles className="w-6 h-6" />, 
+                  title: 'Cosmic Accuracy', 
+                  description: 'Precise birth chart analysis and planetary predictions'
+                },
+                { 
+                  icon: <Lock className="w-6 h-6" />, 
+                  title: 'Sacred Privacy', 
+                  description: 'Your spiritual journey remains completely confidential'
+                },
+                { 
+                  icon: <Heart className="w-6 h-6" />, 
+                  title: 'Karmic Satisfaction', 
+                  description: 'Find peace and clarity with our satisfaction guarantee'
+                }
+              ].map((feature, index) => (
+                <div 
                   key={index}
-                  className="flex flex-col items-center justify-center p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm transition-all duration-200 hover:bg-white/10 text-center"
+                  className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 group"
                 >
-                  <div className="w-5 h-5 mx-auto mb-2">
-                    {badge.icon}
+                  <div className="w-12 h-12 bg-[#fdce20]/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-[#fdce20]/20 transition-colors duration-300">
+                    <div className="text-[#fdce20]">{feature.icon}</div>
                   </div>
-                  <h3 className="text-sm font-medium text-white/80">
-                    {badge.title}
+                  <h3 className="text-lg font-semibold font-serif text-white mb-2 group-hover:text-[#fdce20] transition-colors duration-300">
+                    {feature.title}
                   </h3>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               ))}
             </div>

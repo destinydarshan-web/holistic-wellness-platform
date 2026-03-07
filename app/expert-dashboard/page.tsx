@@ -292,19 +292,19 @@ export default function ExpertDashboard() {
 
         {/* Profile Completion Notice */}
         {(!expertProfile || !expertProfile.is_profile_complete) && (
-          <div className="mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+          <div className="mb-8 p-6 bg-[#fdce20]/10 border border-[#fdce20]/20 rounded-xl">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-yellow-400" />
+              <AlertCircle className="w-6 h-6 text-[#fdce20]" />
               <div>
-                <h3 className="text-lg font-semibold text-yellow-400 mb-1">
+                <h3 className="text-lg font-semibold text-[#fdce20] mb-1">
                   Your account has been approved. Please complete your profile to get listed.
                 </h3>
-                <p className="text-yellow-200 text-sm">
+                <p className="text-[#fdce20]/80 text-sm">
                   Complete your profile information including display name, bio, experience, pricing, and specialties to appear in the {profile?.specialization === 'counsellor' ? 'counselling' : 'astrology'} listings.
                 </p>
                 <button
                   onClick={() => router.push('/expert/profile')}
-                  className="mt-4 px-4 py-2 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors"
+                  className="mt-4 px-4 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-amber-400 transition-colors"
                 >
                   Complete Profile
                 </button>
@@ -407,7 +407,7 @@ export default function ExpertDashboard() {
               <span className="text-2xl font-bold text-white">{stats.totalBookings}</span>
             </div>
             <p className="text-white/60">Total Bookings</p>
-            <div className="mt-2 text-xs text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="mt-2 text-xs text-[#fdce20] opacity-0 group-hover:opacity-100 transition-opacity">
               Click to view details →
             </div>
           </div>
@@ -466,7 +466,7 @@ export default function ExpertDashboard() {
                           ? 'bg-green-500/20 text-green-400'
                           : booking.status === 'active'
                           ? 'bg-blue-500/20 text-blue-400'
-                          : 'bg-yellow-500/20 text-yellow-400'
+                          : 'bg-yellow-500/20 text-[#fdce20]'
                       }`}>
                         {booking.status}
                       </span>

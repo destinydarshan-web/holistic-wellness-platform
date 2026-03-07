@@ -72,7 +72,7 @@ export function Testimonials({
     >
       <div className="max-w-6xl mx-auto">
         <div className={`text-center mb-12 ${isVisible ? 'animate-scroll-fade-in' : 'opacity-0'}`}>
-          <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">
+          <h2 className="text-3xl font-bold font-serif text-white mb-4 tracking-tight">
             {title}
           </h2>
           <p className="text-lg text-white/75">

@@ -285,31 +285,31 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[70vh] pb-14 sm:pb-20">
               {/* Left Column - Content */}
               <div className="space-y-6 max-w-xl text-center lg:text-left animate-fade-in">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white">
+                <h1 className="text-4xl md:text-5xl font-bold font-serif text-white mb-4 text-center">
                   Holistic Wellness Platform
                 </h1>
                 <p className="text-lg md:text-xl leading-relaxed text-white/90">
                   </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  <a href="#form-section" className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-6 py-3 sm:py-4 rounded-full text-base font-semibold whitespace-nowrap shadow-lg shadow-yellow-500/20 active:scale-[0.98] transition-all duration-200 mx-2">
+                  <a href="#form-section" className="w-full sm:w-auto bg-gradient-to-r from-[#fdce20] to-amber-500 text-black px-6 py-3 sm:py-4 rounded-full text-base font-semibold whitespace-nowrap shadow-lg shadow-[#fdce20]/20 active:scale-[0.98] transition-all duration-200 mx-2">
                     Get My Personalized Guidance
                   </a>
-                  <a href="tel:+919038984582" className="w-full sm:w-auto bg-white/5 border border-white/20 backdrop-blur-md text-white px-6 py-3 sm:py-4 rounded-full text-base font-semibold whitespace-nowrap flex items-center justify-center gap-2 active:bg-white/10 transition-all duration-200 mx-2">
-                    <span className="text-sm sm:text-base">📞</span>
+                  <a href="tel:+919038984582" className="w-full sm:w-auto bg-white/5 border-2 border-[#fdce20] backdrop-blur-md text-white px-6 py-3 sm:py-4 rounded-full text-base font-semibold whitespace-nowrap flex items-center justify-center gap-2 active:bg-white/10 transition-all duration-200 mx-2">
+                    <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-[#fdce20]" />
                     Talk to an Expert
                   </a>
                 </div>
                 
                 <p className="text-xs sm:text-sm text-white/60">
-                  🔒 100% confidential • Trusted by 1000+ clients
+                 🔒 100% confidential • Trusted by 1000+ clients
                 </p>
               </div>
 
               {/* Right Column - Glassmorphism Service Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 max-[360px]:grid-cols-1">
                 <Link href="/astrology" className="block group">
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#fdce20]">
                     <div className="flex justify-center mb-2">
                       <ServiceIcon type="astrology" className="w-12 h-12 sm:w-14 sm:h-14" />
                     </div>
@@ -319,7 +319,7 @@ export default function Home() {
                 </Link>
                 
                 <Link href="/counselling" className="block group">
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#fdce20]">
                     <div className="flex justify-center mb-2">
                       <ServiceIcon type="counselling" className="w-12 h-12 sm:w-14 sm:h-14" />
                     </div>
@@ -329,7 +329,7 @@ export default function Home() {
                 </Link>
                 
                 <Link href="/yoga" className="block group">
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#fdce20]">
                     <div className="flex justify-center mb-2">
                       <ServiceIcon type="yoga" className="w-12 h-12 sm:w-14 sm:h-14" />
                     </div>
@@ -339,7 +339,7 @@ export default function Home() {
                 </Link>
                 
                 <Link href="/meditation" className="block group">
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/40 p-3 sm:p-6 hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#fdce20]">
                     <div className="flex justify-center mb-2">
                       <ServiceIcon type="meditation" className="w-12 h-12 sm:w-14 sm:h-14" />
                     </div>
@@ -387,9 +387,9 @@ export default function Home() {
                         </p>
                         
                         {/* Service Name */}
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-yellow-400">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-[#fdce20]">
                           {recommendation?.service}
-                        </h2>
+                        </h1>
                         
                         {/* Personalized Message */}
                         <p className="text-white/80 text-lg leading-relaxed">
@@ -398,7 +398,7 @@ export default function Home() {
                       </div>
 
                       {/* AI Reasoning */}
-                      <div className="bg-white/5 rounded-2xl p-6 border-l-4 border-yellow-400/50">
+                      <div className="bg-white/5 rounded-2xl p-6 border-l-4 border-[#fdce20]/50">
                         <p className="text-white/90 text-base leading-relaxed">
                           {recommendation?.reason}
                         </p>
@@ -408,7 +408,7 @@ export default function Home() {
                       <div className="flex justify-center lg:justify-start">
                         <a 
                           href={recommendation?.link}
-                          className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
+                          className="w-full sm:w-auto bg-gradient-to-r from-[#fdce20] to-amber-500 text-black px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
                         >
                           Book {recommendation?.service} Session
                         </a>
@@ -435,7 +435,7 @@ export default function Home() {
                             <div className="w-full">
                               <a 
                                 href={recommendations[recommendation.secondary.service.toLowerCase() as keyof typeof recommendations]?.link || '/'}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/20 text-white transition-all duration-300 hover:bg-white/10 hover:border-yellow-400 hover:text-yellow-400 group active:scale-95"
+                                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/20 text-white transition-all duration-300 hover:bg-white/10 hover:border-[#fdce20] hover:text-[#fdce20] group active:scale-95"
                               >
                                 Explore {recommendation.secondary.service}
                                 <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
@@ -448,9 +448,9 @@ export default function Home() {
                       {/* Ask Another Question */}
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                         <div className="space-y-4">
-                          <h3 className="text-lg font-semibold text-white">
+                          <h1 className="text-lg font-bold font-serif text-white mb-2">
                             Have Another Question?
-                          </h3>
+                          </h1>
                           <p className="text-white/60 text-sm leading-relaxed">
                             Our AI is ready to help with any other concerns you may have.
                           </p>
@@ -474,6 +474,11 @@ export default function Home() {
                   {/* Idle State - Form */}
                   {status === 'idle' && (
                     <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="text-center mb-6">
+                        <p className="text-[#fdce20] text-base leading-relaxed">
+                          Complete the form to get your perfect service match.
+                        </p>
+                      </div>
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
                           Full Name
@@ -485,7 +490,7 @@ export default function Home() {
                           value={formData.name}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-yellow-400 focus:ring-0 transition-all duration-200"
+                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-[#fdce20] focus:ring-0 transition-all duration-200"
                           placeholder="Enter your full name"
                         />
                       </div>
@@ -501,7 +506,7 @@ export default function Home() {
                           value={formData.email}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-yellow-400 focus:ring-0 transition-all duration-200"
+                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-[#fdce20] focus:ring-0 transition-all duration-200"
                           placeholder="your@email.com"
                         />
                       </div>
@@ -517,7 +522,7 @@ export default function Home() {
                           value={formData.phone}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-yellow-400 focus:ring-0 transition-all duration-200"
+                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-[#fdce20] focus:ring-0 transition-all duration-200"
                           placeholder="+91 98765 43210"
                         />
                       </div>
@@ -533,7 +538,7 @@ export default function Home() {
                           onChange={handleChange}
                           required
                           rows={3}
-                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-yellow-400 focus:ring-0 transition-all duration-200 resize-none"
+                          className="w-full px-4 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/40 rounded-lg focus:border-[#fdce20] focus:ring-0 transition-all duration-200 resize-none"
                           placeholder="Describe your concerns..."
                         />
                       </div>
@@ -541,7 +546,7 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-black rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 py-2.5 text-base font-semibold mt-4"
+                        className="w-full bg-gradient-to-r from-[#fdce20] to-amber-500 text-black rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 py-2.5 text-base font-semibold mt-4"
                       >
                         Get My Personalized Guidance
                       </Button>
@@ -576,9 +581,9 @@ export default function Home() {
                 {/* Right Side - Content */}
                 <div className="space-y-6 max-w-lg">
                   <div>
-                    <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+                    <h1 className="text-3xl font-bold font-serif text-white mb-4 animate-fade-in">
                       Get Personalized Wellness Guidance
-                    </h2>
+                    </h1>
                     <p className="text-lg text-white/80 mb-6">
                       AI-powered insights tailored to your unique wellness needs.
                     </p>
@@ -628,7 +633,7 @@ export default function Home() {
 
                   <div className="pt-4 border-t border-white/10">
                     <p className="text-sm text-white/60">
-                      🔒 Your information is completely confidential and will never be shared with third parties.
+                      Your information is completely confidential and will never be shared with third parties.
                     </p>
                   </div>
                 </div>
@@ -644,9 +649,9 @@ export default function Home() {
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
         
         <div className="max-w-6xl mx-auto pt-8">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
+          <h1 className="text-3xl font-bold font-serif text-white mb-2">
             Our Services
-          </h2>
+          </h1>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             {Object.values(recommendations).map((service, index) => (
               <div key={service.service} className={`animate-scroll-fade-in scroll-animate-stagger-${Math.min(index + 1, 4)}`}>

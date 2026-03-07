@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 
+// Helper function to determine service type and table
+const getServiceTypeAndTable = (specialties: string[], userRole?: string) => {
+  const specialtiesLower = specialties.map(s => s.toLowerCase())
+  
+  // Check specialties for service type indicators
+  if (specialtiesLower.some(s => s.includes('astrology') || s.includes('vedic') || s.includes('tarot') || s.includes('numerology'))) {
+    return { serviceType: 'astrology', table: 'expert_astrologers' }
+  }
+  if (specialtiesLower.some(s => s.includes('anxiety') || s.includes('depression') || s.includes('counselling') || s.includes('therapy'))) {
+    return { serviceType: 'counselling', table: 'expert_counsellors' }
+  }
+  if (specialtiesLower.some(s => s.includes('yoga') || s.includes('vinyasa') || s.includes('ashtanga') || s.includes('hatha'))) {
+    return { serviceType: 'yoga', table: 'expert_yoga' }
+  }
+  if (specialtiesLower.some(s => s.includes('meditation') || s.includes('mindfulness') || s.includes('breathing') || s.includes('vipassana'))) {
+    return { serviceType: 'meditation', table: 'expert_meditation' }
+  }
+  
+  // Fallback to role-based detection
+  if (userRole === 'astrologer') return { serviceType: 'astrology', table: 'expert_astrologers' }
+  if (userRole === 'expert') return { serviceType: 'meditation', table: 'expert_meditation' } // Default for experts
+  
+  // Default fallback
+  return { serviceType: 'meditation', table: 'expert_meditation' }
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('=== DEBUG: Expert Profile Completion ===')
@@ -92,10 +118,16 @@ export async function POST(request: NextRequest) {
       avatar_url: avatar_url ? `${avatar_url.substring(0, 50)}... (length: ${avatar_url.length})` : 'none' 
     })
     
-    // Check if expert_astrologers entry exists for this user
+    // Determine service type and correct table
+    const { serviceType, table } = getServiceTypeAndTable(specialties || [], user.user_metadata?.role)
+    console.log('=== DEBUG: Service Type Detection ===')
+    console.log('Service Type:', serviceType)
+    console.log('Using Table:', table)
+    
+    // Check if expert entry exists in the correct table
     console.log('=== DEBUG: Checking Existing Profile ===')
     const { data: existingProfile, error: checkError } = await supabase
-      .from("expert_astrologers")
+      .from(table)
       .select("*")
       .eq("id", user.id)
       .single()
@@ -103,9 +135,9 @@ export async function POST(request: NextRequest) {
     console.log('Existing Profile:', existingProfile)
     console.log('Check Error:', checkError)
     
-    // Upsert expert profile (update if exists, insert if not)
+    // Upsert expert profile to the correct table
     const { data, error } = await supabase
-      .from("expert_astrologers")
+      .from(table)
       .upsert({
         id,
         display_name,

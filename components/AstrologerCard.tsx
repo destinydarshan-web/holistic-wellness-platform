@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
-import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Briefcase, DollarSign, Camera, Upload, AlertCircle, User, MapPin, Calendar } from 'lucide-react'
+import { Users, Star, Clock, CheckCircle, MessageCircle, Phone, Briefcase, DollarSign, Camera, Upload, AlertCircle, User, MapPin, Calendar, X } from 'lucide-react'
 
 interface AstrologerCardProps {
   astrologer: {
@@ -271,11 +271,11 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-xl border border-white/20 p-4 hover:border-yellow-500/30 hover:from-yellow-500/5 hover:to-white/10 transition-all duration-500 shadow-lg hover:shadow-xl hover:shadow-yellow-500/10">
+    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-xl border border-white/20 p-2 hover:border-yellow-500/30 hover:from-yellow-500/5 hover:to-white/10 transition-all duration-500 shadow-lg hover:shadow-xl hover:shadow-yellow-500/10">
       {/* Header - Avatar, Name, Online Status */}
-      <div className="flex items-start gap-3 mb-4">
+      <div className="flex items-start gap-3 mb-2">
         <div className="relative">
-          <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-white/10">
+          <div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-white/10">
             {astrologer.avatar_url ? (
               <img 
                 src={astrologer.avatar_url} 
@@ -283,7 +283,7 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-6 h-6 text-gray-400" />
+              <User className="w-4 h-4 text-gray-400" />
             )}
           </div>
           
@@ -295,17 +295,17 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-white truncate">{astrologer.display_name}</h3>
+            <h3 className="text-sm font-bold text-white truncate">{astrologer.display_name}</h3>
             {astrologer.is_profile_complete && (
               <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
             )}
           </div>
-          <p className="text-white/50 text-xs">Expert Astrologer</p>
+          <p className="text-white/50 text-[10px]">Expert Astrologer</p>
         </div>
       </div>
 
       {/* Rating and Experience */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1">
           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
           <span className="text-sm font-semibold text-white">4.5</span>
@@ -317,12 +317,12 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       </div>
 
       {/* Specialties */}
-      <div className="mb-3">
-        <div className="flex flex-wrap gap-1">
+      <div className="mb-2">
+        <div className="flex flex-wrap gap-1 mb-1">
           {(astrologer.specialties || []).slice(0, 2).map((specialty, index) => (
             <span 
               key={index}
-              className="px-2 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs rounded-full border border-yellow-500/20"
+              className="px-1.5 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs rounded-full border border-yellow-500/20"
             >
               {specialty}
             </span>
@@ -355,12 +355,12 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {/* Appointment Booking Button */}
         <button 
           onClick={() => setShowAppointmentModal(true)}
           disabled={loading === 'appointment'}
-          className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-green-500/80 to-emerald-600/80 text-white font-semibold hover:from-green-500 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-md"
+          className="w-full py-2 px-3 rounded-lg bg-transparent text-white font-semibold border border-[#fdce20] hover:bg-[#fdce20] hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
         >
           {loading === 'appointment' ? (
             <>
@@ -379,11 +379,11 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
           <button 
             onClick={() => handleSessionStart('chat')}
             disabled={loading === 'chat'}
-            className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-yellow-500/90 to-orange-500/90 text-black font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-md"
+            className="w-full py-2 px-3 rounded-lg bg-[#fdce20] text-black font-semibold hover:bg-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-md"
           >
             {loading === 'chat' ? (
               <>
-                <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 Starting...
               </>
             ) : (
@@ -418,7 +418,7 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
 
       {/* Offline Message */}
       {!astrologer.is_online && (
-        <div className="text-center py-2 px-3 bg-white/5 rounded-lg border border-white/10">
+        <div className="text-center py-2 px-3 bg-white/5 rounded-lg border border-white/10 mt-2">
           <p className="text-white/50 text-xs">Currently offline</p>
         </div>
       )}
@@ -426,54 +426,58 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       {/* Appointment Booking Modal */}
       {showAppointmentModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-[#1C1C24] to-[#0F0F14] rounded-xl border border-white/20 p-5 max-w-sm w-full shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-3">Book Appointment</h3>
+          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f172a] rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold font-serif text-white">Book Astrology Session</h3>
+              <button
+                onClick={() => setShowAppointmentModal(false)}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center ring-2 ring-white/10">
-                  {astrologer.avatar_url ? (
-                    <img src={astrologer.avatar_url} alt={astrologer.display_name} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <User className="w-5 h-5 text-white/40" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-white text-sm">{astrologer.display_name}</p>
-                  <p className="text-white/50 text-xs">Expert Astrologer</p>
-                </div>
+            {/* Astrologer Info */}
+            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#fdce20]/20 to-amber-500/20 rounded-full flex items-center justify-center">
+                {astrologer.avatar_url ? (
+                  <img src={astrologer.avatar_url} alt={astrologer.display_name} className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <User className="w-5 h-5 text-[#fdce20]" />
+                )}
               </div>
-              
-              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg p-2 mb-3">
-                <p className="text-yellow-400 font-semibold text-sm">Fee: {formatPrice(astrologer.hourly_rate)}</p>
-                <p className="text-white/50 text-xs">Duration: 1 hour</p>
+              <div className="flex-1">
+                <p className="font-semibold text-white text-sm">{astrologer.display_name}</p>
+                <p className="text-white/60 text-xs">Expert Astrologer</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[#fdce20] font-bold text-sm">{formatPrice(astrologer.hourly_rate)}</p>
+                <p className="text-white/50 text-xs">per hour</p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            {/* Form Fields */}
+            <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-xs font-medium text-white/80 mb-1">
-                  Select Date
-                </label>
+                <label className="block text-white/80 text-sm font-medium mb-2">Select Date</label>
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 bg-[#0F0F14] border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
                 />
               </div>
-
+              
               <div>
-                <label className="block text-xs font-medium text-white/80 mb-1">
-                  Select Time
-                </label>
+                <label className="block text-white/80 text-sm font-medium mb-2">Select Time</label>
                 <select
                   value={selectedTime}
                   onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#0F0F14] border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#fdce20]/50 focus:border-[#fdce20]"
                 >
-                  <option value="">Select time</option>
+                  <option value="">Select a time</option>
                   <option value="09:00">9:00 AM</option>
                   <option value="10:00">10:00 AM</option>
                   <option value="11:00">11:00 AM</option>
@@ -486,26 +490,27 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
                 </select>
               </div>
             </div>
-
-            <div className="flex gap-2 mt-4">
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowAppointmentModal(false)
                   setSelectedDate('')
                   setSelectedTime('')
                 }}
-                className="flex-1 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm"
+                className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAppointmentBooking}
                 disabled={!selectedDate || !selectedTime || loading === 'appointment'}
-                className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#fdce20] to-amber-500 text-black rounded-lg hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
                 {loading === 'appointment' ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-1"></div>
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
                     Booking...
                   </>
                 ) : (

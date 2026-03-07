@@ -490,7 +490,7 @@ export default function ExpertBookingsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+      case 'pending': return 'bg-[#fdce20]/20 text-[#fdce20] border border-[#fdce20]/30'
       case 'confirmed': return 'bg-green-500/20 text-green-400 border border-green-500/30'
       case 'completed': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
       case 'cancelled': return 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -594,9 +594,9 @@ export default function ExpertBookingsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#0e1117] to-[#05070d] flex items-center justify-center">
         <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-400"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#fdce20]"></div>
           <div className="absolute top-0 left-0 animate-ping">
-            <div className="h-16 w-16 rounded-full bg-yellow-400 opacity-20"></div>
+            <div className="h-16 w-16 rounded-full bg-[#fdce20] opacity-20"></div>
           </div>
         </div>
       </div>
@@ -699,9 +699,9 @@ export default function ExpertBookingsPage() {
               <CheckCircle className="w-4 h-4 text-blue-400" />
               <span className="text-blue-400 text-sm font-medium">{stats.confirmed} Confirmed</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full">
-              <DollarSign className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 text-sm font-medium">{formatCurrency(stats.earnings)} Earned</span>
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#fdce20]/20 border border-[#fdce20]/30 rounded-full">
+              <DollarSign className="w-4 h-4 text-[#fdce20]" />
+              <span className="text-[#fdce20] text-sm font-medium">{formatCurrency(stats.earnings)} Earned</span>
             </div>
           </div>
         </div>
@@ -850,13 +850,13 @@ export default function ExpertBookingsPage() {
             className="group relative bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:bg-white/10 transition-all duration-300 cursor-pointer"
             onClick={() => handleStatusFilter('pending')}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#fdce20]/10 to-orange-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative">
               <div className="flex items-center justify-between mb-2">
-                <Clock className="text-yellow-400 w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+                <Calendar className="text-[#fdce20] w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
                 <div className="flex items-center gap-1">
                   <span className="text-xl font-bold text-white">{stats.pending}</span>
-                  {stats.pending > 0 && <Bell className="w-3 h-3 text-yellow-400 animate-pulse" />}
+                  {stats.pending > 0 && <Bell className="w-3 h-3 text-[#fdce20] animate-pulse" />}
                 </div>
               </div>
               <p className="text-gray-300 text-xs">Pending</p>

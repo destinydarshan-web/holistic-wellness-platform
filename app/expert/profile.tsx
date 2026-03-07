@@ -19,18 +19,110 @@ interface ExpertProfile {
   updated_at?: string
 }
 
-const SPECIALIZATIONS = [
-  'Vedic Astrology',
-  'Western Astrology',
-  'Numerology',
-  'Palmistry',
-  'Vastu Shastra',
-  'Tarot Reading',
-  'Face Reading',
-  'Kundli Matching',
-  'Horoscope Reading',
-  'Remedial Astrology'
-]
+const ALL_SPECIALIZATIONS = {
+  astrology: [
+    'Vedic Astrology',
+    'Western Astrology',
+    'Numerology',
+    'Palmistry',
+    'Vastu Shastra',
+    'Tarot Reading',
+    'Face Reading',
+    'Kundli Matching',
+    'Horoscope Reading',
+    'Remedial Astrology'
+  ],
+  counselling: [
+    'Anxiety',
+    'Depression',
+    'Relationships',
+    'Stress Management',
+    'Career Counselling',
+    'Trauma & PTSD',
+    'Self-Esteem',
+    'Addiction Recovery',
+    'Grief & Loss',
+    'Family Therapy'
+  ],
+  yoga: [
+    'Hatha Yoga',
+    'Vinyasa Flow',
+    'Ashtanga',
+    'Yin Yoga',
+    'Restorative',
+    'Power Yoga',
+    'Meditation',
+    'Prenatal Yoga',
+    'Kids Yoga',
+    'Aerial Yoga'
+  ],
+  meditation: [
+    'Mindfulness',
+    'Breathing',
+    'Guided Meditation',
+    'Transcendental',
+    'Vipassana',
+    'Zen Meditation',
+    'Chakra Healing',
+    'Yoga Nidra',
+    'Loving Kindness',
+    'Stress Relief'
+  ]
+}
+
+// Fallback to all specialties if service type is not detected
+const SPECIALIZATIONS = Object.values(ALL_SPECIALIZATIONS).flat()
+
+// Helper function to get table name based on service type
+const getTableName = (serviceType: string): string => {
+  switch (serviceType) {
+    case 'astrology': return 'expert_astrologers'
+    case 'counselling': return 'expert_counsellors'
+    case 'yoga': return 'expert_yoga'
+    case 'meditation': return 'expert_meditation'
+    default: return 'expert_meditation'
+  }
+}
+
+// Helper function to detect service type based on specialties or role
+const detectServiceType = (specialties: string[], role?: string): string => {
+  // Debug logging
+  console.log('DEBUG: detectServiceType called with:', { specialties, role })
+  
+  // Check if specialties contain service-specific keywords
+  const specialtiesLower = specialties.map(s => s.toLowerCase())
+  
+  if (specialtiesLower.some(s => s.includes('astrology') || s.includes('vedic') || s.includes('tarot') || s.includes('numerology'))) {
+    console.log('DEBUG: Detected astrology service')
+    return 'astrology'
+  }
+  if (specialtiesLower.some(s => s.includes('anxiety') || s.includes('depression') || s.includes('counselling') || s.includes('therapy'))) {
+    console.log('DEBUG: Detected counselling service')
+    return 'counselling'
+  }
+  if (specialtiesLower.some(s => s.includes('yoga') || s.includes('vinyasa') || s.includes('ashtanga') || s.includes('hatha'))) {
+    console.log('DEBUG: Detected yoga service')
+    return 'yoga'
+  }
+  if (specialtiesLower.some(s => s.includes('meditation') || s.includes('mindfulness') || s.includes('breathing') || s.includes('vipassana'))) {
+    console.log('DEBUG: Detected meditation service')
+    return 'meditation'
+  }
+  
+  // Fallback to role-based detection
+  if (role === 'astrologer') {
+    console.log('DEBUG: Using role fallback: astrology')
+    return 'astrology'
+  }
+  if (role === 'expert') {
+    console.log('DEBUG: Using role fallback: meditation (updated for experts)')
+    return 'meditation' // Changed default to meditation for experts
+  }
+  
+  // Default fallback
+  console.log('DEBUG: Using default fallback: meditation')
+  return 'meditation'
+}
 
 export default function ExpertProfilePage() {
   const { user, profile } = useAuth()
@@ -49,6 +141,8 @@ export default function ExpertProfilePage() {
   const [profileExists, setProfileExists] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [serviceType, setServiceType] = useState<string>('')
+  const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>(SPECIALIZATIONS)
 
   useEffect(() => {
     if (!user) {
@@ -70,27 +164,72 @@ export default function ExpertProfilePage() {
       
       if (!user?.id) return
       
-      const { data, error } = await supabase
-        .from("expert_astrologers")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle()
+      // Try to detect service type first from role
+      const initialServiceType = detectServiceType([], profile?.role)
+      console.log('DEBUG: Initial service type detection:', initialServiceType)
+      
+      // Try the most likely table first
+      const tables = [
+        getTableName(initialServiceType),
+        'expert_meditation', // fallback for meditation experts
+        'expert_counsellors', 
+        'expert_yoga', 
+        'expert_astrologers'
+      ]
+      
+      // Remove duplicates
+      const uniqueTables = [...new Set(tables)]
+      console.log('DEBUG: Trying tables in order:', uniqueTables)
+      
+      let profileData = null
+      let foundTable = null
+      
+      // Try each table until we find the profile
+      for (const table of uniqueTables) {
+        console.log(`DEBUG: Trying table: ${table}`)
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle()
 
-      if (error) {
-        console.error('Error loading profile:', error)
-        // Check if table doesn't exist
-        if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-          console.log('expert_astrologers table does not exist yet')
-          setProfileExists(false)
+        if (error) {
+          console.log(`DEBUG: Error with table ${table}:`, error.message)
+          continue
         }
-        return
+
+        if (data) {
+          console.log(`DEBUG: Found profile in table: ${table}`, data)
+          profileData = data
+          foundTable = table
+          break
+        }
       }
 
-      if (data) {
-        setProfileData(data)
+      if (profileData) {
+        setProfileData(profileData)
         setProfileExists(true)
+        
+        // Detect service type based on existing specialties
+        const detectedService = detectServiceType(profileData.specialties || [], profile?.role)
+        console.log('DEBUG: Detected service type from profile:', detectedService)
+        setServiceType(detectedService)
+        
+        const filtered = ALL_SPECIALIZATIONS[detectedService as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
+        console.log('DEBUG: Setting filtered specialties:', filtered)
+        setFilteredSpecialties(filtered)
       } else {
+        console.log('DEBUG: No existing profile data found in any table')
         setProfileExists(false)
+        
+        // For new profiles, use role-based detection
+        const detectedService = detectServiceType([], profile?.role)
+        console.log('DEBUG: Detected service type for new profile:', detectedService)
+        setServiceType(detectedService)
+        
+        const filtered = ALL_SPECIALIZATIONS[detectedService as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
+        console.log('DEBUG: Setting filtered specialties for new profile:', filtered)
+        setFilteredSpecialties(filtered)
       }
     } catch (error) {
       console.error('Error:', error)
@@ -122,11 +261,31 @@ export default function ExpertProfilePage() {
         return
       }
 
-      // Save to expert_astrologers table via API
+      // Save to expert profile via API with authentication
+      console.log('=== DEBUG: Saving Profile ===')
+      console.log('Profile Data:', profileData)
+      
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      
+      if (!token) {
+        setSaveMessage({
+          type: 'error',
+          message: 'Authentication required. Please log in again.'
+        })
+        return
+      }
+      
+      console.log('=== DEBUG: Making API Call ===')
+      console.log('Token exists:', !!token)
+      console.log('Token length:', token?.length)
+      
       const response = await fetch('/api/expert/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           id: user.id,
@@ -139,7 +298,13 @@ export default function ExpertProfilePage() {
         }),
       })
 
+      console.log('=== DEBUG: API Response Status ===')
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+      
       const result = await response.json()
+      console.log('=== DEBUG: API Response Data ===')
+      console.log('Result:', result)
       
       if (result.success) {
         setSaveMessage({
@@ -152,17 +317,23 @@ export default function ExpertProfilePage() {
           router.push('/expert-dashboard')
         }, 2000)
       } else {
+        console.log('=== DEBUG: API Call Failed ===')
+        console.log('Error message:', result.error)
+        console.log('Error details:', result.details)
         setSaveMessage({
           type: 'error',
-          message: result.error || 'Failed to save profile'
+          message: result.error || result.details || 'Failed to save profile'
         })
       }
       
     } catch (err: any) {
-      console.error("Error:", err)
+      console.error('=== DEBUG: Save Error ===', err)
+      console.error('Error name:', err.name)
+      console.error('Error message:', err.message)
+      console.error('Error stack:', err.stack)
       setSaveMessage({
         type: 'error',
-        message: err.message || "Save failed"
+        message: err.message || "Save failed. Please check console for details."
       })
     } finally {
       setSaving(false)
@@ -251,7 +422,7 @@ export default function ExpertProfilePage() {
       <div className="min-h-screen bg-[#0F0F14] py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Create Your Expert Profile</h1>
+            <h1 className="text-3xl font-bold font-serif text-white mb-2">Create Your Expert Profile</h1>
             <p className="text-white/60">
               Set up your professional profile to get listed in the astrology marketplace
             </p>
@@ -274,7 +445,7 @@ export default function ExpertProfilePage() {
               <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <User className="w-8 h-8 text-black" />
               </div>
-              <h2 className="text-xl font-semibold text-white mb-2">No Profile Found</h2>
+              <h2 className="text-xl font-semibold font-serif text-white mb-2">No Profile Found</h2>
               <p className="text-white/60 mb-6">
                 You haven't created your expert profile yet. Click the button below to get started.
               </p>
@@ -306,7 +477,7 @@ export default function ExpertProfilePage() {
     <div className="min-h-screen bg-[#0F0F14] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Complete Your Profile</h1>
+          <h1 className="text-3xl font-bold font-serif text-white mb-2">Complete Your Profile</h1>
           <p className="text-white/60">
             Fill in your details to get listed in the astrology marketplace
           </p>
@@ -327,7 +498,7 @@ export default function ExpertProfilePage() {
         <div className="bg-[#1C1C24] rounded-xl border border-white/10 p-8">
           {/* Basic Information */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Basic Information</h2>
+            <h2 className="text-xl font-semibold font-serif text-white mb-6">Basic Information</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -373,27 +544,71 @@ export default function ExpertProfilePage() {
 
           {/* Specialties */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Specialties *</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {SPECIALIZATIONS.map((specialty) => (
-                <button
-                  key={specialty}
-                  onClick={() => handleSpecialtyToggle(specialty)}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
-                    profileData.specialties.includes(specialty)
-                      ? 'bg-yellow-500 text-black border-yellow-500'
-                      : 'bg-[#0F0F14] text-white/70 border-white/20 hover:border-white/40'
-                  }`}
-                >
-                  {specialty}
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold font-serif text-white">Specialties *</h2>
+              {serviceType && (
+                <div className="px-3 py-1 bg-[#fdce20]/10 border border-[#fdce20]/30 rounded-full">
+                  <span className="text-[#fdce20] text-sm font-medium capitalize">
+                    {serviceType} Services
+                  </span>
+                </div>
+              )}
             </div>
+            
+            {/* Debug info */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mb-4 p-3 bg-white/5 rounded-lg text-xs">
+                <div>Service Type: {serviceType || 'Not detected'}</div>
+                <div>Filtered Specialties Count: {filteredSpecialties.length}</div>
+                <div>Profile Role: {profile?.role || 'No role'}</div>
+                <div>Profile Specialties: {JSON.stringify(profileData.specialties)}</div>
+              </div>
+            )}
+            
+            {filteredSpecialties.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {filteredSpecialties.map((specialty) => (
+                  <button
+                    key={specialty}
+                    onClick={() => handleSpecialtyToggle(specialty)}
+                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                      profileData.specialties.includes(specialty)
+                        ? 'bg-[#fdce20] text-black border-[#fdce20]'
+                        : 'bg-[#0F0F14] text-white/70 border-white/20 hover:border-white/40'
+                    }`}
+                  >
+                    {specialty}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-white/50">No specialties available for this service type.</p>
+                <button
+                  onClick={() => {
+                    setServiceType('meditation')
+                    setFilteredSpecialties(ALL_SPECIALIZATIONS.meditation)
+                  }}
+                  className="mt-4 px-4 py-2 bg-[#fdce20]/10 text-[#fdce20] rounded-lg hover:bg-[#fdce20]/20 transition-colors border border-[#fdce20]/30"
+                >
+                  Show Meditation Specialties
+                </button>
+                <button
+                  onClick={() => {
+                    setServiceType('')
+                    setFilteredSpecialties(SPECIALIZATIONS)
+                  }}
+                  className="mt-2 ml-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  Show All Specialties
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Pricing */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Pricing</h2>
+            <h2 className="text-xl font-semibold font-serif text-white mb-6">Pricing</h2>
             <div className="max-w-xs">
               <label className="block text-sm font-medium text-white/80 mb-2">
                 Price per Minute (₹) *

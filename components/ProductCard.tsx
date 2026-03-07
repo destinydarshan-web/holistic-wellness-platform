@@ -36,7 +36,7 @@ export function ProductCard({ id, name, description, price, image, category }: P
         />
         {category && (
           <div className="absolute top-3 left-3">
-            <span className="bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+            <span className="bg-[#fdce20]/90 text-white px-3 py-1 rounded-full text-xs font-medium">
               {category}
             </span>
           </div>
@@ -55,13 +55,13 @@ export function ProductCard({ id, name, description, price, image, category }: P
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <div className="text-2xl font-bold text-primary">
+          <div className="text-2xl font-bold text-[#fdce20]">
             {formatPrice(price)}
           </div>
           
           <Button 
             variant="outline" 
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="border-[#fdce20] text-[#fdce20] hover:bg-[#fdce20] hover:text-white transition-colors"
             asChild
           >
             <a href={`/products/${id}`}>

@@ -43,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} ${merriweather.variable}`}>
-      <body className="font-sans antialiased text-foreground">
+      <body className={`${poppins.className} antialiased text-foreground`}>
         <AuthProvider>
           <GlobalBackground>
             <div className="min-h-screen flex flex-col">

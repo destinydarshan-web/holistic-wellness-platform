@@ -18,6 +18,47 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'recommended'
     const service = searchParams.get('service') || 'astrology' // Default to astrology
     
+    // Map frontend mode values to database values
+    const modeMapping: { [key: string]: string } = {
+      // Astrology mappings
+      'vedic': 'Vedic Astrology',
+      'western': 'Western Astrology',
+      'numerology': 'Numerology',
+      'tarot': 'Tarot Reading',
+      'palmistry': 'Palmistry',
+      'vastu': 'Vastu Shastra',
+      'kp': 'KP Astrology',
+      'lal-kitab': 'Lal Kitab Astrology',
+      'nadi': 'Nadi Astrology',
+      'prashna': 'Prashna Astrology',
+      'muhurta': 'Muhurta Astrology',
+      'horary': 'Horary Astrology',
+      'matchmaking': 'Matchmaking',
+      'remedial': 'Remedial Astrology',
+      // Counselling mappings
+      'anxiety': 'Anxiety',
+      'depression': 'Depression',
+      'relationships': 'Relationships',
+      'stress': 'Stress Management',
+      'career': 'Career Counselling',
+      'trauma': 'Trauma & PTSD',
+      'self-esteem': 'Self-Esteem',
+      'addiction': 'Addiction Recovery',
+      'grief': 'Grief & Loss',
+      // Yoga mappings
+      'hatha': 'Hatha Yoga',
+      'vinyasa': 'Vinyasa Flow',
+      'ashtanga': 'Ashtanga',
+      'yin': 'Yin Yoga',
+      'restorative': 'Restorative',
+      'power': 'Power Yoga',
+      'meditation': 'Meditation',
+      'prenatal': 'Prenatal Yoga',
+      'kids': 'Kids Yoga'
+    }
+    
+    const actualMode = mode === 'all' ? 'all' : (modeMapping[mode] || mode)
+    
     console.log('=== DEBUG: Fetching experts ===')
     console.log('Params:', { onlineOnly, mode, minPrice, maxPrice, sortBy, service })
     
@@ -62,9 +103,10 @@ export async function GET(request: NextRequest) {
         
         console.log('=== DEBUG: Using simple counselling filter ===')
         
-        // Apply mode filter
-        if (mode !== 'all') {
-          query = query.contains("specialties", [mode])
+        // Apply mode filter - handle specialties properly for PostgreSQL arrays
+        if (actualMode !== 'all') {
+          // Use contains for array filtering only (ilike doesn't work on arrays)
+          query = query.contains("specialties", [actualMode])
         }
         
         // Apply price filters
@@ -114,9 +156,9 @@ export async function GET(request: NextRequest) {
             .eq("status", "approved")
             .eq("role", "counsellor")
           
-          // Apply mode filter
+          // Apply mode filter - handle specialties properly for PostgreSQL arrays
           if (mode !== 'all') {
-            query = query.contains("specialties", `"${mode}"`)
+            query = query.or(`specialties.cs.{${mode}},specialization.ilike.%${mode}%`)
           }
           
           // Apply price filters
@@ -232,9 +274,10 @@ export async function GET(request: NextRequest) {
         // Join with profiles table to filter by status
         query = query.eq("profiles.status", "approved")
         
-        // Apply mode filter
-        if (mode !== 'all') {
-          query = query.contains("specialties", `"${mode}"`)
+        // Apply mode filter - handle specialties properly for PostgreSQL arrays
+        if (actualMode !== 'all') {
+          // Use contains for array filtering only (ilike doesn't work on arrays)
+          query = query.contains("specialties", [actualMode])
         }
         
         // Apply price filters
@@ -281,9 +324,9 @@ export async function GET(request: NextRequest) {
             .eq("status", "approved")
             .eq("specialization", "yoga_trainer")
           
-          // Apply mode filter
+          // Apply mode filter - handle specialties properly for PostgreSQL arrays
           if (mode !== 'all') {
-            query = query.contains("specialties", `"${mode}"`)
+            query = query.or(`specialties.cs.{${mode}},specialization.ilike.%${mode}%`)
           }
           
           // Apply price filters
@@ -337,9 +380,15 @@ export async function GET(request: NextRequest) {
         // Join with profiles table to filter by status
         query = query.eq("profiles.status", "approved")
         
-        // Apply mode filter
-        if (mode !== 'all') {
-          query = query.contains("specialties", `"${mode}"`)
+        // Apply mode filter - handle specialties properly for PostgreSQL arrays
+        if (actualMode !== 'all') {
+          // Use contains for array filtering only (ilike doesn't work on arrays)
+          query = query.contains("specialties", [actualMode])
+        }
+        
+        // Apply online filter
+        if (onlineOnly) {
+          query = query.eq("is_online", true)
         }
         
         // Apply price filters
@@ -358,7 +407,12 @@ export async function GET(request: NextRequest) {
           query = query.order("price_per_minute", { ascending: true })
         } else if (sortBy === 'price-high') {
           query = query.order("price_per_minute", { ascending: false })
+        } else if (sortBy === 'online') {
+          query = query.order("is_online", { ascending: false }).order("created_at", { ascending: false })
+        } else if (sortBy === 'experience') {
+          query = query.order("experience_years", { ascending: false }).order("created_at", { ascending: false })
         } else {
+          // 'recommended' and any other values - sort by created_at desc
           query = query.order("created_at", { ascending: false })
         }
         
@@ -386,9 +440,9 @@ export async function GET(request: NextRequest) {
             .eq("status", "approved")
             .eq("role", "astrologer")
           
-          // Apply mode filter
+          // Apply mode filter - handle specialties properly for PostgreSQL arrays
           if (mode !== 'all') {
-            query = query.contains("specialties", `"${mode}"`)
+            query = query.or(`specialties.cs.{${mode}},specialization.ilike.%${mode}%`)
           }
           
           // Apply price filters
