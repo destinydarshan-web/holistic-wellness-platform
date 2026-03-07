@@ -210,7 +210,7 @@ export function Navigation() {
                 {/* Dropdown Menu */}
                 {isUserDropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-[#111] border border-white/10 shadow-xl rounded-xl p-2 z-50">
-                    {/* Show Dashboard only for non-expert users */}
+                    {/* Show Dashboard for all users except experts, but only show Calendar/Appointments for regular users */}
                     {profile?.role !== 'expert' && profile?.role !== 'astrologer' && (
                       <>
                         <Link
@@ -221,22 +221,27 @@ export function Navigation() {
                           <LayoutDashboard size={16} />
                           <span className="text-sm">Dashboard</span>
                         </Link>
-                        <Link
-                          href="/user/calendar"
-                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                        >
-                          <Calendar size={16} />
-                          <span className="text-sm">My Calendar</span>
-                        </Link>
-                        <Link
-                          href="/appointments"
-                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                        >
-                          <Calendar size={16} />
-                          <span className="text-sm">Appointments</span>
-                        </Link>
+                        {/* Only show Calendar and Appointments for regular users (not admins) */}
+                        {profile?.role !== 'admin' && (
+                          <>
+                            <Link
+                              href="/user/calendar"
+                              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                              onClick={() => setIsUserDropdownOpen(false)}
+                            >
+                              <Calendar size={16} />
+                              <span className="text-sm">My Calendar</span>
+                            </Link>
+                            <Link
+                              href="/appointments"
+                              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
+                              onClick={() => setIsUserDropdownOpen(false)}
+                            >
+                              <Calendar size={16} />
+                              <span className="text-sm">Appointments</span>
+                            </Link>
+                          </>
+                        )}
                       </>
                     )}
                     
@@ -296,7 +301,7 @@ export function Navigation() {
                 className="flex items-center gap-2 bg-white/5 border border-white/20 text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
               >
                 <User size={16} />
-                <span className="text-sm font-medium drop-shadow-md">Login</span>
+                <span className="text-sm font-medium drop-shadow-md">Login/Signup</span>
               </Link>
             )}
           </div>
@@ -422,7 +427,7 @@ export function Navigation() {
                     <div className="w-full h-12 bg-white/10 rounded-xl animate-pulse"></div>
                   ) : user ? (
                     <div className="space-y-2">
-                      {/* Show Dashboard only for non-expert users */}
+                      {/* Show Dashboard for all users except experts, but only show Calendar/Appointments for regular users */}
                       {profile?.role !== 'expert' && profile?.role !== 'astrologer' && (
                         <>
                           <Link
@@ -433,14 +438,17 @@ export function Navigation() {
                             <LayoutDashboard size={16} />
                             <span>Dashboard</span>
                           </Link>
-                          <Link
-                            href="/appointments"
-                            onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide"
-                          >
-                            <Calendar size={16} />
-                            <span>Appointments</span>
-                          </Link>
+                          {/* Only show Calendar and Appointments for regular users (not admins) */}
+                          {profile?.role !== 'admin' && (
+                            <Link
+                              href="/appointments"
+                              onClick={() => setIsOpen(false)}
+                              className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide"
+                            >
+                              <Calendar size={16} />
+                              <span>Appointments</span>
+                            </Link>
+                          )}
                         </>
                       )}
                       
@@ -500,7 +508,7 @@ export function Navigation() {
                       className="flex items-center gap-3 bg-white/5 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/10 transition-all duration-300 w-full justify-center"
                     >
                       <User size={18} />
-                      <span className="font-medium">Login</span>
+                      <span className="font-medium">Login/Signup</span>
                     </Link>
                   )}
                 </div>

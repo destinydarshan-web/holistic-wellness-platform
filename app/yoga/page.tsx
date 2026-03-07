@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle, Leaf, Brain, Zap } from 'lucide-react'
+import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle, Leaf, Brain, Zap, Calendar, MapPin, DollarSign, User } from 'lucide-react'
 import YogaTrainerCard from '@/components/YogaTrainerCard'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Expert {
   id: string
@@ -21,8 +22,32 @@ interface Expert {
   updated_at?: string
 }
 
+interface YogaEvent {
+  slug: string
+  title: string
+  description: string
+  date: string
+  time: string
+  timezone: string
+  duration: string
+  location: string
+  price: number
+  max_participants: number
+  current_participants: number
+  instructor: string
+  instructor_description?: string
+  level: string
+  images?: string[]
+  requirements?: string[]
+  benefits?: string[]
+  status: string
+  created_at: string
+  updated_at: string
+}
+
 export default function YogaPage() {
   const [experts, setExperts] = useState<Expert[]>([])
+  const [events, setEvents] = useState<YogaEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
@@ -34,6 +59,7 @@ export default function YogaPage() {
   const [isModeOpen, setIsModeOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [isPriceOpen, setIsPriceOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'instructors' | 'events'>('events')
 
   // All yoga specialties from expert profile
   const yogaSpecialties = [
@@ -91,8 +117,36 @@ export default function YogaPage() {
   }, [])
 
   useEffect(() => {
-    fetchYogaInstructors()
-  }, [isOnlineOnly, selectedMode, priceRange, sortBy])
+    if (activeTab === 'instructors') {
+      fetchYogaInstructors()
+    } else {
+      fetchYogaEvents()
+    }
+  }, [activeTab, isOnlineOnly, selectedMode, priceRange, sortBy])
+
+  const fetchYogaEvents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('yoga_events')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+
+      if (eventsError) {
+        throw new Error(`Failed to fetch yoga events: ${eventsError.message}`)
+      }
+
+      setEvents(eventsData || [])
+    } catch (err) {
+      console.error('Error fetching yoga events:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch yoga events')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchYogaInstructors = async () => {
     try {
@@ -131,6 +185,142 @@ export default function YogaPage() {
 
   const displayExperts = experts
 
+  const EventCard = ({ event }: { event: YogaEvent }) => {
+    const formatDate = (dateString: string) => {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })
+    }
+
+    const formatTime = (timeString: string) => {
+      const [hours, minutes] = timeString.split(':')
+      const hour = parseInt(hours)
+      const ampm = hour >= 12 ? 'PM' : 'AM'
+      const displayHour = hour % 12 || 12
+      return `${displayHour}:${minutes} ${ampm}`
+    }
+
+    return (
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden hover:bg-white/10 transition-all duration-300 group">
+        <div className="flex flex-col lg:flex-row">
+          {/* Event Image */}
+          <div className="lg:w-1/3 relative h-64 lg:h-auto overflow-hidden">
+            {event.images && event.images.length > 0 ? (
+              <img
+                src={event.images[0]}
+                alt={event.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#fdce20]/20 to-[#f97316]/20 flex items-center justify-center">
+                <Leaf className="w-16 h-16 text-[#fdce20]" />
+              </div>
+            )}
+            <div className="absolute top-4 left-4">
+              <span className="px-3 py-1 bg-[#fdce20] text-black text-xs font-semibold rounded-full">
+                {event.level.charAt(0).toUpperCase() + event.level.slice(1)}
+              </span>
+            </div>
+            <div className="absolute top-4 right-4">
+              <span className="px-3 py-1 bg-black/70 text-white text-xs font-semibold rounded-full">
+                {event.max_participants - event.current_participants} spots left
+              </span>
+            </div>
+          </div>
+
+          {/* Event Content */}
+          <div className="lg:w-2/3 p-6 lg:p-8 flex flex-col justify-between">
+            <div>
+              <h3 className="text-2xl lg:text-3xl font-bold text-white mb-3 group-hover:text-[#fdce20] transition-colors">
+                {event.title}
+              </h3>
+              <p className="text-gray-300 text-base mb-6 line-clamp-2">
+                {event.description}
+              </p>
+
+              {/* Event Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="flex items-center gap-3 text-gray-300">
+                  <Calendar className="w-5 h-5 text-[#fdce20]" />
+                  <span className="text-sm">{formatDate(event.date)}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <Clock className="w-5 h-5 text-[#fdce20]" />
+                  <span className="text-sm">{formatTime(event.time)} ({event.timezone})</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <MapPin className="w-5 h-5 text-[#fdce20]" />
+                  <span className="text-sm">{event.location}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <User className="w-5 h-5 text-[#fdce20]" />
+                  <span className="text-sm">{event.instructor}</span>
+                </div>
+              </div>
+
+              {/* Instructor Info */}
+              {event.instructor_description && (
+                <div className="mb-6 p-4 bg-white/5 rounded-lg">
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {event.instructor_description}
+                  </p>
+                </div>
+              )}
+
+              {/* Requirements */}
+              {event.requirements && event.requirements.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-[#fdce20] mb-3">Requirements</h4>
+                  <div className="space-y-2">
+                    {event.requirements.map((req, index) => (
+                      <div key={index} className="flex items-center gap-2 text-gray-300 text-sm">
+                        <div className="w-1.5 h-1.5 bg-[#fdce20] rounded-full"></div>
+                        <span>{req}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Benefits */}
+              {event.benefits && event.benefits.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-[#fdce20] mb-3">Benefits</h4>
+                  <div className="space-y-2">
+                    {event.benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-center gap-2 text-gray-300 text-sm">
+                        <div className="w-1.5 h-1.5 bg-[#fdce20] rounded-full"></div>
+                        <span>{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Section */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-[#fdce20]" />
+                <span className="text-2xl font-bold text-white">₹{event.price}</span>
+              </div>
+              <Link
+                href={`/yoga/events/${event.slug}`}
+                className="px-6 py-3 bg-[#fdce20] text-black font-semibold rounded-lg hover:bg-[#fdce20]/80 transition-colors"
+              >
+                View Details
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const SkeletonCard = () => (
     <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
       <div className="animate-pulse">
@@ -158,25 +348,58 @@ export default function YogaPage() {
 
   return (
     <div className="pt-20">
-      {/* SECTION 2 - Yoga Instructor Listing */}
-      <section id="instructors" className="px-6 py-15">
+      {/* SECTION 1 - Tab Navigation */}
+      <section className="px-6 py-8">
         <div className="max-w-[1200px] mx-auto">
-          {/* Title Section - Left Aligned */}
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold font-serif text-white mb-3">
-              Meet Our <span className="text-[#fdce20]">Yoga Instructors</span>
-            </h1>
-            <p className="text-lg text-gray-300">
-              Certified instructors guiding your wellness journey.
-            </p>
+          <div className="flex items-center justify-center mb-8">
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-1 inline-flex">
+              <button
+                onClick={() => setActiveTab('instructors')}
+                className={`px-8 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  activeTab === 'instructors'
+                    ? 'bg-[#fdce20] text-black shadow-lg'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>Instructors</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('events')}
+                className={`px-8 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  activeTab === 'events'
+                    ? 'bg-[#fdce20] text-black shadow-lg'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Events</span>
+              </button>
+            </div>
           </div>
+        </div>
+      </section>
 
-          {/* Integrated Filter Bar */}
-          <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#0f172a]/95 via-[#0f172a]/90 to-[#0b1220]/95 backdrop-blur-lg border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-all duration-300 mb-8">
-            {/* Top Soft Highlight Line */}
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-4">
-              {/* Mobile: Compact Single Row */}
+      {/* SECTION 2 - Content Based on Active Tab */}
+      {activeTab === 'instructors' ? (
+        <section id="instructors" className="px-6 py-15">
+          <div className="max-w-[1200px] mx-auto">
+            {/* Title Section - Left Aligned */}
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold font-serif text-white mb-3">
+                Meet Our <span className="text-[#fdce20]">Yoga Instructors</span>
+              </h1>
+              <p className="text-lg text-gray-300">
+                Certified instructors guiding your wellness journey.
+              </p>
+            </div>
+
+            {/* Integrated Filter Bar */}
+            <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#0f172a]/95 via-[#0f172a]/90 to-[#0b1220]/95 backdrop-blur-lg border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-all duration-300 mb-8">
+              {/* Top Soft Highlight Line */}
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-4">
+                {/* Mobile: Compact Single Row */}
                 <div className="flex items-center justify-center gap-2 flex-nowrap w-full py-3 px-4 md:hidden">
                   {/* Online Toggle (Mobile) */}
                   <button
@@ -437,6 +660,62 @@ export default function YogaPage() {
           )}
         </div>
       </section>
+      ) : (
+        <section id="events" className="px-6 py-15">
+          <div className="max-w-[1200px] mx-auto">
+            {/* Title Section - Left Aligned */}
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold font-serif text-white mb-3">
+                Upcoming <span className="text-[#fdce20]">Yoga Events</span>
+              </h1>
+              <p className="text-lg text-gray-300">
+                Join our expert-led yoga events and workshops.
+              </p>
+            </div>
+
+            {/* Events Grid */}
+            {loading ? (
+              <div className="space-y-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Error Loading Events
+                </h2>
+                <p className="text-gray-600">{error}</p>
+                <button
+                  onClick={fetchYogaEvents}
+                  className="mt-4 px-6 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-[#fdce20]/80 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-8 h-8 text-white/40" />
+                </div>
+                <h3 className="text-xl font-semibold font-serif text-white mb-2">No Yoga Events Found</h3>
+                <p className="text-gray-300">
+                  Check back soon for upcoming yoga events and workshops.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {events.map((event) => (
+                  <EventCard key={event.slug} event={event} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* SECTION 3 - Trust Section */}
       <section className="py-16 px-6">

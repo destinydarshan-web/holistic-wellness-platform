@@ -219,8 +219,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0F0F14] px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-start justify-center bg-[#0F0F14] px-4 pt-20">
+      <div className="w-full max-w-md mt-8">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold font-serif text-white mb-2">Destiny Darshan</h1>
