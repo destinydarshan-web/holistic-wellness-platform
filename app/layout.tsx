@@ -1,5 +1,5 @@
 import React from "react"
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Poppins, Merriweather } from 'next/font/google'
 
 import './globals.css'
@@ -24,13 +24,14 @@ export const metadata: Metadata = {
   title: 'Holistic Wellness Platform | Astrology, Counselling, Yoga & Meditation',
   description: 'Balance your mind, body and soul. Discover inner peace and wellness with our platform offering astrology guidance, professional counselling, yoga sessions, and meditation practices.',
   generator: 'v0.app',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#fdce20",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
 }
 
 

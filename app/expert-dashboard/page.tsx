@@ -21,6 +21,7 @@ export default function ExpertDashboard() {
   const [sessions, setSessions] = useState<any[]>([])
   const [expertProfile, setExpertProfile] = useState<any>(null)
   const [pendingSessions, setPendingSessions] = useState<any[]>([])
+  const [pendingLiveSessions, setPendingLiveSessions] = useState<any[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
 
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function ExpertDashboard() {
       loadExpertProfile()
       loadExpertData()
       loadPendingSessions()
+      loadPendingLiveSessions()
     }
   }, [user, profile, loading, router])
 
@@ -183,6 +185,86 @@ export default function ExpertDashboard() {
       }
     } catch (err) {
       console.error('Unexpected error loading pending appointments:', err)
+    }
+  }
+
+  const loadPendingLiveSessions = async () => {
+    try {
+      console.log('=== DEBUG: Loading Pending Live Sessions ===')
+      
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .select('*')
+        .eq('expert_id', user?.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading pending live sessions:', error)
+      } else {
+        console.log('Pending live sessions found:', data)
+        // Enrich with user data
+        const enrichedSessions = await Promise.all(
+          (data || []).map(async (session) => {
+            if (session.user_id) {
+              console.log('=== DEBUG: Fetching user data for live session user_id ===', session.user_id)
+              
+              try {
+                // First, let's check if user exists at all in auth.users
+                const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(session.user_id)
+                console.log('Auth user check:', { authUser, authError })
+                
+                // Then check profiles table
+                const { data: userData, error: userError } = await supabase
+                  .from('profiles')
+                  .select('full_name, role, specialization, status, created_at')
+                  .eq('id', session.user_id)
+                  .maybeSingle()
+                
+                console.log('Profile data result for live session:', { userData, userError })
+                
+                if (userError) {
+                  console.error('Error fetching user data for live session:', userError)
+                  return {
+                    ...session,
+                    user_name: `User (${userError.code || 'Error'})`,
+                    user_email: 'error@debug.com'
+                  }
+                }
+                
+                if (!userData) {
+                  console.log('No profile found for live session user_id:', session.user_id)
+                  // Try to get email from auth.users as fallback
+                  const userEmail = (authUser as any)?.email || 'unknown@auth.com'
+                  return {
+                    ...session,
+                    user_name: 'User (No Profile)',
+                    user_email: userEmail
+                  }
+                }
+                
+                return {
+                  ...session,
+                  user_name: userData.full_name || (authUser as any)?.email?.split('@')[0] || 'Unknown User',
+                  user_email: (authUser as any)?.email || 'noemail@debug.com'
+                }
+              } catch (fetchError) {
+                console.error('Unexpected error fetching user data for live session:', fetchError)
+                return {
+                  ...session,
+                  user_name: 'User (Exception)',
+                  user_email: 'exception@debug.com'
+                }
+              }
+            }
+            return session
+          })
+        )
+        
+        setPendingLiveSessions(enrichedSessions)
+      }
+    } catch (err) {
+      console.error('Unexpected error loading pending live sessions:', err)
     }
   }
 
@@ -304,6 +386,127 @@ export default function ExpertDashboard() {
     } catch (err) {
       console.error('Unexpected error rejecting appointment:', err)
       alert('Failed to reject appointment. Please try again.')
+    }
+  }
+
+  const handleAcceptLiveSession = async (sessionId: string) => {
+    try {
+      console.log('=== DEBUG: Accepting Live Session ===', sessionId)
+      
+      // Update live session status to accepted
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('live_sessions')
+        .update({ 
+          status: 'accepted'
+        })
+        .eq('id', sessionId)
+        .eq('expert_id', user?.id)
+        .select()
+        .single()
+
+      if (sessionError) {
+        console.error('Error accepting live session:', sessionError)
+        alert('Failed to accept live session. Please try again.')
+        return
+      }
+
+      console.log('Live session accepted successfully:', sessionData)
+
+      // Create notification for user
+      try {
+        const userNotificationResponse = await fetch('/api/user-notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: sessionData.user_id,
+            expert_id: user?.id,
+            type: 'live_session_accepted',
+            message: `Your chat session has been accepted by ${profile?.full_name || 'Expert'}`,
+            session_id: sessionId
+          })
+        })
+
+        if (userNotificationResponse.ok) {
+          console.log('✅ User notification sent successfully')
+        } else {
+          console.log('⚠️ Failed to send user notification')
+        }
+      } catch (notificationError) {
+        console.error('Error sending user notification:', notificationError)
+      }
+
+      // Remove from pending list
+      setPendingLiveSessions(prev => prev.filter(session => session.id !== sessionId))
+      
+      // Show success message and redirect to chat
+      console.log('Live session accepted! Redirecting to chat...')
+      router.push(`/session/chat/${sessionId}`)
+      
+    } catch (err) {
+      console.error('Unexpected error accepting live session:', err)
+      alert('Failed to accept live session. Please try again.')
+    }
+  }
+
+  const handleRejectLiveSession = async (sessionId: string) => {
+    try {
+      console.log('=== DEBUG: Rejecting Live Session ===', sessionId)
+      
+      // Update live session status to rejected
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('live_sessions')
+        .update({ 
+          status: 'rejected'
+        })
+        .eq('id', sessionId)
+        .eq('expert_id', user?.id)
+        .select()
+        .single()
+
+      if (sessionError) {
+        console.error('Error rejecting live session:', sessionError)
+        alert('Failed to reject live session. Please try again.')
+        return
+      }
+
+      console.log('Live session rejected successfully:', sessionData)
+
+      // Create notification for user
+      try {
+        const userNotificationResponse = await fetch('/api/user-notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: sessionData.user_id,
+            expert_id: user?.id,
+            type: 'live_session_rejected',
+            message: `Your chat session has been declined by ${profile?.full_name || 'Expert'}`,
+            session_id: sessionId
+          })
+        })
+
+        if (userNotificationResponse.ok) {
+          console.log('✅ User notification sent successfully')
+        } else {
+          console.log('⚠️ Failed to send user notification')
+        }
+      } catch (notificationError) {
+        console.error('Error sending user notification:', notificationError)
+      }
+
+      // Remove from pending list
+      setPendingLiveSessions(prev => prev.filter(session => session.id !== sessionId))
+      
+      // Show success message
+      alert('Live session rejected. User has been notified.')
+      
+    } catch (err) {
+      console.error('Unexpected error rejecting live session:', err)
+      alert('Failed to reject live session. Please try again.')
     }
   }
 
@@ -560,14 +763,14 @@ export default function ExpertDashboard() {
         )}
 
         {/* Pending Sessions Notifications */}
-        {pendingSessions.length > 0 && (
+        {(pendingSessions.length > 0 || pendingLiveSessions.length > 0) && (
           <div className="bg-[#1C1C24] rounded-xl border border-white/10 mb-8">
             <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Bell className="text-[#fbcc1e] w-6 h-6 animate-pulse" />
                   <h2 className="text-xl font-semibold text-white">
-                    Pending Session Requests ({pendingSessions.length})
+                    Pending Requests ({pendingSessions.length + pendingLiveSessions.length})
                   </h2>
                 </div>
                 <button
@@ -579,44 +782,111 @@ export default function ExpertDashboard() {
               </div>
               
               {showNotifications && (
-                <div className="space-y-3">
-                  {pendingSessions.map((appointment) => (
-                    <div key={appointment.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-medium text-white mb-1">
-                            {appointment.user_name} - {appointment.service_category}
-                          </h4>
-                          <p className="text-white/60 text-sm">
-                            Appointment ID: {appointment.id}
-                          </p>
-                          <p className="text-white/60 text-sm">
-                            Date: {appointment.appointment_date}
-                          </p>
-                          <p className="text-white/60 text-sm">
-                            Time: {appointment.appointment_time}
-                          </p>
-                          <p className="text-white/60 text-sm">
-                            Created: {new Date(appointment.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleAcceptSession(appointment.id)}
-                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleRejectSession(appointment.id)}
-                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
-                          >
-                            Reject
-                          </button>
-                        </div>
+                <div className="space-y-4">
+                  {/* Live Chat Sessions */}
+                  {pendingLiveSessions.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-green-400" />
+                        Live Chat Requests ({pendingLiveSessions.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {pendingLiveSessions.map((session) => (
+                          <div key={session.id} className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="font-medium text-white mb-1 flex items-center gap-2">
+                                  {session.user_name}
+                                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
+                                    Live Chat
+                                  </span>
+                                </h4>
+                                <p className="text-white/60 text-sm">
+                                  Session ID: {session.id}
+                                </p>
+                                <p className="text-white/60 text-sm">
+                                  Service: {session.service_category}
+                                </p>
+                                <p className="text-white/60 text-sm">
+                                  Created: {new Date(session.created_at).toLocaleString()}
+                                </p>
+                                <p className="text-yellow-400 text-sm font-medium">
+                                  User is waiting for you to join the chat!
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleAcceptLiveSession(session.id)}
+                                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm flex items-center gap-1"
+                                >
+                                  <MessageCircle className="w-3 h-3" />
+                                  Join Chat
+                                </button>
+                                <button
+                                  onClick={() => handleRejectLiveSession(session.id)}
+                                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Scheduled Appointments */}
+                  {pendingSessions.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-blue-400" />
+                        Scheduled Appointments ({pendingSessions.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {pendingSessions.map((appointment) => (
+                          <div key={appointment.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="font-medium text-white mb-1 flex items-center gap-2">
+                                  {appointment.user_name}
+                                  <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                                    Appointment
+                                  </span>
+                                </h4>
+                                <p className="text-white/60 text-sm">
+                                  Appointment ID: {appointment.id}
+                                </p>
+                                <p className="text-white/60 text-sm">
+                                  Date: {appointment.appointment_date}
+                                </p>
+                                <p className="text-white/60 text-sm">
+                                  Time: {appointment.appointment_time}
+                                </p>
+                                <p className="text-white/60 text-sm">
+                                  Created: {new Date(appointment.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleAcceptSession(appointment.id)}
+                                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() => handleRejectSession(appointment.id)}
+                                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -648,9 +918,14 @@ export default function ExpertDashboard() {
           <div className="bg-[#1C1C24] rounded-xl p-6 border border-white/10">
             <div className="flex items-center justify-between mb-2">
               <AlertCircle className="text-[#fbcc1e] w-8 h-8" />
-              <span className="text-2xl font-bold text-white">{pendingSessions.length}</span>
+              <span className="text-2xl font-bold text-white">{pendingSessions.length + pendingLiveSessions.length}</span>
             </div>
             <p className="text-white/60">Pending Requests</p>
+            <div className="mt-2 text-xs text-white/40">
+              {pendingLiveSessions.length > 0 && `${pendingLiveSessions.length} live chat${pendingLiveSessions.length > 1 ? 's' : ''}`}
+              {pendingLiveSessions.length > 0 && pendingSessions.length > 0 && ' • '}
+              {pendingSessions.length > 0 && `${pendingSessions.length} appointment${pendingSessions.length > 1 ? 's' : ''}`}
+            </div>
           </div>
           <Link
             href="/expert/earnings"

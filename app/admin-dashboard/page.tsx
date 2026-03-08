@@ -395,6 +395,37 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Event Management */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Event Management</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+              onClick={() => router.push('/admin/create-yoga-event')}
+              className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">🧘</span>
+                </div>
+                <h3 className="font-medium text-white text-lg">Manage Yoga Events</h3>
+              </div>
+              <p className="text-white/60 text-sm">Create and manage yoga events for the platform</p>
+            </div>
+            <div
+              onClick={() => router.push('/admin/create-meditation-event')}
+              className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">🧘‍♀️</span>
+                </div>
+                <h3 className="font-medium text-white text-lg">Manage Meditation Events</h3>
+              </div>
+              <p className="text-white/60 text-sm">Create and manage meditation events for the platform</p>
+            </div>
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
@@ -422,37 +453,6 @@ export default function AdminDashboard() {
               <Settings className="text-[#fbcc1e] w-8 h-8 mb-3" />
               <h3 className="font-medium text-white mb-2">Platform Settings</h3>
               <p className="text-white/60 text-sm">Configure platform settings</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Event Management */}
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Event Management</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              onClick={() => router.push('/admin/create-yoga-event')}
-              className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                  <span className="text-white text-xl font-bold">🧘</span>
-                </div>
-                <h3 className="font-medium text-white text-lg">Create Yoga Event</h3>
-              </div>
-              <p className="text-white/60 text-sm">Create and manage yoga events for the platform</p>
-            </div>
-            <div
-              onClick={() => router.push('/admin/create-meditation-event')}
-              className="bg-[#1C1C24] rounded-xl p-6 border border-white/10 hover:bg-white/5 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
-                  <span className="text-white text-xl font-bold">🧘‍♀️</span>
-                </div>
-                <h3 className="font-medium text-white text-lg">Create Meditation Event</h3>
-              </div>
-              <p className="text-white/60 text-sm">Create and manage meditation events for the platform</p>
             </div>
           </div>
         </div>

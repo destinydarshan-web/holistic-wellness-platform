@@ -35,24 +35,28 @@ const vastuTips = [
     title: 'Main Entrance',
     description: 'Ensure the main entrance faces north or east for positive energy flow. Avoid south or west entrances as they bring negative energy.',
     icon: <Home className="w-6 h-6" />,
+    image: '🚪',
     category: 'Entrance'
   },
   {
     title: 'Entrance Door',
     description: 'Use a solid wooden door without any cracks. The door should open clockwise and make pleasant sounds.',
     icon: <Home className="w-6 h-6" />,
+    image: '🚪',
     category: 'Entrance'
   },
   {
     title: 'Door Threshold',
     description: 'Keep the entrance threshold clean and elevated. Avoid broken or damaged thresholds at the entrance.',
     icon: <Home className="w-6 h-6" />,
+    image: '🏠',
     category: 'Entrance'
   },
   {
     title: 'Name Plate',
     description: 'Display a clear name plate near the entrance. Use metal or wooden plates with good visibility.',
     icon: <Home className="w-6 h-6" />,
+    image: '📋',
     category: 'Entrance'
   },
 
@@ -61,24 +65,28 @@ const vastuTips = [
     title: 'Living Room',
     description: 'Place the living room in the northeast direction for harmony. Use light colors and keep the space clutter-free for positive vibes.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🛋️',
     category: 'Living Areas'
   },
   {
     title: 'Furniture Arrangement',
     description: 'Arrange furniture in circular or square patterns. Avoid sharp edges pointing towards seating areas.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🪑',
     category: 'Living Areas'
   },
   {
     title: 'Seating Arrangement',
     description: 'Place sofas and chairs against south or west walls. Ensure the head of family sits facing south or west.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🛏️',
     category: 'Living Areas'
   },
   {
     title: 'Decor Items',
     description: 'Use paintings of landscapes, waterfalls, or family photos. Avoid war scenes or abstract art with sharp angles.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🖼️',
     category: 'Living Areas'
   },
 
@@ -87,24 +95,28 @@ const vastuTips = [
     title: 'Kitchen Location',
     description: 'Kitchen should be in the southeast corner for health and prosperity. Cook facing east and keep the cooking platform clean.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🍳',
     category: 'Kitchen'
   },
   {
     title: 'Cooking Direction',
     description: 'Always cook facing east. This brings health and prosperity to the family members.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🔥',
     category: 'Kitchen'
   },
   {
     title: 'Storage',
     description: 'Store food grains and utensils in south or west direction. Keep the kitchen clean and organized.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🗄️',
     category: 'Kitchen'
   },
   {
     title: 'Water Source',
     description: 'Place water filters, purifiers, and drinking water in the northeast corner of the kitchen.',
     icon: <Sun className="w-6 h-6" />,
+    image: '💧',
     category: 'Kitchen'
   },
 
@@ -113,24 +125,28 @@ const vastuTips = [
     title: 'Master Bedroom',
     description: 'Master bedroom in southwest ensures stability and peace. Sleep with head towards south for better health and relationships.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🛏️',
     category: 'Bedrooms'
   },
   {
     title: 'Bed Position',
     description: 'Place the bed in the southwest corner of the bedroom. Avoid sleeping under beams or with head towards north.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🛌',
     category: 'Bedrooms'
   },
   {
     title: 'Children\'s Bedroom',
     description: 'Place children\'s bedroom in west or northwest direction. Study table should face east or north.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🧸',
     category: 'Bedrooms'
   },
   {
     title: 'Guest Bedroom',
     description: 'Guest bedroom should be in northwest direction. This ensures guests don\'t overstay their welcome.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🛏️',
     category: 'Bedrooms'
   },
 
@@ -139,24 +155,28 @@ const vastuTips = [
     title: 'Pooja Room',
     description: 'Place pooja room in northeast corner. Face east or north while praying. Keep idols at a height and maintain cleanliness.',
     icon: <Home className="w-6 h-6" />,
+    image: '🙏',
     category: 'Spiritual'
   },
   {
     title: 'Idol Placement',
     description: 'Place idols at least 6 inches from walls. Ensure they are not broken or damaged in any way.',
     icon: <Home className="w-6 h-6" />,
+    image: '🗿',
     category: 'Spiritual'
   },
   {
     title: 'Meditation Space',
     description: 'Create a meditation area facing east or north. Use soft cushions and maintain silence in this space.',
     icon: <Home className="w-6 h-6" />,
+    image: '🧘',
     category: 'Spiritual'
   },
   {
     title: 'Sacred Items',
     description: 'Store religious books and items in clean, elevated places. Never keep them on the floor.',
     icon: <Home className="w-6 h-6" />,
+    image: '📿',
     category: 'Spiritual'
   },
 
@@ -165,24 +185,28 @@ const vastuTips = [
     title: 'Study Room Location',
     description: 'Study room should be in east, north, or northeast direction. Sit facing east or north for better concentration and learning.',
     icon: <Compass className="w-6 h-6" />,
+    image: '📚',
     category: 'Study Areas'
   },
   {
     title: 'Study Table',
     description: 'Place study table against a solid wall. Ensure there is a wall behind the study chair for support.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🪑',
     category: 'Study Areas'
   },
   {
     title: 'Book Storage',
     description: 'Keep books in the south or west direction of the study room. Avoid clutter on the study table.',
     icon: <Compass className="w-6 h-6" />,
+    image: '📖',
     category: 'Study Areas'
   },
   {
     title: 'Lighting',
     description: 'Ensure natural light from north or east. Use bright white lights for better concentration.',
     icon: <Compass className="w-6 h-6" />,
+    image: '💡',
     category: 'Study Areas'
   },
 
@@ -191,24 +215,28 @@ const vastuTips = [
     title: 'Bathroom Location',
     description: 'Bathrooms should be in northwest or southeast direction. Keep them clean and ensure proper ventilation to avoid negative energy.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🚿',
     category: 'Bathrooms'
   },
   {
     title: 'Toilet Position',
     description: 'Toilet seat should face north or south. Avoid facing east or west while using the toilet.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🚽',
     category: 'Bathrooms'
   },
   {
     title: 'Bathroom Fixtures',
     description: 'Keep bathroom fixtures clean and in working condition. Fix any leaks immediately as they drain wealth.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🚰',
     category: 'Bathrooms'
   },
   {
     title: 'Ventilation',
     description: 'Ensure proper cross-ventilation in bathrooms. Use exhaust fans to remove moisture and negative energy.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🌬️',
     category: 'Bathrooms'
   },
 
@@ -217,36 +245,42 @@ const vastuTips = [
     title: 'Staircase',
     description: 'Staircase should be in south, west, or southwest direction. Avoid building it in northeast as it blocks positive energy.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🪜',
     category: 'Structure'
   },
   {
     title: 'Windows',
     description: 'Have more windows in north and east directions for natural light and ventilation. Keep windows clean and functional.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🪟',
     category: 'Structure'
   },
   {
     title: 'Doors',
     description: 'Doors should open inwards and be of even number. Avoid doors that creak or make noise.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🚪',
     category: 'Structure'
   },
   {
     title: 'Center of House',
     description: 'Keep the center (brahmasthan) of the house empty and clean. Avoid placing any heavy objects or structures here.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🏛️',
     category: 'Structure'
   },
   {
     title: 'Ceiling Height',
     description: 'Maintain consistent ceiling height throughout the house. Avoid sloping ceilings in living areas.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🏠',
     category: 'Structure'
   },
   {
     title: 'Beams',
     description: 'Avoid sleeping or sitting directly under beams. If unavoidable, use a false ceiling or beam concealer.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🏗️',
     category: 'Structure'
   },
 
@@ -255,24 +289,28 @@ const vastuTips = [
     title: 'Wall Colors',
     description: 'Use light colors like white, cream, light blue for walls. Avoid dark colors in bedrooms and use red sparingly in living areas.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🎨',
     category: 'Decor'
   },
   {
     title: 'Mirrors',
     description: 'Place mirrors on north or east walls. Avoid mirrors in bedrooms and ensure they don\'t reflect the main entrance.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🪞',
     category: 'Decor'
   },
   {
     title: 'Paintings',
     description: 'Hang paintings of positive scenes like nature, waterfalls, or family photos. Avoid paintings depicting violence or sadness.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🖼️',
     category: 'Decor'
   },
   {
     title: 'Curtains',
     description: 'Use light-colored curtains in north and east directions. Use dark colors in south and west.',
     icon: <Compass className="w-6 h-6" />,
+    image: '🪟',
     category: 'Decor'
   },
 
@@ -281,24 +319,28 @@ const vastuTips = [
     title: 'Indoor Plants',
     description: 'Place money plants, bamboo, and tulsi in northeast direction. Avoid cactus and thorny plants inside the house.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🪴',
     category: 'Nature'
   },
   {
     title: 'Garden',
     description: 'Create a garden in the north or east direction. Plant flowering plants and avoid large trees near the house.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🌳',
     category: 'Nature'
   },
   {
     title: 'Water Features',
     description: 'Place water fountains or aquariums in northeast direction. Ensure water flows continuously.',
     icon: <Trees className="w-6 h-6" />,
+    image: '⛲',
     category: 'Nature'
   },
   {
     title: 'Rock Garden',
     description: 'Create rock gardens in southwest direction. Avoid rocks in northeast as they block positive energy.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🪨',
     category: 'Nature'
   },
 
@@ -307,24 +349,28 @@ const vastuTips = [
     title: 'Water Storage',
     description: 'Overhead water tanks should be in southwest direction. Underground water tanks are ideal in northeast direction.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🏗️',
     category: 'Utilities'
   },
   {
     title: 'Electrical Items',
     description: 'Place electrical appliances in southeast direction. Avoid keeping them in northeast as they create electromagnetic disturbances.',
     icon: <Sun className="w-6 h-6" />,
+    image: '⚡',
     category: 'Utilities'
   },
   {
     title: 'Gas Cylinders',
     description: 'Store empty gas cylinders in south direction and filled cylinders in east direction.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🔥',
     category: 'Utilities'
   },
   {
     title: 'Waste Disposal',
     description: 'Designate waste disposal areas in northwest direction. Keep waste bins covered and clean.',
     icon: <Sun className="w-6 h-6" />,
+    image: '🗑️',
     category: 'Utilities'
   },
 
@@ -333,24 +379,28 @@ const vastuTips = [
     title: 'Heavy Furniture',
     description: 'Place heavy furniture and almirahs in south or west direction. Keep southwest corners heavy for stability.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🪑',
     category: 'Furniture'
   },
   {
     title: 'Sofa Sets',
     description: 'Place sofa sets against west or south walls. Ensure they don\'t block the flow of movement.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🛋️',
     category: 'Furniture'
   },
   {
     title: 'Dining Table',
     description: 'Place dining table in west or north direction. Ensure square or rectangular shape for family harmony.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🍽️',
     category: 'Furniture'
   },
   {
     title: 'Wardrobes',
     description: 'Place wardrobes in southwest direction. Keep doors opening towards east or north for positive energy.',
     icon: <Trees className="w-6 h-6" />,
+    image: '🚪',
     category: 'Furniture'
   }
 ]
@@ -426,8 +476,13 @@ export default function VastuPage() {
                 key={index}
                 className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl shadow-black/40 p-6 hover:bg-white/10 hover:scale-[1.02] transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-black mb-4">
-                  {tip.icon}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-black">
+                    {tip.icon}
+                  </div>
+                  <div className="text-4xl">
+                    {tip.image}
+                  </div>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{tip.title}</h3>
                 <p className="text-white/70 text-sm leading-relaxed mb-3">{tip.description}</p>

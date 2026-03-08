@@ -1019,7 +1019,7 @@ export default function ChatPage() {
                   }
                 }}
                 placeholder={isExpert ? "Type your response..." : "Type your message..."}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-gradient-to-br from-white/10 to-white/5 border border-[#d8b4fe]/30 rounded-xl text-white placeholder-[#d8b4fe]/60 focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 focus:bg-white/10 resize-none transition-all duration-300 pr-10 sm:pr-12 text-sm sm:text-base backdrop-blur-sm"
+                className="w-full px-3 py-3 sm:px-4 sm:py-2.5 bg-gradient-to-br from-white/10 to-white/5 border border-[#d8b4fe]/30 rounded-xl text-white placeholder-[#d8b4fe]/60 focus:outline-none focus:border-[#fdce20]/50 focus:ring-2 focus:ring-[#fdce20]/20 focus:bg-white/10 resize-none transition-all duration-300 pr-10 sm:pr-12 text-sm sm:text-base backdrop-blur-sm h-12 sm:h-10 min-h-[48px]"
                 rows={1}
                 disabled={messageSending}
               />
@@ -1032,7 +1032,7 @@ export default function ChatPage() {
             <button
               onClick={sendMessage}
               disabled={!newMessage.trim() || messageSending}
-              className={`px-4 py-[11px] rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 h-[44px] sm:h-[48px] ${
+              className={`px-4 py-[14px] rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 h-[55px] sm:h-[48px] ${
                 sendError 
                   ? 'bg-red-500 text-white hover:bg-red-600' 
                   : 'bg-gradient-to-r from-[#fdce20] to-amber-500 text-black hover:from-[#fdce20] hover:to-amber-500'

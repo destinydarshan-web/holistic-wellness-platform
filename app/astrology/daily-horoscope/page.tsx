@@ -62,6 +62,23 @@ const zodiacDates: Record<string, string> = {
   pisces: 'Feb 19 - Mar 20',
 }
 
+const zodiacOrder = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
+
+const zodiacMessages: Record<string, string> = {
+  'Aries': 'Leadership Opportunities Ahead',
+  'Taurus': 'Financial Growth Expected',
+  'Gemini': 'Communication Flow Strong',
+  'Cancer': 'Emotional Intuition High',
+  'Leo': 'Creative Energy Peak',
+  'Virgo': 'Productivity & Focus Time',
+  'Libra': 'Harmony in Relationships',
+  'Scorpio': 'Transformation Power Active',
+  'Sagittarius': 'Adventure Calls to You',
+  'Capricorn': 'Career Advancement Likely',
+  'Aquarius': 'Innovation Ideas Flowing',
+  'Pisces': 'Spiritual Connection Strong'
+}
+
 const getCurrentDate = () => {
   const date = new Date()
   return date.toLocaleDateString('en-US', {
@@ -76,12 +93,14 @@ const getTodayKey = () => {
   return date.toISOString().split('T')[0] // YYYY-MM-DD format
 }
 
-const horoscopes = fallbackHoroscopes;
+const horoscopes = zodiacOrder.map(sign => {
+  return fallbackHoroscopes.find(h => h.sign === sign) || fallbackHoroscopes[0]
+});
 
 export default function DailyHoroscopePage() {
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [selectedAstrologer, setSelectedAstrologer] = useState<Expert | null>(null)
-  const [horoscopeData, setHoroscopeData] = useState<HoroscopeData[]>(fallbackHoroscopes)
+  const [horoscopeData, setHoroscopeData] = useState<HoroscopeData[]>(horoscopes)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
@@ -137,14 +156,19 @@ export default function DailyHoroscopePage() {
           }
         )
 
+        // Sort according to zodiac order
+        const sortedTransformed = zodiacOrder.map(sign => {
+          return transformed.find(h => h.sign === sign) || transformed[0]
+        })
+
         // Cache the data for today
         const now = new Date().toISOString()
         localStorage.setItem(cacheKey, JSON.stringify({
-          data: transformed,
+          data: sortedTransformed,
           timestamp: now
         }))
 
-        setHoroscopeData(transformed)
+        setHoroscopeData(sortedTransformed)
         setLastUpdated(now)
         
       } catch (err) {
@@ -162,7 +186,7 @@ export default function DailyHoroscopePage() {
           const { data: yesterdayData } = JSON.parse(yesterdayCache)
           setHoroscopeData(yesterdayData)
         } else {
-          setHoroscopeData(fallbackHoroscopes)
+          setHoroscopeData(horoscopes)
         }
       } finally {
         setLoading(false)
@@ -324,7 +348,7 @@ export default function DailyHoroscopePage() {
                   <div className="mt-4 pt-4 border-t border-white/10">
                     <div className="flex items-center gap-2 text-yellow-400">
                       <Star className="w-4 h-4" />
-                      <span className="text-xs font-medium">Cosmic Energy Active</span>
+                      <span className="text-xs font-medium">{zodiacMessages[horoscope.sign] || 'Cosmic Energy Active'}</span>
                     </div>
                   </div>
                 </div>

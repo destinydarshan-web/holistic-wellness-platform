@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle, Brain, SparklesIcon } from 'lucide-react'
+import { Search, Filter, Star, Clock, Users, CheckCircle, ChevronDown, MessageCircle, Phone, Video, Shield, Lock, Heart, Sparkles, X, HelpCircle, Brain, SparklesIcon, Calendar, MapPin, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import MeditationExpertCard from '@/components/MeditationExpertCard'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Expert {
   id: string
@@ -21,8 +22,30 @@ interface Expert {
   updated_at?: string
 }
 
+interface MeditationEvent {
+  slug: string
+  title: string
+  description: string
+  date: string
+  time: string
+  timezone: string
+  duration: string
+  location: string
+  price: number
+  max_participants: number
+  current_participants: number
+  instructor: string
+  instructor_description?: string
+  level: 'beginner' | 'intermediate' | 'advanced' | 'all'
+  meditation_type: 'mindfulness' | 'transcendental' | 'vipassana' | 'zen' | 'guided' | 'other'
+  images?: string[]
+  requirements?: string[]
+  benefits?: string[]
+}
+
 export default function MeditationPage() {
   const [experts, setExperts] = useState<Expert[]>([])
+  const [events, setEvents] = useState<MeditationEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
@@ -34,6 +57,7 @@ export default function MeditationPage() {
   const [isModeOpen, setIsModeOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [isPriceOpen, setIsPriceOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'instructors' | 'events'>('events')
 
   // All meditation specialties from expert profile
   const meditationSpecialties = [
@@ -74,8 +98,47 @@ export default function MeditationPage() {
   }, [])
 
   useEffect(() => {
-    fetchMeditationExperts()
-  }, [isOnlineOnly, selectedMode, priceRange, sortBy])
+    if (activeTab === 'instructors') {
+      fetchMeditationExperts()
+    } else {
+      fetchMeditationEvents()
+    }
+  }, [activeTab, isOnlineOnly, selectedMode, priceRange, sortBy])
+
+  const fetchMeditationEvents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('meditation_events')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+
+      if (eventsError) {
+        throw new Error(`Failed to fetch meditation events: ${eventsError.message}`)
+      }
+
+      console.log('Fetched meditation events data:', eventsData)
+      eventsData?.forEach((event, index) => {
+        console.log(`Event ${index + 1}:`, {
+          title: event.title,
+          requirements: event.requirements,
+          benefits: event.benefits,
+          requirementsType: typeof event.requirements,
+          benefitsType: typeof event.benefits
+        })
+      })
+
+      setEvents(eventsData || [])
+    } catch (err) {
+      console.error('Error fetching meditation events:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch meditation events')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchMeditationExperts = async () => {
     try {
@@ -114,19 +177,6 @@ export default function MeditationPage() {
 
   const displayExperts = experts
 
-  const SkeletonCard = () => (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
-      <div className="animate-pulse">
-        <div className="h-48 bg-white/10"></div>
-        <div className="p-4 space-y-3">
-          <div className="h-4 bg-white/10 rounded w-3/4"></div>
-          <div className="h-3 bg-white/10 rounded w-1/2"></div>
-          <div className="h-3 bg-white/10 rounded w-full"></div>
-        </div>
-      </div>
-    </div>
-  )
-
   const EmptyState = () => (
     <div className="text-center py-16">
       <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -139,11 +189,172 @@ export default function MeditationPage() {
     </div>
   )
 
+  const EventCard = ({ event }: { event: MeditationEvent }) => {
+    console.log('EventCard received event:', event)
+    console.log('EventCard requirements:', event.requirements)
+    console.log('EventCard benefits:', event.benefits)
+    
+    const formatDate = (dateString: string) => {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
+
+    const formatTime = (timeString: string) => {
+      const [hours, minutes] = timeString.split(':')
+      const hour = parseInt(hours)
+      const minute = parseInt(minutes)
+      const ampm = hour >= 12 ? 'PM' : 'AM'
+      const displayHour = hour % 12 || 12
+      return `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`
+    }
+
+    return (
+      <div className="flex-shrink-0 w-72 bg-[#1C1C24] rounded-xl border border-white/10 overflow-hidden hover:border-[#fdce20]/30 transition-all duration-300 group">
+        {/* Event Image */}
+        <div className="relative h-40 overflow-hidden">
+          {event.images && event.images.length > 0 ? (
+            <img
+              src={event.images[0]}
+              alt={event.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#fdce20]/20 to-[#fdce20]/5 flex items-center justify-center">
+              <Brain className="w-12 h-12 text-[#fdce20]/40" />
+            </div>
+          )}
+          <div className="absolute top-2 left-2">
+            <span className="px-2 py-1 bg-[#fdce20] text-black text-xs font-semibold rounded-full">
+              {event.level}
+            </span>
+          </div>
+          <div className="absolute top-2 right-2">
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full">
+              {event.meditation_type}
+            </span>
+          </div>
+        </div>
+
+        {/* Event Content */}
+        <div className="p-4">
+          <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#fdce20] transition-colors line-clamp-1">
+            {event.title}
+          </h3>
+          
+          <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+            {event.description}
+          </p>
+
+          {/* Quick Info */}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2 text-gray-300 text-sm">
+              <Calendar className="w-4 h-4 text-[#fdce20]" />
+              <span>{formatDate(event.date)}</span>
+              <Clock className="w-4 h-4 text-[#fdce20] ml-2" />
+              <span>{formatTime(event.time)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-300 text-sm">
+              <MapPin className="w-4 h-4 text-[#fdce20]" />
+              <span className="truncate">{event.location}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-300 text-sm">
+              <Users className="w-4 h-4 text-[#fdce20]" />
+              <span>{event.current_participants}/{event.max_participants}</span>
+            </div>
+          </div>
+
+          {/* Action Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <DollarSign className="w-4 h-4 text-[#fdce20]" />
+              <span className="text-lg font-bold text-white">₹{event.price}</span>
+            </div>
+            <Link
+              href={`/meditation/events/${event.slug}`}
+              className="px-4 py-2 bg-[#fdce20] text-black font-semibold rounded-lg hover:bg-[#fdce20]/80 transition-colors text-sm"
+            >
+              View Details
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const SkeletonCard = () => (
+    <div className="bg-[#1C1C24] rounded-xl border border-white/10 overflow-hidden animate-pulse">
+      <div className="flex flex-col md:flex-row">
+        <div className="md:w-1/3 h-48 md:h-auto bg-gray-700"></div>
+        <div className="md:w-2/3 p-6">
+          <div className="h-6 bg-gray-700 rounded mb-4 w-3/4"></div>
+          <div className="h-4 bg-gray-700 rounded mb-2 w-1/2"></div>
+          <div className="h-4 bg-gray-700 rounded mb-4 w-full"></div>
+          <div className="h-4 bg-gray-700 rounded w-2/3"></div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="pt-20">
-      {/* SECTION 2 - Meditation Expert Listing */}
-      <section id="experts" className="px-6 py-15">
+      {/* SECTION 1 - Hero Section */}
+      <section className="px-6 py-15 bg-gradient-to-br from-[#0F0F14] to-[#1C1C24]">
         <div className="max-w-[1200px] mx-auto">
+          <div className="text-center mb-12">
+            {/* <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Find Your Inner Peace
+            </h1> */}
+            {/* <p className="text-xl text-gray-300 mb-8">
+              Connect with expert meditation instructors or join group meditation sessions
+            </p> */}
+            
+            {/* Toggle Buttons */}
+            <div className="flex items-center justify-center mb-8">
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-1 inline-flex">
+                <button
+                  onClick={() => setActiveTab('instructors')}
+                  className={`px-8 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    activeTab === 'instructors'
+                      ? 'bg-[#fdce20] text-black shadow-lg'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Users size={16} />
+                  <span>Instructors</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('events')}
+                  className={`px-8 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    activeTab === 'events'
+                      ? 'bg-[#fdce20] text-black shadow-lg'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Calendar size={16} />
+                  <span>Events</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2 - Content Based on Active Tab */}
+      {activeTab === 'instructors' ? (
+        <section id="instructors" className="px-6 py-15">
+          <div className="max-w-[1200px] mx-auto">
+            {/* Title Section - Left Aligned */}
+            <div className="text-left mb-12">
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Expert Meditation Instructors
+              </h2>
+              <p className="text-lg text-gray-300 max-w-3xl">
+                Connect with certified meditation experts who will guide you on your journey to inner peace and mindfulness. Our instructors offer personalized sessions tailored to your needs.
+              </p>
+            </div>
           {/* Title Section - Left Aligned */}
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold font-serif text-white mb-3">
@@ -420,6 +631,77 @@ export default function MeditationPage() {
           )}
         </div>
       </section>
+      ) : (
+        /* Events Section */
+        <section id="events" className="px-6 py-15">
+          <div className="max-w-[1200px] mx-auto">
+            {/* Title Section - Left Aligned */}
+            <div className="text-left mb-12">
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Meditation Events & Sessions
+              </h2>
+              <p className="text-lg text-gray-300 max-w-3xl">
+                Join group meditation sessions and workshops led by experienced instructors. Connect with like-minded individuals and deepen your practice.
+              </p>
+            </div>
+
+            {/* Events Grid */}
+            {loading ? (
+              <div className="space-y-8">
+                {[1, 2, 3].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Error Loading Events
+                </h2>
+                <p className="text-gray-600">{error}</p>
+                <button
+                  onClick={fetchMeditationEvents}
+                  className="mt-4 px-6 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-[#fdce20]/80 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-8 h-8 text-white/40" />
+                </div>
+                <h3 className="text-xl font-semibold font-serif text-white mb-2">No Meditation Events Found</h3>
+                <p className="text-gray-300">
+                  Check back soon for upcoming meditation sessions and workshops.
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
+                {/* Horizontal Scroll Container */}
+                <div className="overflow-x-auto pb-4">
+                  <div className="flex gap-4 min-w-max">
+                    {events.map((event) => (
+                      <EventCard key={event.slug} event={event} />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Scroll Indicators */}
+                {events.length > 3 && (
+                  <div className="flex justify-center mt-2 gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#fdce20]/60"></div>
+                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* SECTION 3 - Trust Section */}
       <section className="py-16 px-6">

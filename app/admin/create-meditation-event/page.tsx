@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { ArrowLeft, Calendar, Clock, MapPin, Users, DollarSign, Image, Save, X, Plus, Trash2 } from 'lucide-react'
 
 interface MeditationEvent {
+  slug: string
   title: string
   description: string
   date: string
@@ -28,11 +29,15 @@ interface MeditationEvent {
 export default function CreateMeditationEventPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
+  const [activeSection, setActiveSection] = useState<'create' | 'upcoming' | 'past'>('create')
+  const [events, setEvents] = useState<MeditationEvent[]>([])
+  const [editingEvent, setEditingEvent] = useState<MeditationEvent | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   
   const [eventData, setEventData] = useState<MeditationEvent>({
+    slug: '',
     title: '',
     description: '',
     date: '',
@@ -65,10 +70,18 @@ export default function CreateMeditationEventPage() {
   }, [user, profile, loading, router])
 
   const handleInputChange = (field: keyof MeditationEvent, value: string | number) => {
-    setEventData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+    if (field === 'price') {
+      const numValue = typeof value === 'string' ? parseFloat(value) : value
+      setEventData(prev => ({
+        ...prev,
+        [field]: isNaN(numValue) ? 0 : numValue
+      }))
+    } else {
+      setEventData(prev => ({
+        ...prev,
+        [field]: value
+      }))
+    }
   }
 
   const addRequirement = () => {
@@ -257,6 +270,164 @@ export default function CreateMeditationEventPage() {
     }
   }
 
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!eventData.title || !eventData.date || !eventData.time || !eventData.location) {
+      setError('Please fill in all required fields')
+      return
+    }
+
+    if (!editingEvent) return
+
+    try {
+      setIsSaving(true)
+      setError(null)
+
+      console.log('Event data before submission:', eventData)
+      console.log('Requirements array:', eventData.requirements)
+      console.log('Benefits array:', eventData.benefits)
+      console.log('Requirements type:', typeof eventData.requirements)
+      console.log('Benefits type:', typeof eventData.benefits)
+      
+      const eventPayload = {
+        title: eventData.title,
+        description: eventData.description,
+        date: eventData.date,
+        time: eventData.time,
+        timezone: eventData.timezone,
+        duration: eventData.duration,
+        location: eventData.location,
+        price: eventData.price,
+        max_participants: eventData.max_participants,
+        instructor: eventData.instructor,
+        instructor_description: eventData.instructor_description,
+        level: eventData.level,
+        meditation_type: eventData.meditation_type,
+        images: eventData.images || [],
+        requirements: eventData.requirements || [],
+        benefits: eventData.benefits || [],
+        status: 'published',
+        updated_at: new Date().toISOString()
+      }
+      
+      console.log('Event payload before insert:', eventPayload)
+      console.log('Payload requirements:', eventPayload.requirements)
+      console.log('Payload benefits:', eventPayload.benefits)
+      
+      const { data: eventDataResult, error: eventError } = await supabase
+        .from('meditation_events')
+        .update(eventPayload)
+        .eq('slug', editingEvent.slug)
+
+      if (eventError) {
+        console.error('Supabase error:', eventError)
+        throw eventError
+      }
+
+      console.log('Event updated successfully:', eventDataResult)
+      setSuccess('Meditation event updated successfully!')
+      setTimeout(() => {
+        setSuccess(null)
+        router.push('/meditation')
+      }, 2000)
+
+    } catch (error) {
+      console.error('Error updating meditation event:', error)
+      setError(error instanceof Error ? error.message : 'Failed to update meditation event')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleEditEvent = (event: MeditationEvent) => {
+    setEditingEvent(event)
+    setEventData({
+      slug: event.slug,
+      title: event.title,
+      description: event.description,
+      date: event.date,
+      time: event.time,
+      timezone: event.timezone,
+      duration: event.duration,
+      location: event.location,
+      price: event.price,
+      max_participants: event.max_participants,
+      instructor: event.instructor,
+      instructor_description: event.instructor_description,
+      level: event.level,
+      meditation_type: event.meditation_type,
+      images: event.images,
+      requirements: event.requirements,
+      benefits: event.benefits
+    })
+    setActiveSection('create')
+  }
+
+  const handleDeleteEvent = async (eventSlug: string) => {
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('meditation_events')
+        .delete()
+        .eq('slug', eventSlug)
+
+      if (deleteError) {
+        throw new Error(`Failed to delete event: ${deleteError.message}`)
+      }
+
+      setSuccess('Event deleted successfully!')
+      setTimeout(() => {
+        setSuccess(null)
+      }, 3000)
+      
+      // Refresh events list
+      fetchEvents()
+    } catch (err) {
+      console.error('Error deleting event:', err)
+      setError(err instanceof Error ? err.message : 'Failed to delete event')
+    }
+  }
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user || !profile || profile.role !== 'admin') {
+        router.push('/dashboard')
+        return
+      }
+    }
+    
+    if (activeSection !== 'create') {
+      fetchEvents()
+    }
+  }, [user, profile, loading, router, activeSection])
+
+  const fetchEvents = async () => {
+    try {
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('meditation_events')
+        .select('*')
+        .eq('status', 'published')
+        .order('date', { ascending: false })
+
+      if (eventsError) {
+        throw new Error(`Failed to fetch events: ${eventsError.message}`)
+      }
+
+      const today = new Date()
+      const upcoming = eventsData?.filter(event => new Date(event.date) >= today) || []
+      const past = eventsData?.filter(event => new Date(event.date) < today) || []
+      
+      setEvents(activeSection === 'upcoming' ? upcoming : past)
+    } catch (err) {
+      console.error('Error fetching events:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch events')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0F0F14]">
@@ -267,7 +438,7 @@ export default function CreateMeditationEventPage() {
 
   return (
     <div className="min-h-screen bg-[#0F0F14] pt-24 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <button
@@ -277,8 +448,78 @@ export default function CreateMeditationEventPage() {
             <ArrowLeft size={20} />
             Back to Admin Dashboard
           </button>
-          <h1 className="text-3xl font-bold text-white mb-2">Create Meditation Event</h1>
-          <p className="text-white/60">Create a new meditation event for the platform</p>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {editingEvent ? 'Edit Meditation Event' : 'Meditation Event Management'}
+          </h1>
+          <p className="text-white/60">
+            {editingEvent ? 'Update an existing meditation event' : 'Create, edit, and manage meditation events'}
+          </p>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="mb-8">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-1 inline-flex">
+            <button
+              onClick={() => {
+                setActiveSection('create')
+                setEditingEvent(null)
+                setEventData({
+                  slug: '',
+                  title: '',
+                  description: '',
+                  date: '',
+                  time: '',
+                  timezone: 'UTC',
+                  duration: '',
+                  location: '',
+                  price: 0,
+                  max_participants: 0,
+                  instructor: '',
+                  level: 'all',
+                  meditation_type: 'mindfulness',
+                  images: [],
+                  requirements: [],
+                  benefits: []
+                })
+              }}
+              className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                activeSection === 'create'
+                  ? 'bg-[#fbcc1e] text-black shadow-lg'
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <Plus size={16} />
+              <span>{editingEvent ? 'Edit Event' : 'Create Event'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveSection('upcoming')
+                setEditingEvent(null)
+              }}
+              className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                activeSection === 'upcoming'
+                  ? 'bg-[#fbcc1e] text-black shadow-lg'
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <Calendar size={16} />
+              <span>Upcoming Events</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveSection('past')
+                setEditingEvent(null)
+              }}
+              className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                activeSection === 'past'
+                  ? 'bg-[#fbcc1e] text-black shadow-lg'
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <Clock size={16} />
+              <span>Past Events</span>
+            </button>
+          </div>
         </div>
 
         {/* Error/Success Messages */}
@@ -299,10 +540,14 @@ export default function CreateMeditationEventPage() {
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-[#1C1C24] rounded-xl border border-white/10 p-6">
-            <h2 className="text-xl font-semibold text-white mb-6">Event Details</h2>
+        {/* Content Based on Active Section */}
+        {activeSection === 'create' ? (
+          /* Create/Edit Form */
+          <form onSubmit={editingEvent ? handleUpdateEvent : handleSubmit} className="space-y-6">
+            <div className="bg-[#1C1C24] rounded-xl border border-white/10 p-6">
+              <h2 className="text-xl font-semibold text-white mb-6">
+                {editingEvent ? 'Edit Event Details' : 'Event Details'}
+              </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -409,7 +654,7 @@ export default function CreateMeditationEventPage() {
                 <input
                   type="number"
                   value={eventData.price}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-[#fbcc1e]"
                   placeholder="0"
                   min="0"
@@ -614,6 +859,77 @@ export default function CreateMeditationEventPage() {
             </button>
           </div>
         </form>
+        ) : activeSection === 'upcoming' || activeSection === 'past' ? (
+          /* Events List */
+          <div className="space-y-6">
+            <div className="bg-[#1C1C24] rounded-xl border border-white/10 p-6">
+              <h2 className="text-xl font-semibold text-white mb-6">
+                {activeSection === 'upcoming' ? 'Upcoming Events' : 'Past Events'}
+              </h2>
+              
+              {events.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="w-12 h-12 text-white/40 mx-auto mb-4" />
+                  <p className="text-white/60">
+                    {activeSection === 'upcoming' 
+                      ? 'No upcoming meditation events found' 
+                      : 'No past meditation events found'
+                    }
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {events.map((event) => (
+                    <div key={event.slug} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-white mb-2">{event.title}</h3>
+                          <p className="text-white/60 text-sm mb-3 line-clamp-2">{event.description}</p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center gap-2 text-white/60">
+                              <Calendar size={14} />
+                              <span>{new Date(event.date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/60">
+                              <Clock size={14} />
+                              <span>{event.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/60">
+                              <MapPin size={14} />
+                              <span>{event.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/60">
+                              <Users size={14} />
+                              <span>{event.current_participants || 0}/{event.max_participants}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 ml-4">
+                          <button
+                            onClick={() => handleEditEvent(event)}
+                            className="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          {activeSection === 'upcoming' && (
+                            <button
+                              onClick={() => handleDeleteEvent(event.slug)}
+                              className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   )

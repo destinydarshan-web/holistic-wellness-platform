@@ -1,10 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Calendar, User, Clock } from 'lucide-react'
 
 interface BlogCardProps {
   id: string
@@ -34,44 +31,76 @@ export function BlogCard({
     })
   }
 
+  const getReadTime = (text: string) => {
+    const wordsPerMinute = 200
+    const words = text.split(/\s+/).length
+    return Math.ceil(words / wordsPerMinute)
+  }
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-      {image && (
-        <div className="w-full h-40 bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center text-muted-foreground text-sm">
-          {image}
-        </div>
-      )}
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <Badge variant="outline" className="border-primary text-primary">
+    <div className="bg-[#1C1C24] rounded-xl border border-white/10 overflow-hidden hover:border-[#fdce20]/30 transition-all duration-300 group">
+      {/* Image Section */}
+      <div className="h-48 bg-gradient-to-br from-[#fdce20]/20 to-[#fdce20]/5 flex items-center justify-center relative overflow-hidden">
+        {image ? (
+          <img 
+            src={image} 
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-16 h-16 bg-[#fdce20]/20 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#fdce20]/30 rounded-full"></div>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F14]/80 to-transparent"></div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6">
+        {/* Category Badge */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="px-3 py-1 bg-[#fdce20]/20 text-[#fdce20] rounded-full text-xs font-medium">
             {category}
-          </Badge>
-          <span className="text-xs text-muted-foreground">
-            {formatDate(date)}
+          </span>
+          <span className="text-xs text-gray-400">
+            {getReadTime(excerpt)} min read
           </span>
         </div>
-        <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2 text-balance">
+
+        {/* Title */}
+        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-[#fdce20] transition-colors">
           {title}
         </h3>
-        <p className="text-muted-foreground text-sm mb-4 flex-1 line-clamp-2">
+
+        {/* Excerpt */}
+        <p className="text-gray-300 text-sm mb-6 line-clamp-3 leading-relaxed">
           {excerpt}
         </p>
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <span className="text-xs text-muted-foreground">
-            by {author}
-          </span>
-          <Link href={`/blog/${id}`}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary hover:text-primary hover:bg-primary/10 gap-2"
-            >
-              Read
-              <ArrowRight size={14} />
-            </Button>
-          </Link>
+
+        {/* Meta Information */}
+        <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+          <div className="flex items-center gap-2">
+            <User size={14} />
+            <span>{author}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar size={14} />
+            <span>{formatDate(date)}</span>
+          </div>
         </div>
+
+        {/* Read More Button */}
+        <Link 
+          href={`/blog/${id}`}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-[#fdce20]/90 transition-colors group"
+        >
+          Read Article
+          <ArrowRight 
+            size={16} 
+            className="transform group-hover:translate-x-1 transition-transform" 
+          />
+        </Link>
       </div>
-    </Card>
+    </div>
   )
 }

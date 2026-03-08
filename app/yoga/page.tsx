@@ -139,6 +139,17 @@ export default function YogaPage() {
         throw new Error(`Failed to fetch yoga events: ${eventsError.message}`)
       }
 
+      console.log('Fetched events data:', eventsData)
+      eventsData?.forEach((event, index) => {
+        console.log(`Event ${index + 1}:`, {
+          title: event.title,
+          requirements: event.requirements,
+          benefits: event.benefits,
+          requirementsType: typeof event.requirements,
+          benefitsType: typeof event.benefits
+        })
+      })
+
       setEvents(eventsData || [])
     } catch (err) {
       console.error('Error fetching yoga events:', err)
@@ -186,12 +197,14 @@ export default function YogaPage() {
   const displayExperts = experts
 
   const EventCard = ({ event }: { event: YogaEvent }) => {
+    console.log('EventCard received event:', event)
+    console.log('EventCard requirements:', event.requirements)
+    console.log('EventCard benefits:', event.benefits)
+    
     const formatDate = (dateString: string) => {
       const date = new Date(dateString)
       return date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
+        month: 'short', 
         day: 'numeric' 
       })
     }
@@ -205,116 +218,72 @@ export default function YogaPage() {
     }
 
     return (
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden hover:bg-white/10 transition-all duration-300 group">
-        <div className="flex flex-col lg:flex-row">
-          {/* Event Image */}
-          <div className="lg:w-1/3 relative h-64 lg:h-auto overflow-hidden">
-            {event.images && event.images.length > 0 ? (
-              <img
-                src={event.images[0]}
-                alt={event.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#fdce20]/20 to-[#f97316]/20 flex items-center justify-center">
-                <Leaf className="w-16 h-16 text-[#fdce20]" />
-              </div>
-            )}
-            <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 bg-[#fdce20] text-black text-xs font-semibold rounded-full">
-                {event.level.charAt(0).toUpperCase() + event.level.slice(1)}
-              </span>
+      <div className="flex-shrink-0 w-72 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden hover:bg-white/10 transition-all duration-300 group">
+        {/* Event Image */}
+        <div className="relative h-40 overflow-hidden">
+          {event.images && event.images.length > 0 ? (
+            <img
+              src={event.images[0]}
+              alt={event.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#fdce20]/20 to-[#f97316]/20 flex items-center justify-center">
+              <Leaf className="w-12 h-12 text-[#fdce20]" />
             </div>
-            <div className="absolute top-4 right-4">
-              <span className="px-3 py-1 bg-black/70 text-white text-xs font-semibold rounded-full">
-                {event.max_participants - event.current_participants} spots left
-              </span>
+          )}
+          <div className="absolute top-2 left-2">
+            <span className="px-2 py-1 bg-[#fdce20] text-black text-xs font-semibold rounded-full">
+              {event.level.charAt(0).toUpperCase() + event.level.slice(1)}
+            </span>
+          </div>
+          <div className="absolute top-2 right-2">
+            <span className="px-2 py-1 bg-black/70 text-white text-xs font-semibold rounded-full">
+              {event.max_participants - event.current_participants} left
+            </span>
+          </div>
+        </div>
+
+        {/* Event Content */}
+        <div className="p-4">
+          <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#fdce20] transition-colors line-clamp-1">
+            {event.title}
+          </h3>
+          
+          <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+            {event.description}
+          </p>
+
+          {/* Quick Info */}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2 text-gray-300 text-sm">
+              <Calendar className="w-4 h-4 text-[#fdce20]" />
+              <span>{formatDate(event.date)}</span>
+              <Clock className="w-4 h-4 text-[#fdce20] ml-2" />
+              <span>{formatTime(event.time)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-300 text-sm">
+              <MapPin className="w-4 h-4 text-[#fdce20]" />
+              <span className="truncate">{event.location}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-300 text-sm">
+              <User className="w-4 h-4 text-[#fdce20]" />
+              <span className="truncate">{event.instructor}</span>
             </div>
           </div>
 
-          {/* Event Content */}
-          <div className="lg:w-2/3 p-6 lg:p-8 flex flex-col justify-between">
-            <div>
-              <h3 className="text-2xl lg:text-3xl font-bold text-white mb-3 group-hover:text-[#fdce20] transition-colors">
-                {event.title}
-              </h3>
-              <p className="text-gray-300 text-base mb-6 line-clamp-2">
-                {event.description}
-              </p>
-
-              {/* Event Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Calendar className="w-5 h-5 text-[#fdce20]" />
-                  <span className="text-sm">{formatDate(event.date)}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Clock className="w-5 h-5 text-[#fdce20]" />
-                  <span className="text-sm">{formatTime(event.time)} ({event.timezone})</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <MapPin className="w-5 h-5 text-[#fdce20]" />
-                  <span className="text-sm">{event.location}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <User className="w-5 h-5 text-[#fdce20]" />
-                  <span className="text-sm">{event.instructor}</span>
-                </div>
-              </div>
-
-              {/* Instructor Info */}
-              {event.instructor_description && (
-                <div className="mb-6 p-4 bg-white/5 rounded-lg">
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    {event.instructor_description}
-                  </p>
-                </div>
-              )}
-
-              {/* Requirements */}
-              {event.requirements && event.requirements.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-[#fdce20] mb-3">Requirements</h4>
-                  <div className="space-y-2">
-                    {event.requirements.map((req, index) => (
-                      <div key={index} className="flex items-center gap-2 text-gray-300 text-sm">
-                        <div className="w-1.5 h-1.5 bg-[#fdce20] rounded-full"></div>
-                        <span>{req}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Benefits */}
-              {event.benefits && event.benefits.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-[#fdce20] mb-3">Benefits</h4>
-                  <div className="space-y-2">
-                    {event.benefits.map((benefit, index) => (
-                      <div key={index} className="flex items-center gap-2 text-gray-300 text-sm">
-                        <div className="w-1.5 h-1.5 bg-[#fdce20] rounded-full"></div>
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* Action Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <DollarSign className="w-4 h-4 text-[#fdce20]" />
+              <span className="text-lg font-bold text-white">₹{event.price}</span>
             </div>
-
-            {/* Action Section */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-[#fdce20]" />
-                <span className="text-2xl font-bold text-white">₹{event.price}</span>
-              </div>
-              <Link
-                href={`/yoga/events/${event.slug}`}
-                className="px-6 py-3 bg-[#fdce20] text-black font-semibold rounded-lg hover:bg-[#fdce20]/80 transition-colors"
-              >
-                View Details
-              </Link>
-            </div>
+            <Link
+              href={`/yoga/events/${event.slug}`}
+              className="px-4 py-2 bg-[#fdce20] text-black font-semibold rounded-lg hover:bg-[#fdce20]/80 transition-colors text-sm"
+            >
+              View Details
+            </Link>
           </div>
         </div>
       </div>
@@ -707,10 +676,24 @@ export default function YogaPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-8">
-                {events.map((event) => (
-                  <EventCard key={event.slug} event={event} />
-                ))}
+              <div className="relative">
+                {/* Horizontal Scroll Container */}
+                <div className="overflow-x-auto pb-4">
+                  <div className="flex gap-4 min-w-max">
+                    {events.map((event) => (
+                      <EventCard key={event.slug} event={event} />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Scroll Indicators */}
+                {events.length > 3 && (
+                  <div className="flex justify-center mt-2 gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#fdce20]/60"></div>
+                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                  </div>
+                )}
               </div>
             )}
           </div>

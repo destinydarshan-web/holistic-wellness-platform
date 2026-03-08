@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
 import { Mail, Clock, Sparkles, Star, Package, Bell, ArrowRight, Check } from 'lucide-react'
 
 export default function ProductsPage() {
@@ -110,33 +109,13 @@ export default function ProductsPage() {
             
             
             
-            {/* Countdown Timer */}
+            {/* Coming Soon Text */}
             <div className="mb-16">
-              <h3 className="text-lg text-white/60 mb-6">Launching in</h3>
-              <div className="grid grid-cols-4 gap-4 sm:gap-8 max-w-2xl mx-auto">
-                <div className="text-center">
-                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
-                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.days}</div>
-                    <div className="text-sm text-[#d8b4fe]">Days</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
-                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.hours}</div>
-                    <div className="text-sm text-[#d8b4fe]">Hours</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
-                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.minutes}</div>
-                    <div className="text-sm text-[#d8b4fe]">Minutes</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl p-4 sm:p-6">
-                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{countdown.seconds}</div>
-                    <div className="text-sm text-[#d8b4fe]">Seconds</div>
-                  </div>
+              <h3 className="text-2xl text-white/60 mb-6">Launching Soon</h3>
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-6 py-3 bg-[#fdce20]/20 backdrop-blur-sm border border-[#fdce20]/30 rounded-2xl">
+                  <Sparkles className="w-6 h-6 text-[#fdce20]" />
+                  <span className="text-xl text-[#d8b4fe] font-medium">Coming Soon</span>
                 </div>
               </div>
             </div>
@@ -322,8 +301,6 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
-      
-      <Footer />
     </div>
   )
 }

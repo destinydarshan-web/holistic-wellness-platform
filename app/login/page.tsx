@@ -5,15 +5,18 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
-import { Eye, EyeOff, User, Mail, Lock, Briefcase, Star } from 'lucide-react'
+import { Eye, EyeOff, User, Mail, Lock, Briefcase, Star, Phone } from 'lucide-react'
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
+    phoneNumber: '',
     fullName: '',
     role: 'user' as 'user' | 'expert' | 'astrologer',
     specialization: '' as 'astrologer' | 'counsellor' | 'yoga_trainer' | 'meditation_expert' | ''
@@ -74,22 +77,57 @@ export default function LoginPage() {
       if (isLogin) {
         // Login
         console.log('Attempting login...')
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password
-        })
+        let authResult: any
+        
+        if (loginMethod === 'email') {
+          authResult = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password
+          })
+        } else if (loginMethod === 'phone') {
+          // For phone login, we need to use signInWithPassword with email
+          // Supabase requires email for password-based auth, so we'll need to handle this differently
+          // For now, we'll search for user by phone and get their email
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('phone_number', formData.phoneNumber)
+            .maybeSingle()
+          
+          if (profileData) {
+            setError('Phone login not yet available. Please use email address.')
+            setFormLoading(false)
+            return
+          } else {
+            setError('Phone number not found. Please check your number or sign up.')
+            setFormLoading(false)
+            return
+          }
+        }
 
-        console.log('Login response:', { data, error })
+        console.log('Login response:', { data: authResult.data, error: authResult.error })
 
-        if (error) {
-          console.error('Login error details:', error)
-          throw error
+        if (authResult.error) {
+          console.error('Login error details:', authResult.error)
+          throw authResult.error
         }
         // Redirect will happen via useEffect
       } else {
         // Signup
         if (!formData.fullName.trim()) {
           setError('Full name is required')
+          setFormLoading(false)
+          return
+        }
+
+        if (!formData.phoneNumber.trim()) {
+          setError('Phone number is required')
+          setFormLoading(false)
+          return
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match')
           setFormLoading(false)
           return
         }
@@ -102,6 +140,7 @@ export default function LoginPage() {
 
         const metadata = {
           full_name: formData.fullName,
+          phone_number: formData.phoneNumber,
           role: formData.role,
           specialization: formData.role === 'expert' ? formData.specialization : null
         }
@@ -205,7 +244,11 @@ export default function LoginPage() {
       if (error.message?.includes('fetch') || error.message?.includes('network')) {
         errorMessage = 'Network error. Please check your internet connection and try again.'
       } else if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password. Please try again.'
+        if (loginMethod === 'phone') {
+          errorMessage = 'Invalid phone number or password. Please try again.'
+        } else {
+          errorMessage = 'Invalid email or password. Please try again.'
+        }
       } else if (error.message?.includes('Email not confirmed')) {
         errorMessage = 'Please check your email and confirm your account.'
       } else if (error.message) {
@@ -279,23 +322,97 @@ export default function LoginPage() {
             )}
 
             {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:border-[#fbcc1e] focus:outline-none transition-colors"
-                  placeholder="Enter your email"
-                  required
-                />
+            {isLogin && loginMethod === 'email' && (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:border-[#fbcc1e] focus:outline-none transition-colors"
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Phone Number (Login) */}
+            {isLogin && loginMethod === 'phone' && (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:border-[#fbcc1e] focus:outline-none transition-colors"
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Login Method Toggle (Login only) */}
+            {isLogin && (
+              <div className="flex gap-2 justify-center mb-4 w-full">
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('email')}
+                  className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    loginMethod === 'email'
+                      ? 'bg-gradient-to-r from-[#fbcc1e] to-[#e6b800] text-black shadow-lg shadow-[#fbcc1e]/25'
+                      : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border border-white/20'
+                  }`}
+                >
+                  <Mail className={`w-4 h-4 ${loginMethod === 'email' ? 'text-black' : 'text-white/70'}`} />
+                  <span className="text-sm">Email Login</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('phone')}
+                  className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    loginMethod === 'phone'
+                      ? 'bg-gradient-to-r from-[#fbcc1e] to-[#e6b800] text-black shadow-lg shadow-[#fbcc1e]/25'
+                      : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border border-white/20'
+                  }`}
+                >
+                  <Phone className={`w-4 h-4 ${loginMethod === 'phone' ? 'text-black' : 'text-white/70'}`} />
+                  <span className="text-sm">Phone Login</span>
+                </button>
+              </div>
+            )}
+
+            {/* Email (Signup always) */}
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:border-[#fbcc1e] focus:outline-none transition-colors"
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Password */}
             <div>
@@ -323,6 +440,56 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Confirm Password (Signup only) */}
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:border-[#fbcc1e] focus:outline-none transition-colors"
+                    placeholder="Confirm your password"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Phone Number (Signup only) */}
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:border-[#fbcc1e] focus:outline-none transition-colors"
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Role Selection (Signup only) */}
             {!isLogin && (

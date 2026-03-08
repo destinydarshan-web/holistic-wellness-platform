@@ -17,12 +17,16 @@ interface YogaEvent {
   location: string
   price: number
   max_participants: number
+  current_participants?: number
   instructor: string
   instructor_description?: string
   level: 'beginner' | 'intermediate' | 'advanced' | 'all'
   images?: string[]
   requirements?: string[]
   benefits?: string[]
+  status?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export default function CreateYogaEventPage() {
@@ -348,6 +352,12 @@ export default function CreateYogaEventPage() {
       })
       
       // Create the yoga event
+      console.log('Event data before submission:', eventData)
+      console.log('Requirements array:', eventData.requirements)
+      console.log('Benefits array:', eventData.benefits)
+      console.log('Requirements type:', typeof eventData.requirements)
+      console.log('Benefits type:', typeof eventData.benefits)
+      
       const eventPayload = {
         slug,
         title: eventData.title,
@@ -372,6 +382,8 @@ export default function CreateYogaEventPage() {
       }
       
       console.log('Event payload before insert:', eventPayload)
+      console.log('Payload requirements:', eventPayload.requirements)
+      console.log('Payload benefits:', eventPayload.benefits)
       
       const { data: eventDataResult, error: eventError } = await supabase
         .from('yoga_events')
