@@ -22,8 +22,13 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title: 'Holistic Wellness Platform | Astrology, Counselling, Yoga & Meditation',
-  description: 'Balance your mind, body and soul. Discover inner peace and wellness with our platform offering astrology guidance, professional counselling, yoga sessions, and meditation practices.',
+  description: 'Connect with expert astrologers for personalized horoscope readings and birth chart analysis. Find professional counsellors for mental health support and relationship guidance. Join live yoga sessions with certified instructors and practice guided meditation for stress relief. Book one-on-one consultations, group workshops, and wellness programs designed for your personal growth journey.',
   generator: 'v0.app',
+  icons: {
+    icon: '/images/DD-Logo.png',
+    shortcut: '/images/DD-Logo.png',
+    apple: '/images/DD-Logo.png',
+  },
 }
 
 export const viewport: Viewport = {
