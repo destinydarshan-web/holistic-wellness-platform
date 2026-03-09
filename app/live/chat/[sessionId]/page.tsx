@@ -55,7 +55,9 @@ export default function ChatSessionPage() {
 
       if (error) {
         console.error('Error checking session status:', error)
-        return
+        // Don't return here, let the component handle the error gracefully
+        setSession(null)
+        setLoading(false)
       }
 
       if (data?.status === "accepted") {

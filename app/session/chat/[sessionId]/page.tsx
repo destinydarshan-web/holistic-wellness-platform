@@ -76,7 +76,7 @@ export default function ChatPage() {
   // Calculate session cost
   useEffect(() => {
     if (timerStarted && sessionInfo?.price_per_minute) {
-      const minutes = Math.ceil(elapsedTime / 60);
+      const minutes = elapsedTime / 60; // Use fractional minutes
       setSessionCost(minutes * sessionInfo.price_per_minute);
     }
   }, [elapsedTime, timerStarted, sessionInfo]);
@@ -233,11 +233,43 @@ export default function ChatPage() {
           // If session was completed by either participant, redirect both users
           if (payload.new?.status === 'completed') {
             console.log('Session completed detected, redirecting both participants');
-            alert('Session has been ended by the other participant.');
+            
+            // Show beautiful session ended notification
+            const sessionEndedNotification = document.createElement('div');
+            sessionEndedNotification.className = 'fixed top-4 left-1/2 right-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-green-500/90 via-green-600/90 to-green-700/90 backdrop-blur-lg border border-green-400/30 rounded-2xl p-6 shadow-2xl shadow-green-500/20 max-w-md mx-auto animate-bounce-in';
+            sessionEndedNotification.innerHTML = `
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 21"/>
+                  </svg>
+                </div>
+                <div class="text-white">
+                  <div class="text-lg font-semibold mb-2">Session Completed</div>
+                  <div class="text-sm opacity-90">Session has been ended by the other participant</div>
+                </div>
+              </div>
+            `;
+            
+            document.body.appendChild(sessionEndedNotification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+              if (document.body.contains(sessionEndedNotification)) {
+                document.body.removeChild(sessionEndedNotification);
+              }
+            }, 5000);
             
             // Redirect both user and expert to appropriate dashboards
             setTimeout(() => {
-              router.push(isExpert ? "/expert-dashboard" : "/dashboard");
+              console.log('=== DEBUG: Performing redirect ===');
+              if (isExpert) {
+                console.log('=== DEBUG: Redirecting expert to earnings page ===');
+                router.push("/expert/earnings");
+              } else {
+                console.log('=== DEBUG: Redirecting user to astrology page ===');
+                router.push("/astrology");
+              }
             }, 2000);
           }
         }
@@ -457,7 +489,7 @@ export default function ChatPage() {
       console.log('=== DEBUG: User role ===', isExpert ? 'Expert' : 'User');
 
       // Calculate final cost
-      const finalMinutes = timerStarted ? Math.ceil(elapsedTime / 60) : 0;
+      const finalMinutes = timerStarted ? elapsedTime / 60 : 0; // Use fractional minutes
       const pricePerMinute = sessionInfo?.price_per_minute || 29; // fallback to default price
       const finalCost = pricePerMinute ? finalMinutes * pricePerMinute : 0;
       console.log('Final minutes:', finalMinutes);
@@ -488,24 +520,30 @@ export default function ChatPage() {
           .eq("id", sessionId)
           .select();
 
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session update timeout')), 10000);
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Session update timeout')), 30000); // Increased to 30 seconds
         });
 
-        const { data: sessionUpdateData, error: sessionError } = await Promise.race([
+        const result = await Promise.race([
           sessionUpdatePromise,
           timeoutPromise
-        ]) as any;
+        ]);
+
+        let sessionUpdateData: any = null;
+        let sessionError: Error | null = null;
+
+        if (result instanceof Error) {
+          sessionError = result;
+        } else {
+          sessionUpdateData = result;
+        }
 
         console.log('=== DEBUG: Session update result ===', { sessionUpdateData, sessionError });
 
         if (sessionError) {
           console.error('=== DEBUG: Error updating session ===', sessionError);
           console.error('=== DEBUG: Session error details ===', {
-            message: sessionError.message,
-            details: sessionError.details,
-            hint: sessionError.hint,
-            code: sessionError.code
+            message: sessionError.message
           });
           alert('Failed to end session: ' + sessionError.message);
           return;
@@ -596,7 +634,7 @@ export default function ChatPage() {
             
             // Fetch user wallet
             console.log('=== DEBUG: Fetching user wallet for user_id ===', sessionInfo.user_id);
-            let userWallet = await supabase
+            let userWallet: { data: { balance: number } } | null = await supabase
               .from("user_wallet")
               .select("balance")
               .eq("user_id", sessionInfo.user_id)
@@ -628,17 +666,19 @@ export default function ChatPage() {
               userWallet = newUserWallet;
             }
 
-            const newUserBalance = (userWalletData?.balance || 0) - finalCost;
+            // Use fresh wallet data for deduction
+            const currentBalance = userWallet?.data?.balance || 0;
+            const newUserBalance = currentBalance - finalCost;
             
-            if (newUserBalance < 0) {
-              console.error('=== DEBUG: Insufficient balance ===', { current: userWalletData?.balance, cost: finalCost });
-              throw new Error('Insufficient wallet balance');
-            }
-
-            console.log('=== DEBUG: Processing user wallet update ===');
-            console.log('Current balance:', userWalletData?.balance || 0);
+            console.log('=== DEBUG: Wallet deduction calculation ===');
+            console.log('Current balance:', currentBalance);
             console.log('Final cost:', finalCost);
             console.log('New balance:', newUserBalance);
+            
+            if (newUserBalance < 0) {
+              console.error('=== DEBUG: Insufficient balance ===', { current: currentBalance, cost: finalCost });
+              throw new Error('Insufficient wallet balance');
+            }
             console.log('User ID:', sessionInfo.user_id);
             
             // Update user wallet
@@ -787,14 +827,63 @@ export default function ChatPage() {
           } catch (error) {
             console.error('=== DEBUG: Error in wallet processing ===', error);
             
-            // Show user-friendly error but continue with session end
+            // Show user-friendly error with beautiful design
             if (error instanceof Error && error.message.includes('Insufficient')) {
               console.log('=== DEBUG: Insufficient balance error ===');
-              alert('Insufficient wallet balance. Session ended but payment failed.');
+              
+              const errorNotification = document.createElement('div');
+              errorNotification.className = 'fixed top-4 left-1/2 right-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-red-500/90 via-red-600/90 to-red-700/90 backdrop-blur-lg border border-red-400/30 rounded-2xl p-6 shadow-2xl shadow-red-500/20 max-w-md mx-auto animate-bounce-in';
+              errorNotification.innerHTML = `
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-red-400 rounded-full flex items-center justify-center animate-pulse">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 011-9h-4a9 9 0 01-9 4"/>
+                    </svg>
+                  </div>
+                  <div class="text-white text-center">
+                    <div class="text-lg font-semibold mb-2">Insufficient Balance</div>
+                    <div class="text-sm opacity-90">Session ended but payment failed due to insufficient wallet balance</div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(errorNotification);
+              
+              // Auto-remove after 5 seconds
+              setTimeout(() => {
+                if (document.body.contains(errorNotification)) {
+                  document.body.removeChild(errorNotification);
+                }
+              }, 5000);
+              
               return;
             } else {
               console.log('=== DEBUG: Other wallet error ===', error);
-              alert('Session ended successfully. There may be an issue with payment processing.');
+              
+              const errorNotification = document.createElement('div');
+              errorNotification.className = 'fixed top-4 left-1/2 right-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-orange-500/90 via-orange-600/90 to-orange-700/90 backdrop-blur-lg border border-orange-400/30 rounded-2xl p-6 shadow-2xl shadow-orange-500/20 max-w-md mx-auto animate-bounce-in';
+              errorNotification.innerHTML = `
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-orange-400 rounded-full flex items-center justify-center animate-pulse">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 011-9h-4a9 9 0 01-9 4"/>
+                    </svg>
+                  </div>
+                  <div class="text-white text-center">
+                    <div class="text-lg font-semibold mb-2">Payment Issue</div>
+                    <div class="text-sm opacity-90">Session ended but there may be an issue with payment processing</div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(errorNotification);
+              
+              // Auto-remove after 5 seconds
+              setTimeout(() => {
+                if (document.body.contains(errorNotification)) {
+                  document.body.removeChild(errorNotification);
+                }
+              }, 5000);
             }
           }
         }
@@ -804,8 +893,31 @@ export default function ChatPage() {
 
       console.log('=== DEBUG: Step 3 - Session end completed ===');
       
-      // Show success message
-      alert(`Session ended successfully. Total cost: ₹${finalCost} for ${finalMinutes} minutes.`);
+      // Show success message with beautiful design
+      const successNotification = document.createElement('div');
+      successNotification.className = 'fixed top-4 left-1/2 right-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-green-500/90 via-green-600/90 to-green-700/90 backdrop-blur-lg border border-green-400/30 rounded-2xl p-6 shadow-2xl shadow-green-500/20 max-w-md mx-auto animate-bounce-in';
+      successNotification.innerHTML = `
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 21"/>
+            </svg>
+          </div>
+          <div class="text-white text-center">
+            <div class="text-lg font-semibold mb-2">Session Ended Successfully</div>
+            <div class="text-sm opacity-90">Total cost: ₹${finalCost} for ${finalMinutes} minutes</div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(successNotification);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        if (document.body.contains(successNotification)) {
+          document.body.removeChild(successNotification);
+        }
+      }, 5000);
       
       console.log('=== DEBUG: Step 4 - Redirecting to appropriate pages ===');
       
@@ -908,7 +1020,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages Area - Enhanced Design */}
-      <div className="relative z-0 flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 pb-32 sm:pb-32 mt-16">
+      <div className="relative z-0 flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 pb-40 sm:pb-48 lg:pb-52 mt-16">
         <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-8 sm:py-12">
@@ -929,7 +1041,7 @@ export default function ChatPage() {
                   <div className="flex items-center gap-3 text-sm">
                     <Clock className="w-4 h-4 text-[#fdce20]" />
                     <p className="text-white/80">
-                      The timer will start when you send your first message
+                      {isExpert ? 'Timer tracks session duration' : 'The timer starts when you send your first message'}
                     </p>
                   </div>
                 </div>
@@ -943,40 +1055,63 @@ export default function ChatPage() {
               ? 'You' 
               : (isExpert ? 'User' : otherParticipant?.display_name || otherParticipant?.full_name || 'Expert');
             
+            // Dynamic width based on message length and ownership
+            const messageLength = msg.content.length;
+            const getMessageWidth = () => {
+              if (isOwnMessage) {
+                // Sent messages: use right-aligned widths with 65% max
+                if (messageLength <= 20) return 'w-auto max-w-[65%]';      // Short messages - auto width, max 65%
+                if (messageLength <= 50) return 'w-auto max-w-[65%]';      // Medium messages - auto width, max 65%
+                if (messageLength <= 100) return 'w-auto max-w-[65%]';     // Long messages - auto width, max 65%
+                return 'w-auto max-w-[65%]';                           // Very long messages - auto width, max 65%
+              } else {
+                // Received messages: use left-aligned widths with 65% max
+                if (messageLength <= 20) return 'w-[60%] max-w-[65%]';      // Short messages
+                if (messageLength <= 50) return 'w-[70%] max-w-[65%]';      // Medium messages  
+                if (messageLength <= 100) return 'w-[80%] max-w-[65%]';     // Long messages
+                return 'w-[90%] max-w-[65%]';                           // Very long messages
+              }
+            };
+            
             return (
               <div
                 key={msg.id}
-                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} items-end animate-fadeIn`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className={`w-[70%] ${isOwnMessage ? 'order-2' : 'order-1'}`}>
-                  <div className={`px-4 py-3 sm:px-5 sm:py-3 rounded-2xl transition-all duration-200 ${
+                <div className={`${getMessageWidth()} ${isOwnMessage ? 'order-2' : 'order-1'}`}>
+                  <div className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl transition-all duration-200 inline-block break-words overflow-wrap-anywhere whitespace-pre-wrap ${
                     isOwnMessage 
-                      ? 'bg-[#fdce20] text-black' 
-                      : 'bg-white/10 text-white'
+                      ? 'bg-gradient-to-br from-[#fdce20]/90 via-[#fdce20]/80 to-[#fdce20]/70 backdrop-blur-sm text-black shadow-lg shadow-[#fdce20]/20' 
+                      : 'bg-gray-50 text-gray-900'
                   }`}>
-                    <p className="text-xs sm:text-sm font-medium mb-1 opacity-80 truncate">
-                      {displayName}
-                    </p>
-                    <p className="text-sm sm:text-base break-words leading-relaxed">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${isOwnMessage ? 'text-black/60' : 'text-white/60'}`}>
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs sm:text-sm font-medium opacity-80 truncate">
+                        {displayName}
+                      </p>
+                      <p className={`text-xs ${isOwnMessage ? 'text-black/60' : 'text-gray-500'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <p className="text-sm sm:text-base break-words overflow-wrap-anywhere whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   </div>
                 </div>
               </div>
             );
           })}
           
-          {/* Typing Indicator - Clean Design */}
+          {/* Typing Indicator - Enhanced Design */}
           {otherUserTyping && (
             <div className="flex justify-start animate-fadeIn">
               <div className="w-[70%] order-1">
-                <div className="px-4 py-3 sm:px-5 sm:py-3 rounded-2xl bg-white/10 text-white">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="px-4 py-3 sm:px-5 sm:py-3 rounded-2xl text-white">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <span className="text-sm text-gray-600 italic animate-pulse">Typing...</span>
                   </div>
                 </div>
               </div>
@@ -987,22 +1122,7 @@ export default function ChatPage() {
       </div>
 
       {/* Fixed Message Input - Enhanced Design */}
-      <div className="relative z-10 fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e293b] to-[#0f172a] backdrop-blur-xl border-t border-[#fdce20]/20 px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-        {/* Error Display */}
-        {sendError && (
-          <div className="max-w-4xl mx-auto mb-3">
-            <div className="bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-2 flex items-center justify-between">
-              <p className="text-red-400 text-sm">{sendError}</p>
-              <button
-                onClick={() => setSendError(null)}
-                className="text-red-400 hover:text-red-300 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-        
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e293b] to-[#0f172a] backdrop-blur-xl border-t border-[#fdce20]/20 px-3 sm:px-4 lg:px-6 py-3 z-50">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end gap-2 sm:gap-3">
             <div className="flex-1 relative">
@@ -1076,7 +1196,7 @@ export default function ChatPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-white text-sm">
                       <span>Duration:</span>
-                      <span>{Math.ceil(elapsedTime / 60)} minutes</span>
+                      <span>{(elapsedTime / 60).toFixed(2)} minutes</span>
                     </div>
                     <div className="flex justify-between text-white text-sm">
                       <span>Rate:</span>
@@ -1084,7 +1204,7 @@ export default function ChatPage() {
                     </div>
                     <div className="flex justify-between text-[#fdce20] font-semibold pt-2 border-t border-[#fdce20]/30 text-sm">
                       <span>Total Cost:</span>
-                      <span>₹{Math.ceil(elapsedTime / 60) * sessionInfo.price_per_minute}</span>
+                      <span>₹{((elapsedTime / 60) * sessionInfo.price_per_minute).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

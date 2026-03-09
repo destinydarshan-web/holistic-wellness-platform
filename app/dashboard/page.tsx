@@ -697,7 +697,7 @@ export default function Dashboard() {
                 Manage your wellness journey and bookings
               </p>
             </div>
-            <div className="hidden md:block">
+            <div className="flex gap-3">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
                 <span className="text-2xl">✨</span>
               </div>
@@ -719,7 +719,7 @@ export default function Dashboard() {
                 <p className="text-4xl font-bold mb-1">${walletBalance.toFixed(2)}</p>
                 <p className="text-yellow-100 text-sm">Available for consultations</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-col sm:flex-row">
                 <button className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-200 font-medium">
                   <Plus className="w-5 h-5" />
                   Add Funds
