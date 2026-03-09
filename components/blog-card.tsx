@@ -46,6 +46,22 @@ export function BlogCard({
             src={image} 
             alt={title}
             className="w-full h-full object-cover"
+            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+              // Hide image on error and show fallback
+              const target = e.currentTarget
+              target.style.display = 'none'
+              if (target.parentElement) {
+                target.parentElement.innerHTML = `
+                  <div class="w-16 h-16 bg-[#fdce20]/20 rounded-full flex items-center justify-center">
+                    <div class="w-8 h-8 bg-[#fdce20]/30 rounded-full"></div>
+                  </div>
+                `
+              }
+            }}
+            onLoad={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+              // Ensure image is visible on load
+              e.currentTarget.style.display = 'block'
+            }}
           />
         ) : (
           <div className="w-16 h-16 bg-[#fdce20]/20 rounded-full flex items-center justify-center">

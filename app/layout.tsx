@@ -54,7 +54,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#fdce20" />
         <meta name="apple-mobile-web-app-status-bar-style" content="#fdce20" />
       </head>
-      <body className={`${poppins.className} antialiased text-foreground`}>
+      <body className={`${poppins.className} antialiased text-foreground`} suppressHydrationWarning>
         <AuthProvider>
           <GlobalBackground>
             <div className="min-h-screen flex flex-col">

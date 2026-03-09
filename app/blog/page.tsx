@@ -8,6 +8,21 @@ import { Button } from '@/components/ui/button'
 import { blogPosts, categories } from '@/data/blog-posts'
 import { BookOpen, Filter, Search, Calendar, User } from 'lucide-react'
 
+// Import fonts for consistency
+import { Poppins, Merriweather } from 'next/font/google'
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
+})
+
+const merriweather = Merriweather({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-merriweather',
+})
+
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -23,7 +38,7 @@ export default function BlogPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#0F0F14]">
+    <div className={`min-h-screen bg-[#0F0F14] ${poppins.variable} ${merriweather.variable}`}>
       <Navigation />
 
       <main className="pt-20">
@@ -36,7 +51,7 @@ export default function BlogPage() {
                   <BookOpen className="w-8 h-8 text-[#fdce20]" />
                 </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              <h1 className={`text-4xl md:text-5xl font-bold text-white mb-6 ${merriweather.className}`}>
                 Wellness <span className="text-[#fdce20]">Blog</span>
               </h1>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
@@ -64,7 +79,7 @@ export default function BlogPage() {
         <section className="px-6 py-8 border-b border-white/10">
           <div className="max-w-[1200px] mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <h2 className={`text-xl font-semibold text-white flex items-center gap-2 ${merriweather.className}`}>
                 <Filter className="w-5 h-5 text-[#fdce20]" />
                 Categories
               </h2>
@@ -124,7 +139,7 @@ export default function BlogPage() {
                 <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <BookOpen className="w-8 h-8 text-white/40" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">
+                <h3 className={`text-xl font-semibold text-white mb-3 ${merriweather.className}`}>
                   No Articles Found
                 </h3>
                 <p className="text-gray-400 max-w-md mx-auto">

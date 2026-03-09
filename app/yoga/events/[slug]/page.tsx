@@ -17,10 +17,26 @@ import {
   AlertCircle,
   ChevronRight,
   Leaf,
-  ChevronLeft
+  ChevronLeft,
+  MessageCircle
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
+
+// Import fonts for consistency
+import { Poppins, Merriweather } from 'next/font/google'
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
+})
+
+const merriweather = Merriweather({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-merriweather',
+})
 
 interface YogaEvent {
   slug: string
@@ -63,9 +79,13 @@ export default function YogaEventDetailPage() {
     }
   }, [slug])
 
-  // Auto carousel for images
+  // Auto carousel for images (desktop only)
   useEffect(() => {
     if (!event || !event.images || event.images.length <= 1) return
+
+    // Check if we're on mobile (screen width < 1024px for lg breakpoint)
+    const isMobile = window.innerWidth < 1024
+    if (isMobile) return
 
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => 
@@ -184,12 +204,13 @@ export default function YogaEventDetailPage() {
   const isFullyBooked = spotsLeft <= 0
 
   return (
-    <div className="min-h-screen bg-[#0F0F14] pt-20">
-      {/* Hero Section with Auto Carousel */}
+    <div className={`min-h-screen bg-[#0F0F14] pt-20 ${poppins.variable} ${merriweather.variable}`}>
+      {/* Hero Section - Carousel on Desktop, Scrollable on Mobile */}
       <div className="relative h-96 overflow-hidden">
         {event.images && event.images.length > 0 ? (
           <>
-            <div className="relative w-full h-full">
+            {/* Desktop: Auto Carousel */}
+            <div className="hidden lg:block relative w-full h-full">
               {event.images.map((image, index) => (
                 <img
                   key={index}
@@ -200,41 +221,88 @@ export default function YogaEventDetailPage() {
                   }`}
                 />
               ))}
+              
+              {/* Desktop Carousel Controls */}
+              {event.images.length > 1 && (
+                <>
+                  {/* Previous Button */}
+                  <button
+                    onClick={goToPreviousImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors z-10"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors z-10"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                  
+                  {/* Image Indicators */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                    {event.images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          index === currentImageIndex ? 'bg-[#fdce20]' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
-            
-            {/* Carousel Controls */}
-            {event.images.length > 1 && (
-              <>
-                {/* Previous Button */}
-                <button
-                  onClick={goToPreviousImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors z-10"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                
-                {/* Next Button */}
-                <button
-                  onClick={goToNextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors z-10"
-                >
-                  <ChevronRight size={20} />
-                </button>
-                
-                {/* Image Indicators */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                  {event.images.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentImageIndex ? 'bg-[#fdce20]' : 'bg-white/50'
-                      }`}
+
+            {/* Mobile: Scrollable Images */}
+            <div className="lg:hidden relative w-full h-full">
+              <div className="flex overflow-x-auto snap-x snap-mandatory w-full h-full">
+                {event.images.map((image, index) => (
+                  <div key={index} className="w-full h-full flex-shrink-0 snap-center">
+                    <img
+                      src={image}
+                      alt={`${event.title} - Image ${index + 1}`}
+                      className="w-full h-full object-cover"
                     />
-                  ))}
-                </div>
-              </>
-            )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Mobile Scroll Indicators */}
+              {event.images.length > 1 && (
+                <>
+                  {/* Left Scroll Indicator */}
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm rounded-full p-2 pointer-events-none">
+                    <ChevronLeft className="w-4 h-4 text-white" />
+                  </div>
+                  
+                  {/* Right Scroll Indicator */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm rounded-full p-2 pointer-events-none">
+                    <ChevronRight className="w-4 h-4 text-white" />
+                  </div>
+                  
+                  {/* Photo Counter */}
+                  <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 pointer-events-none">
+                    <span className="text-white text-xs font-medium">
+                      1 / {event.images.length}
+                    </span>
+                  </div>
+                  
+                  {/* Scroll Hint Animation */}
+                  <div className="absolute bottom-4 left-4 flex items-center gap-1 pointer-events-none">
+                    <div className="flex gap-1">
+                      <div className="w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
+                      <div className="w-1 h-1 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                      <div className="w-1 h-1 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '400ms' }}></div>
+                    </div>
+                    <span className="text-white/60 text-xs animate-pulse">Swipe</span>
+                  </div>
+                </>
+              )}
+            </div>
           </>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#fdce20]/20 to-[#f97316]/20 flex items-center justify-center">
@@ -247,10 +315,9 @@ export default function YogaEventDetailPage() {
         <div className="absolute top-8 left-6 z-10">
           <Link
             href="/yoga"
-            className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm text-white rounded-lg hover:bg-black/70 transition-colors"
+            className="flex items-center justify-center w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-lg hover:bg-black/70 transition-colors"
           >
             <ArrowLeft size={20} />
-            Back to Events
           </Link>
         </div>
 
@@ -271,7 +338,7 @@ export default function YogaEventDetailPage() {
                 </span>
               )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h1 className={`text-3xl md:text-4xl font-bold text-white mb-4 ${merriweather.className}`}>
               {event.title}
             </h1>
           </div>
@@ -285,7 +352,7 @@ export default function YogaEventDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             {/* Description */}
             <section>
-              <h2 className="text-2xl font-bold text-white mb-4">About This Event</h2>
+              <h2 className={`text-xl font-bold text-white mb-4 ${merriweather.className}`}>About This Event</h2>
               <p className="text-gray-300 leading-relaxed text-lg">
                 {event.description}
               </p>
@@ -294,14 +361,14 @@ export default function YogaEventDetailPage() {
             {/* Instructor */}
             {event.instructor_description && (
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">Meet Your Instructor</h2>
+                <h2 className={`text-xl font-bold text-white mb-4 ${merriweather.className}`}>Meet Your Instructor</h2>
                 <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-16 h-16 bg-[#fdce20] rounded-full flex items-center justify-center">
                       <User className="w-8 h-8 text-black" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">{event.instructor}</h3>
+                      <h3 className={`text-lg font-semibold text-white ${merriweather.className}`}>{event.instructor}</h3>
                       <p className="text-gray-400">Certified Yoga Instructor</p>
                     </div>
                   </div>
@@ -315,7 +382,7 @@ export default function YogaEventDetailPage() {
             {/* Requirements */}
             {event.requirements && event.requirements.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">What to Bring</h2>
+                <h2 className={`text-xl font-bold text-white mb-4 ${merriweather.className}`}>What to Bring</h2>
                 <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
                   <ul className="space-y-3">
                     {event.requirements.map((requirement, index) => (
@@ -332,7 +399,7 @@ export default function YogaEventDetailPage() {
             {/* Benefits */}
             {event.benefits && event.benefits.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">Benefits</h2>
+                <h2 className={`text-xl font-bold text-white mb-4 ${merriweather.className}`}>Benefits</h2>
                 <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
                   <ul className="space-y-3">
                     {event.benefits.map((benefit, index) => (
@@ -352,7 +419,7 @@ export default function YogaEventDetailPage() {
             <div className="sticky top-24 space-y-6">
               {/* Event Details Card */}
               <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-                <h3 className="text-xl font-bold text-white mb-6">Event Details</h3>
+                <h3 className={`text-lg font-bold text-white mb-6 ${merriweather.className}`}>Event Details</h3>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-gray-300">
@@ -393,28 +460,15 @@ export default function YogaEventDetailPage() {
                       <p className="text-gray-400 text-sm mt-1">Check your email for details</p>
                     </div>
                   ) : (
-                    <button
-                      onClick={handleBooking}
-                      disabled={isFullyBooked || isBooking}
-                      className={`w-full py-3 px-6 font-semibold rounded-lg transition-colors ${
-                        isFullyBooked
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : isBooking
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : 'bg-[#fdce20] text-black hover:bg-[#fdce20]/80'
-                      }`}
+                    <a
+                      href="https://wa.me/919038984582?text=Hi! I'm interested in the yoga event: ${event.title}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 px-6 font-semibold rounded-lg transition-colors bg-[#fdce20] text-black hover:bg-[#fdce20]/80 flex items-center justify-center gap-2"
                     >
-                      {isBooking ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                          Processing...
-                        </span>
-                      ) : isFullyBooked ? (
-                        'Fully Booked'
-                      ) : (
-                        'Book Now'
-                      )}
-                    </button>
+                      <MessageCircle className="w-4 h-4" />
+                      Ask on WhatsApp
+                    </a>
                   )}
                 </div>
               </div>
@@ -455,28 +509,15 @@ export default function YogaEventDetailPage() {
                 <p className="text-green-400 font-semibold text-sm">Booking Confirmed!</p>
               </div>
             ) : (
-              <button
-                onClick={handleBooking}
-                disabled={isFullyBooked || isBooking}
-                className={`flex-1 py-3 px-6 font-semibold rounded-lg transition-colors ${
-                  isFullyBooked
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : isBooking
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-[#fdce20] text-black hover:bg-[#fdce20]/80'
-                }`}
+              <a
+                href="https://wa.me/919038984582?text=Hi! I'm interested in the yoga event: ${event.title}"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 px-6 font-semibold rounded-lg transition-colors bg-[#fdce20] text-black hover:bg-[#fdce20]/80 flex items-center justify-center gap-2"
               >
-                {isBooking ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    Processing...
-                  </span>
-                ) : isFullyBooked ? (
-                  'Fully Booked'
-                ) : (
-                  'Book Now'
-                )}
-              </button>
+                <MessageCircle className="w-4 h-4" />
+                Enquire
+              </a>
             )}
           </div>
         </div>

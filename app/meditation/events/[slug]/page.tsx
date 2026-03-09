@@ -249,10 +249,9 @@ export default function MeditationEventDetailPage() {
         <div className="absolute top-8 left-6 z-10">
           <Link
             href="/meditation"
-            className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm text-white rounded-lg hover:bg-black/70 transition-colors"
+            className="flex items-center justify-center w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-lg hover:bg-black/70 transition-colors"
           >
             <ArrowLeft size={20} />
-            Back to Events
           </Link>
         </div>
 
