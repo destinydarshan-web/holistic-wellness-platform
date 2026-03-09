@@ -634,7 +634,7 @@ export default function ChatPage() {
             
             // Fetch user wallet
             console.log('=== DEBUG: Fetching user wallet for user_id ===', sessionInfo.user_id);
-            let userWallet: { data: { balance: number } } | null = await supabase
+            let userWallet = await supabase
               .from("user_wallet")
               .select("balance")
               .eq("user_id", sessionInfo.user_id)
