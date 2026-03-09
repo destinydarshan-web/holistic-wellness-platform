@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
-import { Eye, EyeOff, User, Mail, Lock, Briefcase, Star, Phone } from 'lucide-react'
+import { Eye, EyeOff, User, Mail, Lock, Briefcase, Star, Phone, Chrome } from 'lucide-react'
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email')
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -59,6 +60,31 @@ export default function LoginPage() {
       ...prev,
       [e.target.name]: e.target.value
     }))
+  }
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true)
+    setError('')
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+      
+      if (error) {
+        console.error('Google sign-in error:', error)
+        throw error
+      }
+      
+      // Redirect will happen automatically
+    } catch (error: any) {
+      console.error('Google sign-in caught error:', error)
+      setError('Failed to sign in with Google. Please try again.')
+      setGoogleLoading(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -297,6 +323,29 @@ export default function LoginPage() {
               Sign Up
             </button>
           </div>
+
+          {/* Social Login Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-[#1C1C24] text-white/60">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign In Button */}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+          >
+            <Chrome className="w-5 h-5" />
+            <span className="font-medium">
+              {googleLoading ? 'Connecting...' : 'Continue with Google'}
+            </span>
+          </button>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

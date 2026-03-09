@@ -461,7 +461,7 @@ export default function YogaEventDetailPage() {
                     </div>
                   ) : (
                     <a
-                      href="https://wa.me/919038984582?text=Hi! I'm interested in the yoga event: ${event.title}"
+                      href={`https://wa.me/919038984582?text=Hello Destiny Darshan! 🙏 I'm interested in joining your yoga event: "${event.title}". 🧑‍🏫 Instructor: ${event.instructor}. 📅 Date: ${formatDate(event.date)} ⏰ Time: ${formatTime(event.time)} 📍 Location: ${event.location} 💰 Price: ₹${event.price}. Could you please provide more details about booking and availability? Thank you! 🧘‍♀️`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-3 px-6 font-semibold rounded-lg transition-colors bg-[#fdce20] text-black hover:bg-[#fdce20]/80 flex items-center justify-center gap-2"
@@ -510,7 +510,7 @@ export default function YogaEventDetailPage() {
               </div>
             ) : (
               <a
-                href="https://wa.me/919038984582?text=Hi! I'm interested in the yoga event: ${event.title}"
+                href={`https://wa.me/919038984582?text=Hello Destiny Darshan! 🙏 I'm interested in joining your yoga event: "${event.title}". 🧑‍🏫 Instructor: ${event.instructor}. 📅 Date: ${formatDate(event.date)} ⏰ Time: ${formatTime(event.time)} 📍 Location: ${event.location} 💰 Price: ₹${event.price}. Could you please provide more details about booking and availability? Thank you! 🧘‍♀️`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 py-3 px-6 font-semibold rounded-lg transition-colors bg-[#fdce20] text-black hover:bg-[#fdce20]/80 flex items-center justify-center gap-2"

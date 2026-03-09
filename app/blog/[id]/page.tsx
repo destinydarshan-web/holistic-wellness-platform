@@ -3,7 +3,7 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { blogPosts } from '@/data/blog-posts'
+import { blogPosts, type BlogPost } from '@/data/blog-posts'
 import { ArrowLeft, Calendar, User, Clock, Share2, Bookmark } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -33,7 +33,7 @@ export default async function BlogDetailPage({
   params,
 }: BlogDetailPageProps) {
   const { id } = await params
-  const post = blogPosts.find((p) => p.id === id)
+  const post = blogPosts.find((p: BlogPost) => p.id === id)
 
   if (!post) {
     notFound()
@@ -49,7 +49,7 @@ export default async function BlogDetailPage({
   }
 
   const relatedPosts = blogPosts
-    .filter((p) => p.category === post.category && p.id !== post.id)
+    .filter((p: BlogPost) => p.category === post.category && p.id !== post.id)
     .slice(0, 3)
 
   return (
@@ -111,7 +111,7 @@ export default async function BlogDetailPage({
                 Related Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {relatedPosts.map((relatedPost) => (
+                {relatedPosts.map((relatedPost: BlogPost) => (
                   <Card key={relatedPost.id} className="p-6 hover:shadow-lg transition-shadow">
                     <Badge variant="outline" className="border-primary text-primary mb-3">
                       {relatedPost.category}

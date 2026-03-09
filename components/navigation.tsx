@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard, Calendar, DollarSign } from 'lucide-react'
+import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard, Calendar, DollarSign, AlertTriangle } from 'lucide-react'
 import Image from 'next/image'
 import { ServiceIcon } from '@/components/ServiceIcon'
 import { useAuth } from '@/contexts/AuthContext'
@@ -29,6 +29,7 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { user, profile, signOut, loading } = useAuth()
@@ -58,7 +59,21 @@ export function Navigation() {
     setIsOpen(false)
   }
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true)
+    setIsUserDropdownOpen(false)
+  }
+
+  const confirmLogout = async () => {
+    setShowLogoutModal(false)
+    await performLogout()
+  }
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false)
+  }
+
+  const performLogout = async () => {
     console.log("Logout clicked - executing signOut");
     
     try {
@@ -285,7 +300,7 @@ export function Navigation() {
                     
                     <div className="border-t border-white/10 my-2"></div>
                     <button
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white w-full text-left"
                     >
                       <LogOut size={16} />
@@ -492,7 +507,7 @@ export function Navigation() {
                       
                       <button
                         onClick={() => {
-                          handleLogout()
+                          handleLogoutClick()
                           setIsOpen(false)
                         }}
                         className="flex items-center gap-2 bg-white/5 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-200 text-sm font-medium tracking-wide"
@@ -517,6 +532,49 @@ export function Navigation() {
           </div>
         )}
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={cancelLogout}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-[#111] border border-white/10 rounded-2xl p-6 max-w-md mx-4 shadow-2xl">
+            {/* Warning Icon */}
+            <div className="flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-400" />
+            </div>
+            
+            {/* Modal Text */}
+            <h3 className="text-xl font-semibold text-white text-center mb-2">
+              Confirm Logout
+            </h3>
+            <p className="text-gray-300 text-center mb-6">
+              Are you sure you want to logout? You'll need to sign in again to access your account.
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={cancelLogout}
+                className="flex-1 px-4 py-2.5 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-all duration-200 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   )
 }

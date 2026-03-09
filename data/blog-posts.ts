@@ -1,4 +1,15 @@
-export const blogPosts = [
+export interface BlogPost {
+  id: string
+  title: string
+  excerpt: string
+  category: string
+  content: string
+  author: string
+  date: string
+  image: string
+}
+
+export const blogPosts: BlogPost[] = [
   {
     id: '1',
     title: 'Understanding Your Birth Chart: A Beginner\'s Guide',
