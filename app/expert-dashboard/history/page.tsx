@@ -69,7 +69,7 @@ export default function ExpertHistory() {
   const loadHistoryData = async () => {
     setLoadingData(true)
     try {
-      console.log('=== DEBUG: Loading Expert History Data ===')
+      
       
       // Load sessions and bookings in parallel
       const [sessionsResponse, bookingsResponse] = await Promise.allSettled([
@@ -91,7 +91,7 @@ export default function ExpertHistory() {
       // Process sessions
       if (sessionsResponse.status === 'fulfilled') {
         sessionsData = sessionsResponse.value.data || []
-        console.log('Sessions loaded:', sessionsData.length)
+        
         
         // Enrich sessions with user data
         sessionsData = await Promise.all(sessionsData.map(async (session) => {
@@ -114,13 +114,13 @@ export default function ExpertHistory() {
           }
         }))
       } else {
-        console.log('Sessions error:', sessionsResponse.reason)
+        
       }
 
       // Process bookings
       if (bookingsResponse.status === 'fulfilled') {
         bookingsData = bookingsResponse.value.data || []
-        console.log('Bookings loaded:', bookingsData.length)
+        
         
         // Enrich bookings with user data
         bookingsData = await Promise.all(bookingsData.map(async (booking) => {
@@ -137,14 +137,14 @@ export default function ExpertHistory() {
           }
         }))
       } else {
-        console.log('Bookings error:', bookingsResponse.reason)
+        
       }
 
       setSessions(sessionsData)
       setBookings(bookingsData)
       
     } catch (error) {
-      console.error('Error loading history data:', error)
+      
     } finally {
       setLoadingData(false)
     }

@@ -7,7 +7,7 @@ import {
   Clock, 
   MapPin, 
   Users, 
-  DollarSign, 
+  IndianRupee, 
   User, 
   ArrowLeft, 
   Shield,
@@ -448,7 +448,7 @@ export default function YogaEventDetailPage() {
                   <div className="flex items-center justify-between mb-6">
                     <span className="text-gray-400">Price</span>
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-[#fdce20]" />
+                      <IndianRupee className="w-5 h-5 text-[#fdce20]" />
                       <span className="text-2xl font-bold text-white">₹{event.price}</span>
                     </div>
                   </div>
@@ -501,7 +501,7 @@ export default function YogaEventDetailPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-[#fdce20]" />
+              <IndianRupee className="w-5 h-5 text-[#fdce20]" />
               <span className="text-xl font-bold text-white">₹{event.price}</span>
             </div>
             {bookingSuccess ? (

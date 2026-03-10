@@ -144,7 +144,7 @@ export default function CreateMeditationEventPage() {
           .upload(fileName, file)
         
         if (error) {
-          console.error('Error uploading image:', error)
+          
           continue
         }
         
@@ -154,7 +154,7 @@ export default function CreateMeditationEventPage() {
         
         imageUrls.push(publicUrl)
       } catch (error) {
-        console.error('Error uploading image:', error)
+        
       }
     }
     
@@ -252,18 +252,18 @@ export default function CreateMeditationEventPage() {
         })
 
       if (eventError) {
-        console.error('Supabase error:', eventError)
+        
         throw eventError
       }
 
-      console.log('Event created successfully:', eventDataResult)
+      
       setSuccess('Meditation event created successfully!')
       setTimeout(() => {
         router.push('/meditation')
       }, 2000)
 
     } catch (error) {
-      console.error('Error creating meditation event:', error)
+      
       setError(error instanceof Error ? error.message : 'Failed to create meditation event')
     } finally {
       setIsSaving(false)
@@ -284,11 +284,11 @@ export default function CreateMeditationEventPage() {
       setIsSaving(true)
       setError(null)
 
-      console.log('Event data before submission:', eventData)
-      console.log('Requirements array:', eventData.requirements)
-      console.log('Benefits array:', eventData.benefits)
-      console.log('Requirements type:', typeof eventData.requirements)
-      console.log('Benefits type:', typeof eventData.benefits)
+      
+      
+      
+      
+      
       
       const eventPayload = {
         title: eventData.title,
@@ -311,9 +311,9 @@ export default function CreateMeditationEventPage() {
         updated_at: new Date().toISOString()
       }
       
-      console.log('Event payload before insert:', eventPayload)
-      console.log('Payload requirements:', eventPayload.requirements)
-      console.log('Payload benefits:', eventPayload.benefits)
+      
+      
+      
       
       const { data: eventDataResult, error: eventError } = await supabase
         .from('meditation_events')
@@ -321,11 +321,11 @@ export default function CreateMeditationEventPage() {
         .eq('slug', editingEvent.slug)
 
       if (eventError) {
-        console.error('Supabase error:', eventError)
+        
         throw eventError
       }
 
-      console.log('Event updated successfully:', eventDataResult)
+      
       setSuccess('Meditation event updated successfully!')
       setTimeout(() => {
         setSuccess(null)
@@ -333,7 +333,7 @@ export default function CreateMeditationEventPage() {
       }, 2000)
 
     } catch (error) {
-      console.error('Error updating meditation event:', error)
+      
       setError(error instanceof Error ? error.message : 'Failed to update meditation event')
     } finally {
       setIsSaving(false)
@@ -387,7 +387,7 @@ export default function CreateMeditationEventPage() {
       // Refresh events list
       fetchEvents()
     } catch (err) {
-      console.error('Error deleting event:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to delete event')
     }
   }
@@ -423,7 +423,7 @@ export default function CreateMeditationEventPage() {
       
       setEvents(activeSection === 'upcoming' ? upcoming : past)
     } catch (err) {
-      console.error('Error fetching events:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to fetch events')
     }
   }

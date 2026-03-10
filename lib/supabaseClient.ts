@@ -21,6 +21,7 @@ export type Database = {
         Row: {
           id: string
           full_name: string | null
+          phone_number: string | null
           role: 'user' | 'expert' | 'admin'
           specialization: 'astrologer' | 'counsellor' | 'yoga_trainer' | 'meditation_expert' | null
           status: 'approved' | 'pending'
@@ -29,6 +30,7 @@ export type Database = {
         Insert: {
           id: string
           full_name?: string | null
+          phone_number?: string | null
           role: 'user' | 'expert' | 'admin'
           specialization?: 'astrologer' | 'counsellor' | 'yoga_trainer' | 'meditation_expert' | null
           status?: 'approved' | 'pending'
@@ -37,6 +39,7 @@ export type Database = {
         Update: {
           id?: string
           full_name?: string | null
+          phone_number?: string | null
           role?: 'user' | 'expert' | 'admin'
           specialization?: 'astrologer' | 'counsellor' | 'yoga_trainer' | 'meditation_expert' | null
           status?: 'approved' | 'pending'

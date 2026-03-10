@@ -348,9 +348,9 @@ export default function ChatPage() {
     }
   };
 
-  // Auto-scroll to bottom
+  // Auto-scroll to top (newest messages at bottom)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
 
   const sendMessage = async () => {
@@ -1021,7 +1021,7 @@ export default function ChatPage() {
 
       {/* Messages Area - Enhanced Design */}
       <div className="relative z-0 flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 pb-40 sm:pb-48 lg:pb-52 mt-16">
-        <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+        <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4 flex flex-col-reverse">
           {messages.length === 0 && (
             <div className="text-center py-8 sm:py-12">
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6">
@@ -1049,7 +1049,7 @@ export default function ChatPage() {
             </div>
           )}
           
-          {messages.map((msg, index) => {
+          {[...messages].reverse().map((msg, index) => {
             const isOwnMessage = msg.sender_id === user?.id;
             const displayName = isOwnMessage 
               ? 'You' 

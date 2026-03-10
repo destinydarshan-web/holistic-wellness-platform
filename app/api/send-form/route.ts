@@ -9,7 +9,7 @@ async function sendEmailViaResend(
   const resendApiKey = process.env.RESEND_API_KEY
 
   if (!resendApiKey) {
-    console.error('[v0] RESEND_API_KEY is not configured')
+    
     throw new Error('Email service not configured. Please add RESEND_API_KEY to environment variables.')
   }
 
@@ -29,7 +29,7 @@ async function sendEmailViaResend(
 
   if (!response.ok) {
     const error = await response.json()
-    console.error('[v0] Resend API error:', error)
+    
     throw new Error(`Failed to send email: ${error.message || 'Unknown error'}`)
   }
 
@@ -37,7 +37,7 @@ async function sendEmailViaResend(
 }
 
 export async function POST(request: NextRequest) {
-  console.log('[AUDIT] Email API route triggered')
+  
   
   try {
     const data = await request.json()
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     `.trim()
 
     // Send email to admin
-    console.log('[v0] Sending email to destinydarshan@gmail.com')
+    
     await sendEmailViaResend(
       'destinydarshan@gmail.com',
       `New Wellness Inquiry from ${name} - ${recommendedService}`,
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
         'We Received Your Wellness Inquiry - Destiny Darshan',
         confirmationHtml
       )
-      console.log('[v0] Confirmation email sent to user')
+      
     }
 
     return NextResponse.json(
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('[v0] Error processing form submission:', error)
+    
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }

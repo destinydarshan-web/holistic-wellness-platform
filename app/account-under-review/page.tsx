@@ -9,16 +9,16 @@ export default function AccountUnderReviewPage() {
   const { user, profile, loading } = useAuth()
 
   useEffect(() => {
-    console.log('=== DEBUG: Account Under Review Page ===')
-    console.log('Loading:', loading)
-    console.log('User:', user)
-    console.log('Profile:', profile)
-    console.log('Profile status:', profile?.status)
+    
+    
+    
+    
+    
     
     // Only redirect when we have complete data
     if (!loading) {
       if (!user) {
-        console.log('No user, redirecting to login')
+        
         router.replace("/login")
         return
       }
@@ -26,7 +26,7 @@ export default function AccountUnderReviewPage() {
       // If we have profile data, check status
       if (profile) {
         if (profile.status !== "pending") {
-          console.log('Profile status not pending, redirecting. Status:', profile.status)
+          
           if (profile.status === "approved" && (profile.role === "expert" || profile.role === "astrologer")) {
             router.replace("/expert-dashboard")
           } else if (profile.status === "approved" && profile.role === "user") {
@@ -35,10 +35,10 @@ export default function AccountUnderReviewPage() {
             router.replace("/")
           }
         } else {
-          console.log('Profile status is pending, showing under review page')
+          
         }
       } else {
-        console.log('No profile data yet, waiting...')
+        
       }
     }
   }, [user, profile, loading, router])

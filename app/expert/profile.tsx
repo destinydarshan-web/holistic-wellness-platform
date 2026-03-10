@@ -87,40 +87,40 @@ const getTableName = (serviceType: string): string => {
 // Helper function to detect service type based on specialties or role
 const detectServiceType = (specialties: string[], role?: string): string => {
   // Debug logging
-  console.log('DEBUG: detectServiceType called with:', { specialties, role })
+  
   
   // Check if specialties contain service-specific keywords
   const specialtiesLower = specialties.map(s => s.toLowerCase())
   
   if (specialtiesLower.some(s => s.includes('astrology') || s.includes('vedic') || s.includes('tarot') || s.includes('numerology'))) {
-    console.log('DEBUG: Detected astrology service')
+    
     return 'astrology'
   }
   if (specialtiesLower.some(s => s.includes('anxiety') || s.includes('depression') || s.includes('counselling') || s.includes('therapy'))) {
-    console.log('DEBUG: Detected counselling service')
+    
     return 'counselling'
   }
   if (specialtiesLower.some(s => s.includes('yoga') || s.includes('vinyasa') || s.includes('ashtanga') || s.includes('hatha'))) {
-    console.log('DEBUG: Detected yoga service')
+    
     return 'yoga'
   }
   if (specialtiesLower.some(s => s.includes('meditation') || s.includes('mindfulness') || s.includes('breathing') || s.includes('vipassana'))) {
-    console.log('DEBUG: Detected meditation service')
+    
     return 'meditation'
   }
   
   // Fallback to role-based detection
   if (role === 'astrologer') {
-    console.log('DEBUG: Using role fallback: astrology')
+    
     return 'astrology'
   }
   if (role === 'expert') {
-    console.log('DEBUG: Using role fallback: meditation (updated for experts)')
+    ')
     return 'meditation' // Changed default to meditation for experts
   }
   
   // Default fallback
-  console.log('DEBUG: Using default fallback: meditation')
+  
   return 'meditation'
 }
 
@@ -166,23 +166,23 @@ export default function ExpertProfilePage() {
       
       // Try to detect service type first from role
       const initialServiceType = detectServiceType([], profile?.role)
-      console.log('DEBUG: Initial service type detection:', initialServiceType)
-      console.log('DEBUG: Profile role:', profile?.role)
-      console.log('DEBUG: Profile specialization:', profile?.specialization)
+      
+      
+      
       
       // For meditation experts (role='expert'), ensure we get meditation specialties and correct table
       let finalServiceType = initialServiceType
-      console.log('DEBUG: Before forcing - finalServiceType:', finalServiceType)
+      
       
       if (profile?.role === 'expert') {
-        console.log('DEBUG: User is expert, forcing meditation service type')
+        
         finalServiceType = 'meditation'
-        console.log('DEBUG: After forcing - finalServiceType:', finalServiceType)
+        
         setServiceType('meditation')
         setFilteredSpecialties(ALL_SPECIALIZATIONS.meditation)
-        console.log('DEBUG: Set serviceType to meditation and filtered specialties')
+        
       } else {
-        console.log('DEBUG: User is not expert, using initial service type')
+        
         setServiceType(initialServiceType)
         const filtered = ALL_SPECIALIZATIONS[initialServiceType as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
         setFilteredSpecialties(filtered)
@@ -190,8 +190,8 @@ export default function ExpertProfilePage() {
       
       // Try the most likely table first using the final service type
       const primaryTable = getTableName(finalServiceType)
-      console.log('DEBUG: Final service type:', finalServiceType)
-      console.log('DEBUG: Primary table selected:', primaryTable)
+      
+      
       
       const tables = [
         primaryTable, // Use finalServiceType instead of initialServiceType
@@ -203,14 +203,14 @@ export default function ExpertProfilePage() {
       
       // Remove duplicates
       const uniqueTables = [...new Set(tables)]
-      console.log('DEBUG: Trying tables in order:', uniqueTables)
+      
       
       let profileData = null
       let foundTable = null
       
       // Try each table until we find the profile
       for (const table of uniqueTables) {
-        console.log(`DEBUG: Trying table: ${table}`)
+        
         const { data, error } = await supabase
           .from(table)
           .select("*")
@@ -218,12 +218,12 @@ export default function ExpertProfilePage() {
           .maybeSingle()
 
         if (error) {
-          console.log(`DEBUG: Error with table ${table}:`, error.message)
+          
           continue
         }
 
         if (data) {
-          console.log(`DEBUG: Found profile in table: ${table}`, data)
+          
           profileData = data
           foundTable = table
           break
@@ -236,41 +236,41 @@ export default function ExpertProfilePage() {
         
         // Detect service type based on existing specialties and role
         let detectedService = detectServiceType(profileData.specialties || [], profile?.role)
-        console.log('DEBUG: Detected service type from profile:', detectedService)
+        
         
         // For meditation experts, ensure we always use meditation service type
         if (profile?.role === 'expert') {
           detectedService = 'meditation'
-          console.log('DEBUG: User is expert, forcing meditation service type from profile')
+          
         }
         
         setServiceType(detectedService)
         
         const filtered = ALL_SPECIALIZATIONS[detectedService as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
-        console.log('DEBUG: Setting filtered specialties:', filtered)
+        
         setFilteredSpecialties(filtered)
       } else {
-        console.log('DEBUG: No existing profile data found in any table')
+        
         setProfileExists(false)
         
         // For new profiles, use role-based detection
         let detectedService = detectServiceType([], profile?.role)
-        console.log('DEBUG: Detected service type for new profile:', detectedService)
+        
         
         // For meditation experts, ensure we always use meditation service type
         if (profile?.role === 'expert') {
           detectedService = 'meditation'
-          console.log('DEBUG: User is expert, forcing meditation service type for new profile')
+          
         }
         
         setServiceType(detectedService)
         
         const filtered = ALL_SPECIALIZATIONS[detectedService as keyof typeof ALL_SPECIALIZATIONS] || SPECIALIZATIONS
-        console.log('DEBUG: Setting filtered specialties for new profile:', filtered)
+        
         setFilteredSpecialties(filtered)
       }
     } catch (error) {
-      console.error('Error:', error)
+      
       setProfileExists(false)
     } finally {
       setLoading(false)
@@ -300,8 +300,8 @@ export default function ExpertProfilePage() {
       }
 
       // Save to expert profile via API with authentication
-      console.log('=== DEBUG: Saving Profile ===')
-      console.log('Profile Data:', profileData)
+      
+      
       
       // Get auth token
       const { data: { session } } = await supabase.auth.getSession()
@@ -315,9 +315,9 @@ export default function ExpertProfilePage() {
         return
       }
       
-      console.log('=== DEBUG: Making API Call ===')
-      console.log('Token exists:', !!token)
-      console.log('Token length:', token?.length)
+      
+      
+      
       
       const response = await fetch('/api/expert/profile', {
         method: 'POST',
@@ -336,13 +336,13 @@ export default function ExpertProfilePage() {
         }),
       })
 
-      console.log('=== DEBUG: API Response Status ===')
-      console.log('Response status:', response.status)
-      console.log('Response ok:', response.ok)
+      
+      
+      
       
       const result = await response.json()
-      console.log('=== DEBUG: API Response Data ===')
-      console.log('Result:', result)
+      
+      
       
       if (result.success) {
         setSaveMessage({
@@ -355,9 +355,9 @@ export default function ExpertProfilePage() {
           router.push('/expert-dashboard')
         }, 2000)
       } else {
-        console.log('=== DEBUG: API Call Failed ===')
-        console.log('Error message:', result.error)
-        console.log('Error details:', result.details)
+        
+        
+        
         setSaveMessage({
           type: 'error',
           message: result.error || result.details || 'Failed to save profile'
@@ -365,10 +365,10 @@ export default function ExpertProfilePage() {
       }
       
     } catch (err: any) {
-      console.error('=== DEBUG: Save Error ===', err)
-      console.error('Error name:', err.name)
-      console.error('Error message:', err.message)
-      console.error('Error stack:', err.stack)
+      
+      
+      
+      
       setSaveMessage({
         type: 'error',
         message: err.message || "Save failed. Please check console for details."
@@ -412,7 +412,7 @@ export default function ExpertProfilePage() {
         .single()
 
       if (error) {
-        console.error('Error creating profile:', error)
+        
         setSaveMessage({
           type: 'error',
           message: 'Failed to create profile'
@@ -429,7 +429,7 @@ export default function ExpertProfilePage() {
         })
       }
     } catch (error) {
-      console.error('Error:', error)
+      
       setSaveMessage({
         type: 'error',
         message: 'Failed to create profile'
@@ -631,10 +631,10 @@ export default function ExpertProfilePage() {
                     <p className="text-[#fdce20]/80 text-sm mb-2">Are you a meditation expert? Click below to load meditation specialties:</p>
                     <button
                       onClick={() => {
-                        console.log('DEBUG: Emergency fallback - forcing meditation specialties')
+                        
                         setServiceType('meditation')
                         setFilteredSpecialties(ALL_SPECIALIZATIONS.meditation)
-                        console.log('DEBUG: Set meditation specialties:', ALL_SPECIALIZATIONS.meditation)
+                        
                       }}
                       className="px-4 py-2 bg-[#fdce20] text-black font-medium rounded-lg hover:bg-amber-400 transition-colors"
                     >

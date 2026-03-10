@@ -57,7 +57,7 @@ export default function AdminSettingsPage() {
       setError(null)
 
       // Debug: Check if platform_settings table exists
-      console.log('=== DEBUG: Loading Platform Settings ===')
+      
 
       // Try to load settings from platform_settings table
       const { data: settingsData, error: settingsError } = await supabase
@@ -65,28 +65,28 @@ export default function AdminSettingsPage() {
         .select('*')
         .single()
 
-      console.log('=== DEBUG: Settings Raw Response ===', { settingsData, settingsError })
+      
 
       if (settingsError) {
-        console.log('=== DEBUG: Settings table error ===', settingsError)
+        
         
         // If table doesn't exist or any other error, use default settings
-        console.log('=== DEBUG: Using default settings due to error ===', settingsError.message)
+        
         // Use default settings (already set in state)
         return
       }
 
       if (settingsData && settingsData.settings) {
-        console.log('=== DEBUG: Using loaded settings ===', settingsData.settings)
+        
         setSettings(settingsData.settings)
       } else {
-        console.log('=== DEBUG: No settings found, using defaults ===')
+        
         // Use default settings (already set in state)
       }
     } catch (error) {
-      console.error('Error loading settings:', error)
+      
       // Don't show any error to user, just use defaults silently
-      console.log('=== DEBUG: Using default settings due to catch error ===')
+      
       // Use default settings (already set in state)
     } finally {
       setIsLoading(false)
@@ -99,7 +99,7 @@ export default function AdminSettingsPage() {
       setError(null)
       setSuccess(null)
 
-      console.log('=== DEBUG: Saving Platform Settings ===')
+      
 
       // Save to platform_settings table
       const { error: saveError } = await supabase
@@ -110,18 +110,18 @@ export default function AdminSettingsPage() {
           updated_at: new Date().toISOString()
         })
 
-      console.log('=== DEBUG: Save Settings Response ===', { saveError })
+      
 
       if (saveError) {
-        console.log('=== DEBUG: Save settings error ===', saveError)
+        
         throw saveError
       }
 
-      console.log('=== DEBUG: Settings saved successfully ===')
+      
       setSuccess('Settings saved successfully!')
       setTimeout(() => setSuccess(null), 3000)
     } catch (error) {
-      console.error('Error saving settings:', error)
+      
       setError('Failed to save settings')
     } finally {
       setIsSaving(false)

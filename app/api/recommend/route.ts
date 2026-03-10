@@ -119,11 +119,11 @@ export async function POST(request: Request) {
 
     const recommendation = generateRecommendation(concern, name)
 
-    console.log('[v0] Recommendation generated:', recommendation.primaryService)
+    
 
     return Response.json(recommendation)
   } catch (error) {
-    console.error('[v0] Recommendation error:', error)
+    
 
     // Fallback to a safe default
     return Response.json({

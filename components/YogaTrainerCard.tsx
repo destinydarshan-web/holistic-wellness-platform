@@ -33,6 +33,7 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [notes, setNotes] = useState('')
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -74,7 +75,7 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
       setShowConfirmationModal(true)
       
     } catch (error: any) {
-      console.error('Error preparing appointment confirmation:', error)
+      
       alert(`Failed to prepare appointment: ${error.message}`)
     }
   }
@@ -110,7 +111,7 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
 
       // Create notification for trainer
       try {
-        console.log('=== DEBUG: Sending notification to trainer ===')
+        
         const notificationResponse = await fetch('/api/notifications', {
           method: 'POST',
           headers: {
@@ -126,20 +127,20 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
         })
 
         const notificationData = await notificationResponse.json()
-        console.log('Notification response:', notificationData)
+        
 
         if (notificationResponse.ok && notificationData.success) {
-          console.log('✅ Notification sent to trainer successfully')
+          
           if (notificationData.warning) {
-            console.log('⚠️ Notification warning:', notificationData.warning)
+            
           }
         } else {
-          console.error('❌ Failed to send notification to trainer')
-          console.error('Response status:', notificationResponse.status)
-          console.error('Response data:', notificationData)
+          
+          
+          
         }
       } catch (notificationError) {
-        console.error('Error sending notification to trainer:', notificationError)
+        
       }
 
       // Close confirmation modal
@@ -152,7 +153,7 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
       showNotification('Appointment request sent! Waiting for expert confirmation.', 'success')
       
     } catch (error: any) {
-      console.error('Appointment booking error:', error)
+      
       showNotification(`Failed to book appointment: ${error.message}`, 'error')
     } finally {
       setLoading(null)
@@ -194,7 +195,8 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
   const timeSlots = generateTimeSlots()
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+    <>
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
       {/* Header - Avatar, Name */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
@@ -271,7 +273,13 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
       {/* Action Button */}
       <div className="space-y-3">
         <button 
-          onClick={() => setShowAppointmentModal(true)}
+          onClick={() => {
+            if (!user?.id) {
+              setShowLoginModal(true)
+              return
+            }
+            setShowAppointmentModal(true)
+          }}
           disabled={loading === 'appointment'}
           className="w-full py-3 rounded-xl bg-gradient-to-r from-[#fdce20] to-amber-500 text-black font-semibold hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -485,6 +493,55 @@ export default function YogaTrainerCard({ trainer }: YogaTrainerCardProps) {
           </div>
         </div>
       )}
+
     </div>
+
+    {/* Login Modal - For unauthorized users */}
+    {showLoginModal && (
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={() => setShowLoginModal(false)}
+      >
+        <div 
+          className="bg-gradient-to-br from-[#1C1C24] to-[#2a2a3e] border border-[#fbcc1e]/20 rounded-2xl p-6 max-w-md w-full shadow-2xl shadow-[#fbcc1e]/10 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowLoginModal(false)}
+            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          
+          {/* Icon */}
+          <div className="w-16 h-16 bg-gradient-to-br from-[#fbcc1e]/20 to-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-[#fbcc1e]" />
+          </div>
+          
+          {/* Title */}
+          <h3 className="text-xl font-semibold text-white text-center mb-2">
+            Authentication Required
+          </h3>
+          
+          {/* Message */}
+          <p className="text-white/70 text-center mb-6">
+            Log in to get started
+          </p>
+          
+          {/* Login Button */}
+          <button
+            onClick={() => {
+              setShowLoginModal(false)
+              router.push('/login?redirect=' + encodeURIComponent(window.location.pathname))
+            }}
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#fbcc1e] to-amber-500 text-black rounded-lg hover:from-[#fbcc1e]/90 hover:to-amber-500/90 transition-all font-semibold"
+          >
+            Log In
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

@@ -35,7 +35,7 @@ export default function ExpertIncomingSession({
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      console.log("Expert auth session on mount:", data)
+      
     })
   }, [])
 
@@ -45,12 +45,12 @@ export default function ExpertIncomingSession({
       const authId = userData.user?.id
       
       if (!authId) {
-        console.error("No authenticated user found")
+        
         return
       }
       
-      console.log("=== DEBUG: Fetching Expert Record ===")
-      console.log("Auth ID:", authId)
+      
+      
       
       const { data, error } = await supabase
         .from("expert_astrologers")
@@ -59,7 +59,7 @@ export default function ExpertIncomingSession({
         .single()
       
       if (error) {
-        console.error("Error fetching expert record:", error)
+        
         console.error("Error details:", {
           message: error.message,
           details: error.details,
@@ -70,12 +70,12 @@ export default function ExpertIncomingSession({
       }
       
       if (!data) {
-        console.error("No expert record found for user:", authId)
-        console.error("This means the expert hasn't completed their profile yet")
+        
+        
         return
       }
       
-      console.log("Expert record found:", data)
+      
       setExpertId(data.id)
     }
 
@@ -94,12 +94,12 @@ export default function ExpertIncomingSession({
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error("Error fetching pending sessions:", error)
+        
         return
       }
       
       if (data && data.length > 0) {
-        console.log("Existing pending session found:", data[0])
+        
         setIncomingSession(data[0])
         setShowModal(true)
       }
@@ -111,7 +111,7 @@ export default function ExpertIncomingSession({
   useEffect(() => {
     if (!expertId) return
     
-    console.log("Subscribing to live_sessions for expert:", expertId)
+    
     const channel = supabase
       .channel(`expert-${expertId}-incoming`)
       .on(
@@ -123,7 +123,7 @@ export default function ExpertIncomingSession({
           filter: `expert_id=eq.${expertId}` 
         },
         (payload: any) => {
-          console.log("Realtime event received:", payload)
+          
           
           if (payload.new?.status === "pending") {
             setIncomingSession(payload.new)
@@ -132,25 +132,25 @@ export default function ExpertIncomingSession({
         }
       )
       .subscribe((status: any) => {
-        console.log("Realtime subscription status:", status)
+        
       })
     
     return () => {
-      console.log("Cleaning up realtime subscription")
+      
       supabase.removeChannel(channel)
     }
   }, [expertId])
 
   const handleAccept = async () => {
     try {
-      console.log("=== ACCEPT CLICK TRIGGERED ===")
-      console.log("=== DEBUG: Incoming Session State ===")
-      console.log("incomingSession:", incomingSession)
-      console.log("incomingSession.id:", incomingSession?.id)
-      console.log("incomingSession.status:", incomingSession?.status)
+      
+      
+      
+      
+      
       
       if (!incomingSession?.id) {
-        console.error("No session ID found")
+        
         return
       }
       
@@ -158,22 +158,22 @@ export default function ExpertIncomingSession({
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {
-        console.error("Error getting auth session:", sessionError)
+        
         return
       }
       
       if (!sessionData?.session) {
-        console.error("No active auth session for expert")
+        
         return
       }
       
-      console.log("=== DEBUG: Auth Session Data ===")
-      console.log("sessionData:", sessionData)
-      console.log("sessionData.session:", sessionData?.session)
-      console.log("sessionData.session.user.id:", sessionData?.session?.user?.id)
+      
+      
+      
+      
       
       const sessionId = String(incomingSession.id).trim()
-      console.log("Updating session:", sessionId)
+      
       
       // Update session status to accepted
       const { data, error } = await supabase
@@ -186,12 +186,12 @@ export default function ExpertIncomingSession({
         .eq("expert_id", sessionData?.session?.user?.id)
         .select()
       
-      console.log("=== DEBUG: Update Response ===")
-      console.log("Update data:", data)
-      console.log("Update error:", error)
+      
+      
+      
       
       if (error) {
-        console.error("=== DEBUG: Update Error ===")
+        
         console.error("Update error details:", {
           message: error.message,
           details: error.details,
@@ -202,32 +202,32 @@ export default function ExpertIncomingSession({
       }
       
       if (!data || data.length === 0) {
-        console.error("=== DEBUG: No Rows Updated ===")
-        console.error("No rows updated. Data:", data)
-        console.error("Update error:", error)
+        
+        
+        
         return
       }
       
-      console.log("=== DEBUG: Update Success ===")
-      console.log("Session updated successfully")
+      
+      
       setShowModal(false)
       setIncomingSession(null)
       
       // 3️⃣ Update Expert Accept Logic - Redirect to chat session
       router.push(`/session/chat/${sessionId}`)
     } catch (err) {
-      console.error("=== DEBUG: Accept Exception ===")
-      console.error("Accept exception:", err)
+      
+      
       alert("Failed to accept session. Please try again.")
     }
   }
 
   const handleReject = async () => {
     try {
-      console.log("=== REJECT CLICK TRIGGERED ===")
+      
       
       if (!incomingSession || !incomingSession.id) {
-        console.error("Incoming session missing or invalid for reject")
+        
         return
       }
       
@@ -235,18 +235,18 @@ export default function ExpertIncomingSession({
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {
-        console.error("Error getting auth session:", sessionError)
+        
         return
       }
       
       if (!sessionData?.session) {
-        console.error("No active auth session for expert")
+        
         return
       }
       
-      console.log("Expert authenticated:", sessionData.session.user.id)
+      
       const sessionId = String(incomingSession.id).trim()
-      console.log("Attempting to reject session ID:", sessionId)
+      
       
       // Update session status to rejected
       const { data, error } = await supabase
@@ -260,16 +260,16 @@ export default function ExpertIncomingSession({
         .select()
       
       if (error) {
-        console.error("Supabase reject update error:", error)
+        
         return
       }
       
       if (!data || data.length === 0) {
-        console.error("Reject update executed but no rows affected. ID mismatch likely.")
+        
         return
       }
       
-      console.log("Session rejected successfully")
+      
       setShowModal(false)
       setIncomingSession(null)
       
@@ -279,7 +279,7 @@ export default function ExpertIncomingSession({
       // Show user feedback
       alert("Session rejected successfully. User has been notified.")
     } catch (err) {
-      console.error("Unexpected error in handleReject:", err)
+      
       alert("Failed to reject session. Please try again.")
     }
   }

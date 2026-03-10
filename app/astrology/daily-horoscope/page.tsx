@@ -125,7 +125,7 @@ export default function DailyHoroscopePage() {
           const today = new Date().toDateString()
           
           if (cacheDate === today) {
-            console.log('[DailyHoroscope] Using cached data for', todayKey)
+            
             setHoroscopeData(cachedHoroscopes)
             setLastUpdated(timestamp)
             setLoading(false)
@@ -134,7 +134,7 @@ export default function DailyHoroscopePage() {
         }
 
         // Fetch fresh data
-        console.log('[DailyHoroscope] Fetching fresh horoscope data for', todayKey)
+        
         const response = await fetch('/api/horoscope')
         
         if (!response.ok) {
@@ -142,7 +142,6 @@ export default function DailyHoroscopePage() {
         }
 
         const data = await response.json()
-        console.log('[DailyHoroscope] Horoscope data fetched:', data.cached ? '(cached)' : '(fresh)')
 
         const transformed: HoroscopeData[] = Object.entries(data.horoscopes).map(
           ([sign, horoscope]) => {
@@ -172,7 +171,7 @@ export default function DailyHoroscopePage() {
         setLastUpdated(now)
         
       } catch (err) {
-        console.error('[DailyHoroscope] Error fetching horoscopes:', err)
+        
         setError(true)
         
         // Try to use yesterday's cached data if available
@@ -182,7 +181,7 @@ export default function DailyHoroscopePage() {
         const yesterdayCache = localStorage.getItem(`horoscope_${yesterdayKey}`)
         
         if (yesterdayCache) {
-          console.log('[DailyHoroscope] Using yesterday\'s cached data as fallback')
+          
           const { data: yesterdayData } = JSON.parse(yesterdayCache)
           setHoroscopeData(yesterdayData)
         } else {
@@ -198,7 +197,7 @@ export default function DailyHoroscopePage() {
         setExpertsLoading(true)
         setExpertsError(null)
         
-        console.log('[DailyHoroscope] Fetching experts...')
+        
         const response = await fetch('/api/experts')
         
         if (!response.ok) {
@@ -206,7 +205,7 @@ export default function DailyHoroscopePage() {
         }
         
         const result = await response.json()
-        console.log('[DailyHoroscope] Experts fetched:', result)
+        
         
         if (result.success && result.data) {
           setExperts(result.data)
@@ -214,7 +213,7 @@ export default function DailyHoroscopePage() {
           throw new Error(result.error || 'Failed to fetch experts')
         }
       } catch (err) {
-        console.error('[DailyHoroscope] Error fetching experts:', err)
+        
         setExpertsError(err instanceof Error ? err.message : 'Failed to load experts')
       } finally {
         setExpertsLoading(false)
@@ -233,7 +232,7 @@ export default function DailyHoroscopePage() {
     const msUntilMidnight = tomorrow.getTime() - now.getTime()
     
     const midnightTimer = setTimeout(() => {
-      console.log('[DailyHoroscope] Auto-refreshing at midnight')
+      
       fetchHoroscopes()
     }, msUntilMidnight)
 

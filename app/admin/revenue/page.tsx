@@ -114,7 +114,7 @@ export default function AdminRevenuePage() {
       setTransactions(transactionsWithDetails)
       calculateStats(transactionsWithDetails)
     } catch (error) {
-      console.error('Error loading revenue data:', error)
+      
       setError('Failed to load revenue data')
     } finally {
       setIsLoading(false)

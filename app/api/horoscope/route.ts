@@ -70,7 +70,7 @@ async function fetchHoroscopesFromAPI(): Promise<Record<string, string>> {
           horoscopes[sign] = fallbackHoroscopes[sign]
         }
       } catch {
-        console.error(`[v0] Error fetching horoscope for ${sign}:`, Error)
+        
         horoscopes[sign] = fallbackHoroscopes[sign]
       }
     })
@@ -78,7 +78,7 @@ async function fetchHoroscopesFromAPI(): Promise<Record<string, string>> {
     await Promise.all(promises)
     return horoscopes
   } catch (error) {
-    console.error('[v0] Error fetching horoscopes:', error)
+    
     // Return all fallback horoscopes on error
     const allFallback: Record<string, string> = {}
     zodiacSigns.forEach((sign) => {
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     if (horoscopeCache && horoscopeCache.date === today) {
       const now = Date.now()
       if (now - horoscopeCache.timestamp < CACHE_DURATION) {
-        console.log('[v0] Returning cached horoscope data')
+        
         return NextResponse.json(
           {
             horoscopes: horoscopeCache.data,
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch fresh data
-    console.log('[v0] Fetching fresh horoscope data from API')
+    
     const horoscopes = await fetchHoroscopesFromAPI()
 
     // Update cache
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'public, max-age=3600' } }
     )
   } catch (error) {
-    console.error('[v0] API error:', error)
+    
     return NextResponse.json(
       { error: 'Failed to fetch horoscopes' },
       { status: 500 }

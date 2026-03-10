@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 export async function GET() {
   try {
-    console.log('=== DEBUG: Testing expert_counsellors table access ===')
+    
     
     // Test 1: Check if table exists and has data
     const { data: allCounsellors, error: allError } = await supabase
@@ -11,7 +11,7 @@ export async function GET() {
       .select("*")
       .limit(10)
     
-    console.log('=== DEBUG: All counsellors ===', { allCounsellors, allError })
+    
     
     // Log specializations details
     if (allCounsellors && allCounsellors.length > 0) {
@@ -34,7 +34,7 @@ export async function GET() {
       .eq("specialization", "counsellor")
       .limit(10)
     
-    console.log('=== DEBUG: Profile counsellors ===', { profileCounsellors, profileError })
+    
     
     // Test 3: Check expert_astrologers for counsellors (should be empty after migration)
     const { data: astrologerCounsellors, error: astrologerError } = await supabase
@@ -42,7 +42,7 @@ export async function GET() {
       .select("*")
       .limit(10)
     
-    console.log('=== DEBUG: Astrologer table counsellors ===', { astrologerCounsellors, astrologerError })
+    
     
     return NextResponse.json({
       success: true,
@@ -66,7 +66,7 @@ export async function GET() {
     })
     
   } catch (error) {
-    console.error('=== DEBUG: Test endpoint error ===', error)
+    
     return NextResponse.json(
       { 
         success: false, 

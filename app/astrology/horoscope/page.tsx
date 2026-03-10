@@ -103,7 +103,6 @@ export default function DailyHoroscopePage() {
         }
 
         const data = await response.json()
-        console.log('[v0] Horoscope data fetched:', data.cached ? '(cached)' : '(fresh)')
 
         const transformed: HoroscopeData[] = Object.entries(data.horoscopes).map(
           ([sign, horoscope]) => {
@@ -120,7 +119,7 @@ export default function DailyHoroscopePage() {
 
         setHoroscopeData(transformed)
       } catch (err) {
-        console.error('[v0] Error fetching horoscopes:', err)
+        
         setError(true)
         setHoroscopeData(fallbackHoroscopes)
       } finally {

@@ -46,7 +46,7 @@ export default function AdminDashboard() {
           filter: 'role=eq.expert'
         }, 
         (payload) => {
-          console.log('Profile change detected:', payload)
+          
           loadAdminData() // Refresh data when profiles change
         }
       )
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
           table: 'bookings'
         }, 
         (payload) => {
-          console.log('Booking change detected:', payload)
+          
           loadAdminData() // Refresh data when bookings change
         }
       )
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
           table: 'transactions'
         }, 
         (payload) => {
-          console.log('Transaction change detected:', payload)
+          
           loadAdminData() // Refresh data when transactions change
         }
       )
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
         setStats(stats)
       }
     } catch (error) {
-      console.error('Error loading admin data:', error)
+      
       setError('Failed to load admin data')
     } finally {
       setIsLoading(false)
@@ -190,12 +190,12 @@ export default function AdminDashboard() {
       if (profileError) throw profileError
 
       // Send notification to expert (optional - you can implement this)
-      console.log(`Expert ${expertId} approved successfully`)
+      
 
       // Refresh data
       await loadAdminData()
     } catch (error) {
-      console.error('Error approving expert:', error)
+      
       setError('Failed to approve expert')
     } finally {
       setIsLoading(false)
@@ -220,12 +220,12 @@ export default function AdminDashboard() {
       //   .update({ status: 'rejected' })
       //   .eq('id', expertId)
 
-      console.log(`Expert ${expertId} rejected and removed`)
+      
 
       // Refresh data
       await loadAdminData()
     } catch (error) {
-      console.error('Error rejecting expert:', error)
+      
       setError('Failed to reject expert')
     } finally {
       setIsLoading(false)

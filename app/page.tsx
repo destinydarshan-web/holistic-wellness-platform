@@ -158,7 +158,6 @@ export default function Home() {
 
     try {
       // Call AI recommendation API
-      console.log('[v0] Requesting AI recommendation...')
       const aiResponse = await fetch('/api/recommend', {
         method: 'POST',
         headers: {

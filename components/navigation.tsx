@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard, Calendar, DollarSign, AlertTriangle } from 'lucide-react'
+import { Menu, X, ShoppingBag, BookOpen, Info, Phone, ChevronDown, User, LogOut, LayoutDashboard, Calendar, IndianRupee, AlertTriangle } from 'lucide-react'
 import Image from 'next/image'
 import { ServiceIcon } from '@/components/ServiceIcon'
 import { useAuth } from '@/contexts/AuthContext'
@@ -74,7 +74,7 @@ export function Navigation() {
   }
 
   const performLogout = async () => {
-    console.log("Logout clicked - executing signOut");
+    ;
     
     try {
       // Close dropdown immediately
@@ -84,9 +84,9 @@ export function Navigation() {
       const { error } = await signOut();
       
       if (error) {
-        console.error("Logout error:", error.message);
+        ;
       } else {
-        console.log("Logout successful");
+        ;
       }
       
       // Add a small delay to ensure state is cleared before navigation
@@ -98,7 +98,7 @@ export function Navigation() {
       }, 100);
       
     } catch (error) {
-      console.error("Logout exception:", error);
+      ;
       
       // Emergency fallback
       setTimeout(() => {
@@ -292,7 +292,7 @@ export function Navigation() {
                           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white/90 hover:text-white"
                           onClick={() => setIsUserDropdownOpen(false)}
                         >
-                          <DollarSign size={16} />
+                          <IndianRupee size={16} />
                           <span className="text-sm">Earnings</span>
                         </Link>
                       </>
@@ -499,7 +499,7 @@ export function Navigation() {
                             onClick={() => setIsOpen(false)}
                             className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium tracking-wide hover:border-l-2 hover:border-l-yellow-400 hover:shadow-sm"
                           >
-                            <DollarSign size={16} />
+                            <IndianRupee size={16} />
                             <span>Earnings</span>
                           </Link>
                         </>

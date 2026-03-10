@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 export async function POST() {
   try {
-    console.log('Checking if hourly_rate column exists...')
+    
     
     // Try to select the hourly_rate column
     const { data, error } = await supabase
@@ -12,7 +12,7 @@ export async function POST() {
       .limit(1)
     
     if (error && error.message.includes('column "hourly_rate" does not exist')) {
-      console.log('Column does not exist. Manual SQL required.')
+      
       return NextResponse.json({ 
         error: 'Column does not exist',
         message: 'The hourly_rate column needs to be added manually to the database.',
@@ -42,7 +42,7 @@ export async function POST() {
     })
     
   } catch (error) {
-    console.error('Unexpected error:', error)
+    
     return NextResponse.json({ 
       error: 'Unexpected error',
       message: error instanceof Error ? error.message : 'Unknown error'

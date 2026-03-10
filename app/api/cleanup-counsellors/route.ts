@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 export async function POST() {
   try {
-    console.log('=== DEBUG: Starting counsellor specialization cleanup ===')
+    
     
     // Define counselling specializations
     const counsellingSpecializations = [
@@ -39,28 +39,28 @@ export async function POST() {
       .select("*")
     
     if (fetchError) {
-      console.error('=== DEBUG: Error fetching counsellors ===', fetchError)
+      
       return NextResponse.json(
         { success: false, error: 'Failed to fetch counsellors' },
         { status: 500 }
       )
     }
     
-    console.log('=== DEBUG: Found counsellors ===', counsellors?.length || 0)
+    
     
     let updatedCount = 0
     
     // Clean up each counsellor's specializations
     for (const counsellor of counsellors || []) {
-      console.log('=== DEBUG: Processing counsellor ===', counsellor.display_name)
-      console.log('=== DEBUG: Current specializations ===', counsellor.specialties)
+      
+      
       
       // Filter out astrology specializations, keep only counselling ones
       const cleanedSpecializations = (counsellor.specialties || []).filter((spec: string) => 
         counsellingSpecializations.includes(spec)
       )
       
-      console.log('=== DEBUG: Cleaned specializations ===', cleanedSpecializations)
+      
       
       // Only update if specializations changed
       if (JSON.stringify(counsellor.specialties) !== JSON.stringify(cleanedSpecializations)) {
@@ -73,17 +73,17 @@ export async function POST() {
           .eq("id", counsellor.id)
         
         if (updateError) {
-          console.error('=== DEBUG: Error updating counsellor ===', updateError)
+          
         } else {
-          console.log('=== DEBUG: Successfully updated counsellor ===', counsellor.display_name)
+          
           updatedCount++
         }
       } else {
-        console.log('=== DEBUG: No update needed for counsellor ===', counsellor.display_name)
+        
       }
     }
     
-    console.log('=== DEBUG: Cleanup completed ===', { updatedCount })
+    
     
     return NextResponse.json({
       success: true,
@@ -93,7 +93,7 @@ export async function POST() {
     })
     
   } catch (error) {
-    console.error('=== DEBUG: Cleanup error ===', error)
+    
     return NextResponse.json(
       { 
         success: false, 

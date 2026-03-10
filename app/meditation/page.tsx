@@ -50,7 +50,7 @@ export default function MeditationPage() {
   const [error, setError] = useState<string | null>(null)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [selectedMode, setSelectedMode] = useState('all')
-  const [priceRange, setPriceRange] = useState([0, 5000])
+  const [priceRange, setPriceRange] = useState([0, 1000])
   const [sortBy, setSortBy] = useState('recommended')
   const [showFilters, setShowFilters] = useState(false)
   const [showPriceModal, setShowPriceModal] = useState(false)
@@ -120,7 +120,7 @@ export default function MeditationPage() {
         throw new Error(`Failed to fetch meditation events: ${eventsError.message}`)
       }
 
-      console.log('Fetched meditation events data:', eventsData)
+      
       eventsData?.forEach((event, index) => {
         console.log(`Event ${index + 1}:`, {
           title: event.title,
@@ -133,7 +133,7 @@ export default function MeditationPage() {
 
       setEvents(eventsData || [])
     } catch (err) {
-      console.error('Error fetching meditation events:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to fetch meditation events')
     } finally {
       setLoading(false)
@@ -168,7 +168,7 @@ export default function MeditationPage() {
         throw new Error(result.details || 'Failed to fetch meditation experts')
       }
     } catch (err) {
-      console.error('Error fetching meditation experts:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to fetch meditation experts')
     } finally {
       setLoading(false)
@@ -190,9 +190,9 @@ export default function MeditationPage() {
   )
 
   const EventCard = ({ event }: { event: MeditationEvent }) => {
-    console.log('EventCard received event:', event)
-    console.log('EventCard requirements:', event.requirements)
-    console.log('EventCard benefits:', event.benefits)
+    
+    
+    
     
     const formatDate = (dateString: string) => {
       const date = new Date(dateString)
@@ -440,14 +440,14 @@ export default function MeditationPage() {
                         <input
                           type="range"
                           min="0"
-                          max="5000"
+                          max="1000"
                           value={priceRange[1]}
                           onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                           className="w-full accent-[#fdce20]"
                         />
                         <div className="flex justify-between text-xs text-gray-400 mt-2">
                           <span>₹0</span>
-                          <span>₹5000</span>
+                          <span>₹1000</span>
                         </div>
                       </div>
                     )}
@@ -563,7 +563,7 @@ export default function MeditationPage() {
                     <input
                       type="range"
                       min="0"
-                      max="5000"
+                      max="1000"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                       className="w-24"

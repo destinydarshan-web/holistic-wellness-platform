@@ -49,13 +49,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const warningTime = SESSION_TIMEOUT - (2 * 60 * 1000); // 23 minutes
       
       const warningTimer = setTimeout(() => {
-        console.log('Session will expire in 2 minutes');
+        // Session timeout warning - 2 minutes remaining
         // You could show a toast notification here
       }, warningTime);
       
       // Set the actual timeout
       const timer = setTimeout(async () => {
-        console.log('Session expired due to inactivity');
+        // Session timeout - signing out user
         await signOut();
       }, SESSION_TIMEOUT);
       
@@ -74,10 +74,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
       setLoading(false);
       
-      console.log("Logout successful, state cleared");
       return result;
     } catch (error) {
-      console.error("Logout exception:", error);
       return { error: error as AuthError };
     }
   };
@@ -138,11 +136,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(false);
         }
       } catch (error: any) {
-        console.error('Auth initialization error:', error);
+        // Handle session initialization error
         
         // Handle lock timeout errors gracefully
         if (error.message?.includes('Navigator LockManager') || error.message?.includes('timed out') || error.message?.includes('LockManager')) {
-          console.log('Auth lock timeout - retrying with exponential backoff...');
+          // Lock timeout detected
           
           // Clear any existing session data that might be causing the lock
           await supabase.auth.signOut();
@@ -153,7 +151,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           for (let attempt = 0; attempt < retryAttempts; attempt++) {
             const delay = baseDelay * Math.pow(2, attempt);
-            console.log(`Retry attempt ${attempt + 1} in ${delay}ms`);
             
             await new Promise(resolve => setTimeout(resolve, delay));
             
@@ -173,12 +170,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   if (mounted) {
                     setProfile(data);
                     setLoading(false);
-                    console.log('Auth retry successful');
                     return; // Success, exit retry loop
                   }
                 }
               } catch (retryError) {
-                console.error(`Retry attempt ${attempt + 1} failed:`, retryError);
+                // Retry failed, continue to next attempt
                 if (attempt === retryAttempts - 1) {
                   // Final retry failed, set loading to false
                   if (mounted) {

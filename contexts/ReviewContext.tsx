@@ -83,7 +83,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
         setReviews(prev => [...prev, data])
       }
     } catch (error) {
-      console.error('Error creating review:', error)
+      
     } finally {
       setIsLoading(false)
     }
@@ -113,7 +113,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
         )
       )
     } catch (error) {
-      console.error('Error updating review:', error)
+      
     } finally {
       setIsLoading(false)
     }
@@ -131,7 +131,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
       
       setReviews(prev => prev.filter(review => review.id !== id))
     } catch (error) {
-      console.error('Error deleting review:', error)
+      
     } finally {
       setIsLoading(false)
     }
@@ -148,7 +148,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
     } catch (error) {
-      console.error('Error marking review as helpful:', error)
+      
     } finally {
       setIsLoading(false)
     }
@@ -168,7 +168,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
         setExpertReviews(data)
       }
     } catch (error) {
-      console.error('Error fetching expert reviews:', error)
+      
     } finally {
       setIsLoading(false)
     }
@@ -188,7 +188,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
         setUserReviews(data)
       }
     } catch (error) {
-      console.error('Error fetching user reviews:', error)
+      
     } finally {
       setIsLoading(false)
     }
@@ -216,7 +216,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
         })
       }
     } catch (error) {
-      console.error('Error fetching review stats:', error)
+      
     } finally {
       setIsLoading(false)
     }

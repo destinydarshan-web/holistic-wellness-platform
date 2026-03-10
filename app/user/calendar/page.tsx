@@ -75,7 +75,7 @@ export default function UserCalendar() {
   const loadAppointments = async () => {
     try {
       setLoadingData(true)
-      console.log('=== DEBUG: Loading User Calendar Data ===')
+      
       
       const { data, error } = await supabase
         .from('appointments')
@@ -84,9 +84,9 @@ export default function UserCalendar() {
         .order('appointment_date', { ascending: true })
 
       if (error) {
-        console.error('Error loading appointments:', error)
+        
       } else {
-        console.log('Appointments loaded:', data?.length || 0)
+        
         
         // Enrich appointments with expert data
         const enrichedAppointments = await Promise.all(
@@ -111,7 +111,7 @@ export default function UserCalendar() {
         setAppointments(enrichedAppointments)
       }
     } catch (error) {
-      console.error('Error in loadAppointments:', error)
+      
     } finally {
       setLoadingData(false)
     }

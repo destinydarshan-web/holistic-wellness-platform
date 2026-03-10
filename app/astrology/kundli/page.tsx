@@ -192,7 +192,7 @@ export default function KundliMatchingPage() {
         setShowLocationSuggestions(true)
       }
     } catch (error) {
-      console.error('Location search failed:', error)
+      
       // Fallback to city list if API fails
       fallbackCitySearch(query)
     } finally {
@@ -269,7 +269,7 @@ export default function KundliMatchingPage() {
       
       return 'Asia/Kolkata' // Default to India
     } catch (error) {
-      console.error('Timezone detection failed:', error)
+      
       return 'Asia/Kolkata'
     }
   }
@@ -610,7 +610,7 @@ const handleLocationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         return transformAPIDataToKundliResult(data, formData)
       }
     } catch (error) {
-      console.log('API call failed, using enhanced calculations')
+      
     }
 
     // Fallback to enhanced local calculations

@@ -3,50 +3,49 @@ import { supabase } from '@/lib/supabaseClient'
 
 // Helper function to determine service type and table
 const getServiceTypeAndTable = (specialties: string[], userRole?: string) => {
-  console.log('=== DEBUG: Service Type Detection ===')
-  console.log('Input specialties:', specialties)
-  console.log('Input userRole:', userRole)
+  
+  
+  
   
   const specialtiesLower = specialties.map(s => s.toLowerCase())
-  console.log('Lowercase specialties:', specialtiesLower)
+  
   
   // Check specialties for service type indicators
   if (specialtiesLower.some(s => s.includes('astrology') || s.includes('vedic') || s.includes('tarot') || s.includes('numerology'))) {
-    console.log('Detected: ASTROLOGY from specialties')
+    
     return { serviceType: 'astrology', table: 'expert_astrologers' }
   }
   if (specialtiesLower.some(s => s.includes('anxiety') || s.includes('depression') || s.includes('counselling') || s.includes('therapy'))) {
-    console.log('Detected: COUNSELLING from specialties')
+    
     return { serviceType: 'counselling', table: 'expert_counsellors' }
   }
   if (specialtiesLower.some(s => s.includes('yoga') || s.includes('vinyasa') || s.includes('ashtanga') || s.includes('hatha'))) {
-    console.log('Detected: YOGA from specialties')
+    
     return { serviceType: 'yoga', table: 'expert_yoga' }
   }
   if (specialtiesLower.some(s => s.includes('meditation') || s.includes('mindfulness') || s.includes('breathing') || s.includes('vipassana'))) {
-    console.log('Detected: MEDITATION from specialties')
+    
     return { serviceType: 'meditation', table: 'expert_meditation' }
   }
   
   // Fallback to role-based detection
-  console.log('No specialty-based detection, falling back to role-based detection')
+  
   if (userRole === 'astrologer') {
-    console.log('Detected: ASTROLOGY from role')
+    
     return { serviceType: 'astrology', table: 'expert_astrologers' }
   }
   if (userRole === 'expert') {
-    console.log('Detected: MEDITATION from role (expert role defaults to meditation)')
     return { serviceType: 'meditation', table: 'expert_meditation' }
   }
   
   // Default fallback
-  console.log('Using default fallback: MEDITATION')
+  
   return { serviceType: 'meditation', table: 'expert_meditation' }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== DEBUG: Expert Profile Completion ===')
+    
     
     // Get auth token from request
     const authHeader = request.headers.get('authorization')
@@ -63,31 +62,31 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
-      console.error('Auth error:', authError)
+      
       return NextResponse.json({
         success: false,
         error: 'Invalid authentication token'
       }, { status: 401 })
     }
     
-    console.log('=== DEBUG: Authenticated User ===')
-    console.log('User ID:', user.id)
-    console.log('User Email:', user.email)
-    console.log('User Role:', user.user_metadata?.role || 'not set')
+    
+    
+    
+    
     
     const body = await request.json()
     const { id, display_name, bio, experience_years, price_per_minute, specialties, avatar_url } = body
     
-    console.log('=== DEBUG: Request vs Auth User ===')
-    console.log('Request ID:', id)
-    console.log('Auth User ID:', user.id)
-    console.log('IDs Match:', id === user.id)
+    
+    
+    
+    
     
     // Validate that the ID in request matches authenticated user
     if (id !== user.id) {
-      console.log('=== DEBUG: ID Mismatch ===')
-      console.log('Request ID:', id)
-      console.log('Auth User ID:', user.id)
+      
+      
+      
       return NextResponse.json({
         success: false,
         error: 'Unauthorized: You can only update your own profile'
@@ -116,14 +115,14 @@ export async function POST(request: NextRequest) {
                               !!specialties && 
                               specialties.length > 0
     
-    console.log('=== DEBUG: Profile Completion Check ===')
+    
     console.log('Required fields filled:', {
       display_name: !!display_name,
       price_per_minute: !!price_per_minute,
       specialties: !!specialties && specialties.length > 0,
       isProfileComplete
     })
-    console.log('isProfileComplete value:', isProfileComplete, typeof isProfileComplete)
+    
     
     // Validate boolean fields
     const validatedData = {
@@ -138,13 +137,13 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     }
     
-    console.log('=== DEBUG: Validated Data for Upsert ===')
-    console.log('is_profile_complete:', validatedData.is_profile_complete, typeof validatedData.is_profile_complete)
-    console.log('experience_years:', validatedData.experience_years, typeof validatedData.experience_years)
-    console.log('price_per_minute:', validatedData.price_per_minute, typeof validatedData.price_per_minute)
     
-    console.log('=== DEBUG: Upserting Expert Profile ===')
-    console.log('ID:', id)
+    
+    
+    
+    
+    
+    
     console.log('Data:', { 
       display_name, 
       bio, 
@@ -156,36 +155,36 @@ export async function POST(request: NextRequest) {
     
     // Determine service type and correct table
     const { serviceType, table } = getServiceTypeAndTable(specialties || [], user.user_metadata?.role)
-    console.log('=== DEBUG: Service Type Detection Results ===')
-    console.log('Service Type:', serviceType)
-    console.log('Using Table:', table)
-    console.log('User Role from metadata:', user.user_metadata?.role)
-    console.log('Specialties provided:', specialties)
+    
+    
+    
+    
+    
     
     // Additional check: Force meditation for 'expert' role regardless of specialties
     let finalTable = table
     let finalServiceType = serviceType
     
     if (user.user_metadata?.role === 'expert') {
-      console.log('User role is "expert" - forcing to meditation table')
+      
       finalTable = 'expert_meditation'
       finalServiceType = 'meditation'
     }
     
-    console.log('=== DEBUG: Final Table Selection ===')
-    console.log('Final Service Type:', finalServiceType)
-    console.log('Final Table:', finalTable)
+    
+    
+    
     
     // Check if expert entry exists in the correct table
-    console.log('=== DEBUG: Checking Existing Profile ===')
+    
     const { data: existingProfile, error: checkError } = await supabase
       .from(finalTable)
       .select("*")
       .eq("id", user.id)
       .single()
     
-    console.log('Existing Profile:', existingProfile)
-    console.log('Check Error:', checkError)
+    
+    
     
     // Upsert expert profile to the correct table
     const { data, error } = await supabase
@@ -197,7 +196,7 @@ export async function POST(request: NextRequest) {
       .single()
     
     if (error) {
-      console.error('Supabase error:', error)
+      
       console.error('Error details:', {
         message: error.message,
         details: error.details,
@@ -219,8 +218,8 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    console.log('=== DEBUG: Profile Saved ===')
-    console.log('Saved data:', data)
+    
+    
     
     return NextResponse.json({
       success: true,
@@ -229,8 +228,8 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('=== DEBUG: Error Saving Profile ===')
-    console.error('Error:', error)
+    
+    
     return NextResponse.json({
       success: false,
       error: `Failed to save profile: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,

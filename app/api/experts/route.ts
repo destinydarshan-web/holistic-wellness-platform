@@ -3,18 +3,13 @@ import { supabase } from '@/lib/supabaseClient'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('=== DEBUG: Supabase Client Check ===')
-    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing')
-    console.log('Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing')
-    console.log('Supabase client:', supabase ? 'Initialized' : 'Not initialized')
-    
     const { searchParams } = new URL(request.url)
     
     // Parse query parameters
     const onlineOnly = searchParams.get('onlineOnly') === 'true'
     const mode = searchParams.get('mode') || 'all'
     const minPrice = parseInt(searchParams.get('minPrice') || '0')
-    const maxPrice = parseInt(searchParams.get('maxPrice') || '5000')
+    const maxPrice = parseInt(searchParams.get('maxPrice') || '1000')
     const sortBy = searchParams.get('sortBy') || 'recommended'
     const service = searchParams.get('service') || 'astrology' // Default to astrology
     
@@ -59,16 +54,13 @@ export async function GET(request: NextRequest) {
     
     const actualMode = mode === 'all' ? 'all' : (modeMapping[mode] || mode)
     
-    console.log('=== DEBUG: Fetching experts ===')
-    console.log('Params:', { onlineOnly, mode, minPrice, maxPrice, sortBy, service })
-    
     // Try different table names to find the correct one
     let data = null
     let error = null
     
     if (service === 'counselling') {
       // Handle counselling service - try expert_counsellors table first
-      console.log('=== DEBUG: Trying expert_counsellors table for counselling ===')
+      
       
       // First, let's check what's in the expert_counsellors table
       const { data: allCounsellors, error: allCounsellorsError } = await supabase
@@ -76,20 +68,17 @@ export async function GET(request: NextRequest) {
         .select("*")
         .limit(5)
       
-      console.log('=== DEBUG: All counsellors in expert_counsellors table ===', { allCounsellors, allCounsellorsError })
-      console.log('=== DEBUG: Counsellor profile completion status ===', allCounsellors?.map(c => ({ id: c.id, name: c.display_name, is_complete: c.is_profile_complete })))
-      
       const { data: counsellorData, error: counsellorError } = await supabase
         .from("expert_counsellors")
         .select("*")
         .eq("is_profile_complete", true)
         .limit(1)
       
-      console.log('expert_counsellors test:', { counsellorData, counsellorError })
+      
       
       if (!counsellorError) {
         // Use expert_counsellors table
-        console.log('=== DEBUG: Using expert_counsellors table ===')
+        
         
         let query = supabase
           .from("expert_counsellors")
@@ -102,7 +91,7 @@ export async function GET(request: NextRequest) {
         // Join with profiles table to filter by status
         query = query.eq("profiles.status", "approved")
         
-        console.log('=== DEBUG: Using proper counselling filter with profiles join ===')
+        
         
         // Apply mode filter - handle specialties properly for PostgreSQL arrays
         if (actualMode !== 'all') {
@@ -120,7 +109,7 @@ export async function GET(request: NextRequest) {
           query = query.gte("price_per_minute", minPrice)
         }
         
-        if (maxPrice < 5000) {
+        if (maxPrice < 1000) {
           query = query.lte("price_per_minute", maxPrice)
         }
         
@@ -138,12 +127,12 @@ export async function GET(request: NextRequest) {
         const result = await query
         data = result.data
         error = result.error
-        console.log('=== DEBUG: expert_counsellors query result ===', { data, error })
-        console.log('=== DEBUG: Number of counsellors found ===', data?.length || 0)
+        
+        
         
       } else {
         // Try profiles table with counsellor role as fallback
-        console.log('=== DEBUG: Trying profiles table for counsellors ===')
+        
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
           .select("*")
@@ -151,11 +140,11 @@ export async function GET(request: NextRequest) {
           .eq("role", "counsellor")
           .limit(1)
         
-        console.log('profiles counsellor test:', { profilesData, profilesError })
+        
         
         if (!profilesError) {
           // Use profiles table
-          console.log('=== DEBUG: Using profiles table for counsellors ===')
+          
           let query = supabase
             .from("profiles")
             .select("*")
@@ -172,7 +161,7 @@ export async function GET(request: NextRequest) {
             query = query.gte("price_per_minute", minPrice)
           }
           
-          if (maxPrice < 5000) {
+          if (maxPrice < 1000) {
             query = query.lte("price_per_minute", maxPrice)
           }
           
@@ -190,39 +179,39 @@ export async function GET(request: NextRequest) {
           const result = await query
           data = result.data
           error = result.error
-          console.log('=== DEBUG: profiles counsellors query result ===', { data, error })
+          
         } else {
           // Check if there are any counsellors at all
-          console.log('=== DEBUG: Checking for any counsellors in profiles ===')
+          
           const { data: allCounsellors, error: allCounsellorsError } = await supabase
             .from("profiles")
             .select("*")
             .eq("role", "counsellor")
             .limit(5)
           
-          console.log('All counsellors in profiles:', { allCounsellors, allCounsellorsError })
+          
           
           // Also check what roles exist
-          console.log('=== DEBUG: Checking all roles in profiles ===')
+          
           const { data: allRoles, error: allRolesError } = await supabase
             .from("profiles")
             .select("role")
             .limit(10)
           
-          console.log('All roles in profiles:', { allRoles, allRolesError })
+          
           
           // Check if there are any approved profiles at all
-          console.log('=== DEBUG: Checking all approved profiles ===')
+          
           const { data: allApproved, error: allApprovedError } = await supabase
             .from("profiles")
             .select("role, status, full_name")
             .eq("status", "approved")
             .limit(10)
           
-          console.log('All approved profiles:', { allApproved, allApprovedError })
+          
           
           // As a fallback, return some sample data or empty with proper message
-          console.log('=== DEBUG: No counsellors found, trying fallback to approved profiles ===')
+          
           
           // Try to get approved profiles and treat them as counsellors for testing
           const { data: approvedProfiles, error: approvedError } = await supabase
@@ -231,7 +220,7 @@ export async function GET(request: NextRequest) {
             .eq("status", "approved")
             .limit(10)
           
-          console.log('Approved profiles for fallback:', { approvedProfiles, approvedError })
+          
           
           if (!approvedError && approvedProfiles && approvedProfiles.length > 0) {
             // Transform approved profiles to counsellor format
@@ -245,9 +234,9 @@ export async function GET(request: NextRequest) {
               price_per_minute: profile.price_per_minute || 50,
               hourly_rate: profile.hourly_rate || 3000
             }))
-            console.log('=== DEBUG: Using approved profiles as counsellors ===')
+            
           } else {
-            console.log('=== DEBUG: No approved profiles found, returning empty array ===')
+            
             data = []
           }
           error = null
@@ -255,7 +244,7 @@ export async function GET(request: NextRequest) {
       }
     } else if (service === 'yoga') {
       // Handle yoga service - try expert_yoga table first
-      console.log('=== DEBUG: Trying expert_yoga table for yoga ===')
+      
       
       const { data: yogaData, error: yogaError } = await supabase
         .from("expert_yoga")
@@ -263,11 +252,11 @@ export async function GET(request: NextRequest) {
         .eq("is_profile_complete", true)
         .limit(1)
       
-      console.log('expert_yoga test:', { yogaData, yogaError })
+      
       
       if (!yogaError) {
         // Use expert_yoga table
-        console.log('=== DEBUG: Using expert_yoga table ===')
+        
         
         let query = supabase
           .from("expert_yoga")
@@ -296,7 +285,7 @@ export async function GET(request: NextRequest) {
           query = query.gte("price_per_minute", minPrice)
         }
         
-        if (maxPrice < 5000) {
+        if (maxPrice < 1000) {
           query = query.lte("price_per_minute", maxPrice)
         }
         
@@ -317,7 +306,7 @@ export async function GET(request: NextRequest) {
         
       } else {
         // Try profiles table as fallback
-        console.log('=== DEBUG: Trying profiles table for yoga ===')
+        
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
           .select("*")
@@ -325,7 +314,7 @@ export async function GET(request: NextRequest) {
           .eq("specialization", "yoga_trainer")
           .limit(1)
         
-        console.log('profiles yoga test:', { profilesData, profilesError })
+        
         
         if (!profilesError) {
           // Use profiles table
@@ -345,7 +334,7 @@ export async function GET(request: NextRequest) {
             query = query.gte("price_per_minute", minPrice)
           }
           
-          if (maxPrice < 5000) {
+          if (maxPrice < 1000) {
             query = query.lte("price_per_minute", maxPrice)
           }
           
@@ -367,7 +356,7 @@ export async function GET(request: NextRequest) {
       }
     } else if (service === 'meditation') {
       // Handle meditation service - try expert_meditation table first
-      console.log('=== DEBUG: Trying expert_meditation table for meditation ===')
+      
       
       const { data: meditationData, error: meditationError } = await supabase
         .from("expert_meditation")
@@ -375,11 +364,11 @@ export async function GET(request: NextRequest) {
         .eq("is_profile_complete", true)
         .limit(1)
       
-      console.log('expert_meditation test:', { meditationData, meditationError })
+      
       
       if (!meditationError) {
         // Use expert_meditation table
-        console.log('=== DEBUG: Using expert_meditation table ===')
+        
         
         let query = supabase
           .from("expert_meditation")
@@ -408,7 +397,7 @@ export async function GET(request: NextRequest) {
           query = query.gte("price_per_minute", minPrice)
         }
         
-        if (maxPrice < 5000) {
+        if (maxPrice < 1000) {
           query = query.lte("price_per_minute", maxPrice)
         }
         
@@ -429,7 +418,7 @@ export async function GET(request: NextRequest) {
         
       } else {
         // Try profiles table as fallback
-        console.log('=== DEBUG: Trying profiles table for meditation ===')
+        
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
           .select("*")
@@ -437,7 +426,7 @@ export async function GET(request: NextRequest) {
           .eq("role", "expert")
           .limit(1)
         
-        console.log('profiles meditation test:', { profilesData, profilesError })
+        
         
         if (!profilesError) {
           // Use profiles table
@@ -457,7 +446,7 @@ export async function GET(request: NextRequest) {
             query = query.gte("price_per_minute", minPrice)
           }
           
-          if (maxPrice < 5000) {
+          if (maxPrice < 1000) {
             query = query.lte("price_per_minute", maxPrice)
           }
           
@@ -479,18 +468,18 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Handle astrology service (original logic)
-      console.log('=== DEBUG: Trying expert_astrologers table ===')
+      
       const { data: expertData, error: expertError } = await supabase
         .from("expert_astrologers")
         .select("*")
         .eq("is_profile_complete", true)
         .limit(1)
       
-      console.log('expert_astrologers test:', { expertData, expertError })
+      
       
       if (!expertError) {
         // Use expert_astrologers table
-        console.log('=== DEBUG: Using expert_astrologers table ===')
+        
         
         let query = supabase
           .from("expert_astrologers")
@@ -519,7 +508,7 @@ export async function GET(request: NextRequest) {
           query = query.gte("price_per_minute", minPrice)
         }
         
-        if (maxPrice < 5000) {
+        if (maxPrice < 1000) {
           query = query.lte("price_per_minute", maxPrice)
         }
         
@@ -545,7 +534,7 @@ export async function GET(request: NextRequest) {
         
       } else {
         // Try profiles table as fallback
-        console.log('=== DEBUG: Trying profiles table as fallback ===')
+        
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
           .select("*")
@@ -553,7 +542,7 @@ export async function GET(request: NextRequest) {
           .eq("role", "astrologer")
           .limit(1)
         
-        console.log('profiles test:', { profilesData, profilesError })
+        
         
         if (!profilesError) {
           // Use profiles table
@@ -573,7 +562,7 @@ export async function GET(request: NextRequest) {
             query = query.gte("price_per_minute", minPrice)
           }
           
-          if (maxPrice < 5000) {
+          if (maxPrice < 1000) {
             query = query.lte("price_per_minute", maxPrice)
           }
         
@@ -595,18 +584,18 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    console.log('=== DEBUG: Query Results ===')
-    console.log('Data:', data)
-    console.log('Error:', error)
-    console.log('Data length:', data?.length || 0)
+    
+    
+    
+    
     
     if (error) {
-      console.error('Database error:', error)
+      
       throw new Error(`Database query failed: ${error.message}`)
     }
     
     if (!data || data.length === 0) {
-      console.log('No experts found, returning empty array')
+      
       return NextResponse.json({
         success: true,
         data: [],
@@ -633,9 +622,9 @@ export async function GET(request: NextRequest) {
       ...expert
     }))
     
-    console.log('=== DEBUG: Final Results ===')
-    console.log('Mapped experts:', mappedExperts)
-    console.log('Total count:', mappedExperts.length)
+    
+    
+    
     
     return NextResponse.json({
       success: true,
@@ -644,12 +633,6 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('=== DEBUG: Error Fetching Experts ===')
-    console.error('Error:', error)
-    console.error('Error type:', typeof error)
-    console.error('Error message:', (error as any)?.message)
-    console.error('Error stack:', (error as any)?.stack)
-    
     return NextResponse.json(
       { 
         success: false, 

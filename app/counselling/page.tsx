@@ -27,7 +27,7 @@ export default function CounsellingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [selectedMode, setSelectedMode] = useState('all')
-  const [priceRange, setPriceRange] = useState([0, 5000])
+  const [priceRange, setPriceRange] = useState([0, 1000])
   const [sortBy, setSortBy] = useState('recommended')
   const [showFilters, setShowFilters] = useState(false)
   const [showPriceModal, setShowPriceModal] = useState(false)
@@ -105,7 +105,7 @@ export default function CounsellingPage() {
         throw new Error(result.details || 'Failed to fetch counsellors')
       }
     } catch (err) {
-      console.error('Error fetching counsellors:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to fetch counsellors')
     } finally {
       setLoading(false)
@@ -229,14 +229,14 @@ export default function CounsellingPage() {
                         <input
                           type="range"
                           min="0"
-                          max="5000"
+                          max="1000"
                           value={priceRange[1]}
                           onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                           className="w-full accent-[#fdce20]"
                         />
                         <div className="flex justify-between text-xs text-gray-400 mt-2">
                           <span>₹0</span>
-                          <span>₹5000</span>
+                          <span>₹1000</span>
                         </div>
                       </div>
                     )}
@@ -352,7 +352,7 @@ export default function CounsellingPage() {
                     <input
                       type="range"
                       min="0"
-                      max="5000"
+                      max="1000"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                       className="w-24"

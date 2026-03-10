@@ -42,7 +42,7 @@ export default function ReviewPrompt({ appointment, onReviewSubmitted }: ReviewP
       setShowReviewForm(false)
       onReviewSubmitted?.()
     } catch (error) {
-      console.error('Error submitting review:', error)
+      
     } finally {
       setIsSubmitting(false)
     }

@@ -4,15 +4,15 @@ export async function POST(request: Request) {
   try {
     const { expert_id, user_id, type, message, appointment_id } = await request.json()
     
-    console.log('=== DEBUG: Creating Notification ===')
-    console.log('Data:', { expert_id, user_id, type, message, appointment_id })
+    
+    
 
     // First, check if expert_notifications table exists
     let notificationData = null
     let notificationError = null
     
     try {
-      console.log('=== DEBUG: Trying expert_notifications table ===')
+      
       const { data, error } = await supabase
         .from('expert_notifications')
         .insert({
@@ -27,24 +27,24 @@ export async function POST(request: Request) {
         .select()
         .single()
 
-      console.log('expert_notifications result:', { data, error })
+      
       
       if (!error) {
         notificationData = data
         notificationError = null
       } else {
         notificationError = error
-        console.log('expert_notifications failed, trying fallback')
+        
       }
     } catch (tableError) {
-      console.log('expert_notifications table doesn\'t exist, trying fallback')
+      
       notificationError = tableError
     }
 
     // If expert_notifications failed, try notifications table as fallback
     if (notificationError) {
       try {
-        console.log('=== DEBUG: Trying notifications table as fallback ===')
+        
         const { data, error } = await supabase
           .from('notifications')
           .insert({
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
           .select()
           .single()
 
-        console.log('notifications fallback result:', { data, error })
+        
         
         if (!error) {
           notificationData = data
@@ -68,13 +68,13 @@ export async function POST(request: Request) {
           notificationError = error
         }
       } catch (fallbackError) {
-        console.log('notifications table also failed')
+        
         notificationError = fallbackError
       }
     }
 
     if (notificationError) {
-      console.error('All notification methods failed:', notificationError)
+      
       // Don't fail the booking process, just log the error
       return Response.json({ 
         success: true, 
@@ -83,14 +83,14 @@ export async function POST(request: Request) {
       })
     }
 
-    console.log('✅ Notification created successfully:', notificationData)
+    
     return Response.json({ 
       success: true, 
       notification: notificationData 
     })
     
   } catch (error) {
-    console.error('Error in notifications API:', error)
+    
     // Don't fail the booking process
     return Response.json({ 
       success: true, 
@@ -117,13 +117,13 @@ export async function GET(request: Request) {
       .limit(50)
 
     if (error) {
-      console.error('Error fetching notifications:', error)
+      
       return Response.json({ error: 'Failed to fetch notifications' }, { status: 500 })
     }
 
     return Response.json({ notifications: data })
   } catch (error) {
-    console.error('Error in notifications GET API:', error)
+    
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

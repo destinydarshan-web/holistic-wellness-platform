@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
 
       setUsers(usersWithEmails)
     } catch (error) {
-      console.error('Error loading users:', error)
+      
       setError('Failed to load users')
     } finally {
       setIsLoading(false)
@@ -102,7 +102,7 @@ export default function AdminUsersPage() {
       if (error) throw error
       await loadUsers()
     } catch (error) {
-      console.error('Error updating user role:', error)
+      
       setError('Failed to update user role')
     } finally {
       setIsLoading(false)
@@ -120,7 +120,7 @@ export default function AdminUsersPage() {
       if (error) throw error
       await loadUsers()
     } catch (error) {
-      console.error('Error updating user status:', error)
+      
       setError('Failed to update user status')
     } finally {
       setIsLoading(false)

@@ -27,7 +27,7 @@ export default function AstrologyPage() {
   const [error, setError] = useState<string | null>(null)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [selectedMode, setSelectedMode] = useState('all')
-  const [priceRange, setPriceRange] = useState([0, 5000])
+  const [priceRange, setPriceRange] = useState([0, 1000])
   const [sortBy, setSortBy] = useState('recommended')
   const [showFilters, setShowFilters] = useState(false)
   const [showPriceModal, setShowPriceModal] = useState(false)
@@ -83,58 +83,58 @@ export default function AstrologyPage() {
       setLoading(true)
       setError(null)
       
+      // Add cache-busting timestamp
+      const timestamp = Date.now()
       const params = new URLSearchParams({
         onlineOnly: isOnlineOnly.toString(),
         mode: selectedMode,
         minPrice: priceRange[0].toString(),
         maxPrice: priceRange[1].toString(),
-        sortBy: sortBy
+        sortBy: sortBy,
+        t: timestamp.toString()
       })
       
-      console.log('=== DEBUG: Frontend Fetch ===')
-      console.log('Fetching URL:', `/api/experts?${params}`)
+      
+      
       
       const response = await fetch(`/api/experts?${params}`)
       
-      console.log('=== DEBUG: API Response Status ===')
-      console.log('Response status:', response.status)
-      console.log('Response ok:', response.ok)
-      console.log('Response headers:', response.headers)
+      
+      
+      
+      
       
       if (!response.ok) {
         const errorText = await response.text()
-        console.log('=== DEBUG: API Error Response ===')
-        console.log('Error text:', errorText)
+        
+        
         throw new Error(`Failed to fetch experts: ${response.status} ${errorText}`)
       }
       
       const result = await response.json()
       
-      console.log('=== DEBUG: Frontend Response ===')
-      console.log('Full response:', result)
-      console.log('Success:', result.success)
-      console.log('Data:', result.data)
-      console.log('Data length:', result.data?.length || 0)
-      console.log('Error:', result.error)
+      
+      
+      
+      
+      
+      
       
       // Log approved astrologers only
       if (result.success && result.data) {
-        console.log('=== DEBUG: Approved Astrologers Only ===')
-        console.log('Approved astrologers:', result.data)
-        console.log('Specializations:', result.data.map((e: any) => e.specialization))
-        console.log('Statuses:', result.data.map((e: any) => e.status))
+        const filteredData = result.data
+          .filter((e: any) => e.specialization)
+          .filter((e: any) => e.status)
       }
       
       if (result.success) {
-        console.log('=== DEBUG: Setting Experts State ===')
-        console.log('Experts fetched:', result.data)
         setExperts(result.data || [])
       } else {
         throw new Error(result.error || 'Failed to fetch experts')
       }
     } catch (err) {
-      console.log('=== DEBUG: Fetch Error ===')
-      console.error('Error:', err)
+      
+      
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
@@ -339,14 +339,14 @@ export default function AstrologyPage() {
                         <input
                           type="range"
                           min="0"
-                          max="5000"
+                          max="1000"
                           value={priceRange[1]}
                           onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                           className="w-full accent-yellow-500"
                         />
                         <div className="flex justify-between text-xs text-gray-400 mt-2">
                           <span>₹0</span>
-                          <span>₹5000</span>
+                          <span>₹1000</span>
                         </div>
                       </div>
                     )}
@@ -462,7 +462,7 @@ export default function AstrologyPage() {
                       <input
                         type="range"
                         min="0"
-                        max="5000"
+                        max="1000"
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                         className="w-24"

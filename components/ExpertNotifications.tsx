@@ -84,7 +84,7 @@ export default function ExpertNotifications() {
         setUnreadCount(enrichedNotifications.filter((n: Notification) => !n.read).length)
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error)
+      
     } finally {
       setLoading(false)
     }
@@ -136,7 +136,7 @@ export default function ExpertNotifications() {
         .eq('id', notificationId)
 
       if (error) {
-        console.error('Error marking notification as read:', error)
+        
         return
       }
 
@@ -145,7 +145,7 @@ export default function ExpertNotifications() {
       )
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
-      console.error('Error marking notification as read:', error)
+      
     }
   }
 
@@ -158,7 +158,7 @@ export default function ExpertNotifications() {
         .eq('read', false)
 
       if (error) {
-        console.error('Error marking all notifications as read:', error)
+        
         return
       }
 
@@ -167,7 +167,7 @@ export default function ExpertNotifications() {
       )
       setUnreadCount(0)
     } catch (error) {
-      console.error('Error marking all notifications as read:', error)
+      
     }
   }
 
@@ -179,7 +179,7 @@ export default function ExpertNotifications() {
         .eq('id', notificationId)
 
       if (error) {
-        console.error('Error deleting notification:', error)
+        
         return
       }
 
@@ -189,7 +189,7 @@ export default function ExpertNotifications() {
         setUnreadCount(prev => Math.max(0, prev - 1))
       }
     } catch (error) {
-      console.error('Error deleting notification:', error)
+      
     }
   }
 
@@ -201,14 +201,14 @@ export default function ExpertNotifications() {
         .eq('expert_id', user!.id)
 
       if (error) {
-        console.error('Error clearing all notifications:', error)
+        
         return
       }
 
       setNotifications([])
       setUnreadCount(0)
     } catch (error) {
-      console.error('Error clearing all notifications:', error)
+      
     }
   }
 

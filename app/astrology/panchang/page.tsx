@@ -323,7 +323,7 @@ export default function PanchangPage() {
           })
           
         } catch (error) {
-          console.warn(`Failed to fetch data for ${dateStr}:`, error)
+          
           // Fallback to calculation if API fails
           const fallbackDate = calculateFallbackDate(currentDate)
           dates.push(fallbackDate)
@@ -335,7 +335,7 @@ export default function PanchangPage() {
       setRealAuspiciousDates(sortedDates)
       
     } catch (error) {
-      console.error('Error fetching auspicious dates:', error)
+      
       setAuspiciousDatesError('Failed to load auspicious dates. Using calculated data.')
       // Fallback to calculated data
       const fallbackDates = calculateAuspiciousDates()
@@ -711,7 +711,7 @@ export default function PanchangPage() {
         setExpertsLoading(true)
         setExpertsError(null)
         
-        console.log('[Panchang] Fetching experts...')
+        
         const response = await fetch('/api/experts')
         
         if (!response.ok) {
@@ -719,7 +719,7 @@ export default function PanchangPage() {
         }
         
         const result = await response.json()
-        console.log('[Panchang] Experts fetched:', result)
+        
         
         if (result.success && result.data) {
           // Filter experts who specialize in panchang/muhurat astrology
@@ -736,7 +736,7 @@ export default function PanchangPage() {
           throw new Error(result.error || 'Failed to fetch experts')
         }
       } catch (err) {
-        console.error('[Panchang] Error fetching experts:', err)
+        
         setExpertsError(err instanceof Error ? err.message : 'Failed to load experts')
       } finally {
         setExpertsLoading(false)

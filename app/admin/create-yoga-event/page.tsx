@@ -93,7 +93,7 @@ export default function CreateYogaEventPage() {
       
       setEvents(activeSection === 'upcoming' ? upcoming : past)
     } catch (err) {
-      console.error('Error fetching events:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to fetch events')
     }
   }
@@ -144,7 +144,7 @@ export default function CreateYogaEventPage() {
       // Refresh events list
       fetchEvents()
     } catch (err) {
-      console.error('Error deleting event:', err)
+      
       setError(err instanceof Error ? err.message : 'Failed to delete event')
     }
   }
@@ -186,11 +186,11 @@ export default function CreateYogaEventPage() {
         .eq('slug', editingEvent.slug)
 
       if (eventError) {
-        console.error('Supabase error:', eventError)
+        
         throw eventError
       }
 
-      console.log('Event updated successfully:', eventDataResult)
+      
       setSuccess('Yoga event updated successfully!')
       setTimeout(() => {
         setSuccess(null)
@@ -198,7 +198,7 @@ export default function CreateYogaEventPage() {
       }, 2000)
 
     } catch (error) {
-      console.error('Error updating yoga event:', error)
+      
       setError(error instanceof Error ? error.message : 'Failed to update yoga event')
     } finally {
       setIsSaving(false)
@@ -272,7 +272,7 @@ export default function CreateYogaEventPage() {
           .upload(fileName, file)
         
         if (error) {
-          console.error('Error uploading image:', error)
+          
           continue
         }
         
@@ -282,7 +282,7 @@ export default function CreateYogaEventPage() {
         
         imageUrls.push(publicUrl)
       } catch (error) {
-        console.error('Error uploading image:', error)
+        
       }
     }
     
@@ -352,11 +352,11 @@ export default function CreateYogaEventPage() {
       })
       
       // Create the yoga event
-      console.log('Event data before submission:', eventData)
-      console.log('Requirements array:', eventData.requirements)
-      console.log('Benefits array:', eventData.benefits)
-      console.log('Requirements type:', typeof eventData.requirements)
-      console.log('Benefits type:', typeof eventData.benefits)
+      
+      
+      
+      
+      
       
       const eventPayload = {
         slug,
@@ -381,27 +381,27 @@ export default function CreateYogaEventPage() {
         updated_at: new Date().toISOString()
       }
       
-      console.log('Event payload before insert:', eventPayload)
-      console.log('Payload requirements:', eventPayload.requirements)
-      console.log('Payload benefits:', eventPayload.benefits)
+      
+      
+      
       
       const { data: eventDataResult, error: eventError } = await supabase
         .from('yoga_events')
         .insert(eventPayload)
 
       if (eventError) {
-        console.error('Supabase error:', eventError)
+        
         throw eventError
       }
 
-      console.log('Event created successfully:', eventDataResult)
+      
       setSuccess('Yoga event created successfully!')
       setTimeout(() => {
         router.push('/yoga')
       }, 2000)
 
     } catch (error) {
-      console.error('Error creating yoga event:', error)
+      
       setError(error instanceof Error ? error.message : 'Failed to create yoga event')
     } finally {
       setIsSaving(false)

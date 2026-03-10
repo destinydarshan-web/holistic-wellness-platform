@@ -56,29 +56,29 @@ export default function ExpertEarningsPage() {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        console.log('=== DEBUG: No user found, redirecting to login ===')
+        
         router.push('/login')
         return
       }
       
       if (!profile) {
-        console.log('=== DEBUG: No profile found, waiting for profile load ===')
+        
         return
       }
       
       if (profile.role !== 'expert' && profile.role !== 'astrologer') {
-        console.log('=== DEBUG: User not expert/astrologer, redirecting to dashboard ===')
+        
         router.push('/dashboard')
         return
       }
 
       if (profile.status !== 'approved') {
-        console.log('=== DEBUG: Expert not approved, redirecting to account-under-review ===')
+        
         router.push('/account-under-review')
         return
       }
 
-      console.log('=== DEBUG: Expert authenticated, loading earnings data ===')
+      
       loadEarningsData()
     }
   }, [user, profile, loading, router])
@@ -87,7 +87,7 @@ export default function ExpertEarningsPage() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (earningsLoading) {
-        console.log('=== DEBUG: Earnings loading timeout (20s), setting to false ===')
+        // Timeout reached, setting to false
         setEarningsLoading(false)
         // Set empty state to show something to the user
         setEarnings([])
@@ -111,7 +111,7 @@ export default function ExpertEarningsPage() {
   // Handle filter changes separately
   useEffect(() => {
     if (user && profile && !loading && !earningsLoading) {
-      console.log('=== DEBUG: Filter changed, reloading earnings data ===')
+      
       loadEarningsData()
     }
   }, [filter.period, filter.status])
@@ -120,7 +120,7 @@ export default function ExpertEarningsPage() {
   useEffect(() => {
     if (!user?.id || loading) return
 
-    console.log('=== DEBUG: Setting up real-time earnings listener ===')
+    
     
     const channel = supabase
       .channel('expert-earnings-updates')
@@ -133,10 +133,10 @@ export default function ExpertEarningsPage() {
           filter: `expert_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('=== DEBUG: Session update received ===', payload)
+          
           // When any session is updated for this expert, refresh earnings
           if (payload.new?.expert_id === user.id && payload.new?.status === 'completed') {
-            console.log('=== DEBUG: Session completed, refreshing earnings ===')
+            
             loadEarningsData()
           }
         }
@@ -144,7 +144,7 @@ export default function ExpertEarningsPage() {
       .subscribe()
 
     return () => {
-      console.log('=== DEBUG: Cleaning up earnings listener ===')
+      
       supabase.removeChannel(channel)
     }
   }, [user?.id, loading])
@@ -152,11 +152,11 @@ export default function ExpertEarningsPage() {
   const loadEarningsData = async () => {
     try {
       setEarningsLoading(true)
-      console.log('=== DEBUG: Loading Expert Earnings Data ===')
+      
 
       // Check if user is available
       if (!user?.id) {
-        console.error('=== DEBUG: No user ID available ===')
+        
         setEarningsLoading(false)
         return
       }
@@ -169,7 +169,7 @@ export default function ExpertEarningsPage() {
 
       while (retryCount < maxRetries && !sessions) {
         try {
-          console.log(`=== DEBUG: Database query attempt ${retryCount + 1} ===`)
+          
           
           // Simplified query for better performance
           const result = await supabase
@@ -190,20 +190,20 @@ export default function ExpertEarningsPage() {
           })
 
           if (sessionsError) {
-            console.log(`=== DEBUG: Query attempt ${retryCount + 1} failed ===`, sessionsError)
+            
             sessionsError = sessionsError
             retryCount++
             
             if (retryCount < maxRetries) {
-              console.log(`=== DEBUG: Retrying in 2 seconds... ===`)
+              
               await new Promise(resolve => setTimeout(resolve, 2000))
             }
           } else {
-            console.log('=== DEBUG: Query successful ===')
+            
             break
           }
         } catch (error) {
-          console.error(`=== DEBUG: Query attempt ${retryCount + 1} error ===`, error)
+          
           if (retryCount < maxRetries - 1) {
             await new Promise(resolve => setTimeout(resolve, 1000))
             retryCount++
@@ -212,7 +212,7 @@ export default function ExpertEarningsPage() {
       }
 
       if (sessionsError) {
-        console.error('=== DEBUG: Error loading sessions ===', sessionsError)
+        
         // Set empty state on error
         setEarnings([])
         setSummary({
@@ -229,7 +229,7 @@ export default function ExpertEarningsPage() {
         return
       }
 
-      console.log('=== DEBUG: Sessions loaded for earnings ===', sessions?.length || 0)
+      
 
       // Fetch expert transactions separately
       const { data: expertTransactions, error: transactionsError } = await supabase
@@ -259,7 +259,7 @@ export default function ExpertEarningsPage() {
                 duration = Math.ceil((endTime.getTime() - startTime.getTime()) / 60000)
               }
             } catch (dateError) {
-              console.error('=== DEBUG: Date parsing error ===', dateError)
+              
             }
           }
           
@@ -320,13 +320,13 @@ export default function ExpertEarningsPage() {
             } else {
               // No matching transaction found - this session has no earnings
               transactionAmount = 0
-              console.log('=== DEBUG: No transaction found for session ===', session.id)
+              
             }
           }
           
           // Only process sessions that have matching transactions
           if (transactionAmount === 0) {
-            console.log('=== DEBUG: Skipping session with no transaction ===', session.id)
+            
             return null
           }
 
@@ -356,12 +356,12 @@ export default function ExpertEarningsPage() {
             status: session.status === 'completed' ? 'completed' : 'pending'
           }
         } catch (error) {
-          console.error('=== DEBUG: Error processing session ===', session.id, error)
+          
           return null
         }
       }).filter(Boolean) as EarningRecord[] || []
 
-      console.log('=== DEBUG: Processed earnings records ===', earningsRecords.length)
+      
 
       // Filter based on selected period
       const filteredEarnings = filterEarningsByPeriod(earningsRecords, filter.period)
@@ -404,13 +404,13 @@ export default function ExpertEarningsPage() {
 
       const growth = lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : 0
 
-      console.log('=== DEBUG: Earnings Summary ===')
-      console.log('Total earnings:', totalEarnings)
-      console.log('Net earnings:', netEarnings)
-      console.log('Total sessions:', totalSessions)
-      console.log('This month:', thisMonth)
-      console.log('Last month:', lastMonth)
-      console.log('Growth:', growth)
+      
+      
+      
+      
+      
+      
+      
 
       setEarnings(statusFilteredEarnings)
       setSummary({
@@ -425,7 +425,7 @@ export default function ExpertEarningsPage() {
         growth
       })
     } catch (error) {
-      console.error('=== DEBUG: Error in loadEarningsData ===', error)
+      
       // Set empty state on any error
       setEarnings([])
       setSummary({
@@ -545,7 +545,7 @@ export default function ExpertEarningsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  console.log('=== DEBUG: Manual refresh clicked ===')
+                  
                   loadEarningsData()
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 transition-colors border border-white/20"

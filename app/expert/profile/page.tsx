@@ -146,7 +146,7 @@ export default function ExpertProfilePage() {
     
     // Add timeout fallback to prevent infinite loading
     const timeout = setTimeout(() => {
-      console.log('=== DEBUG: Loading timeout, forcing loading to false ===')
+      
       setLoading(false)
     }, 5000) // 5 second timeout
 
@@ -155,22 +155,18 @@ export default function ExpertProfilePage() {
 
   const loadProfile = async () => {
     try {
-      console.log('=== DEBUG: Loading Expert Profile ===')
+      
       setLoading(true)
       
       if (!user?.id) {
-        console.log('=== DEBUG: No user ID, returning ===')
+        
         return
       }
       
-      console.log('=== DEBUG: Fetching profile for user:', user.id)
+      
       
       // Determine table name based on specialization
       let tableName = ""
-      console.log('=== DEBUG: Profile object (fetch) ===', profile)
-      console.log('=== DEBUG: Profile role (fetch) ===', profile?.role)
-      console.log('=== DEBUG: Profile specialization (fetch) ===', profile?.specialization)
-      console.log('=== DEBUG: Profile specialization type (fetch) ===', typeof profile?.specialization)
       
       if (profile?.specialization === 'counsellor') {
         tableName = "expert_counsellors"
@@ -189,7 +185,7 @@ export default function ExpertProfilePage() {
         tableName = "expert_astrologers" // Default fallback
       }
       
-      console.log('=== DEBUG: Fetching from table ===', tableName)
+      
       
       let { data, error } = await supabase
         .from(tableName)
@@ -197,13 +193,13 @@ export default function ExpertProfilePage() {
         .eq("id", user.id)
         .single()
 
-      console.log('=== DEBUG: Profile fetch result ===')
-      console.log('Data:', data)
-      console.log('Error:', error)
+      
+      
+      
 
       // If error and it's a counsellor or yoga trainer, try the other tables as fallback
       if (error && (profile?.specialization === 'counsellor' || profile?.specialization === 'yoga_trainer')) {
-        console.log(`=== DEBUG: Error fetching from ${tableName}, trying fallback tables ===`)
+        
         
         // Try expert_astrologers as fallback
         const { data: fallbackData, error: fallbackError } = await supabase
@@ -212,15 +208,15 @@ export default function ExpertProfilePage() {
           .eq("id", user.id)
           .single()
         
-        console.log('=== DEBUG: Fallback fetch result ===')
-        console.log('Fallback Data:', fallbackData)
-        console.log('Fallback Error:', fallbackError)
+        
+        
+        
         
         if (!fallbackError && fallbackData) {
           // Use fallback data
           data = fallbackData
           error = null
-          console.log('=== DEBUG: Using fallback data from expert_astrologers ===')
+          
         } else if (profile?.specialization === 'counsellor') {
           // For counsellors, also try expert_counsellors
           const { data: secondFallback, error: secondFallbackError } = await supabase
@@ -232,7 +228,7 @@ export default function ExpertProfilePage() {
           if (!secondFallbackError && secondFallback) {
             data = secondFallback
             error = null
-            console.log('=== DEBUG: Using second fallback data from expert_counsellors ===')
+            
           }
         }
       }
@@ -240,34 +236,28 @@ export default function ExpertProfilePage() {
       if (error) {
         // Only log error if it's not a "no rows found" error
         if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
-          console.error('=== DEBUG: Error loading profile ===', error)
-          console.log('=== DEBUG: Error details ===', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          })
+          // Handle other errors
         } else {
           // Expected case - profile doesn't exist yet
-          console.log('=== DEBUG: Profile does not exist yet (expected) ===')
+          // Profile will be created
         }
         
         // Handle different error types
         if (error.code === 'PGRST116') {
           // No rows found - profile doesn't exist yet
-          console.log('=== DEBUG: Profile does not exist yet, using defaults ===')
+          
         } else if (error.message?.includes('No rows found')) {
           // Profile doesn't exist in this table yet
-          console.log('=== DEBUG: Profile not found in table, using defaults ===')
+          
         } else {
           // Other error
-          console.error('=== DEBUG: Database error ===', error)
+          
         }
       }
 
       if (data) {
-        console.log('=== DEBUG: Setting profile data ===')
-        console.log('=== DEBUG: Raw data from DB ===', data)
+        
+        
         
         // Map database fields to our interface
         const mappedData: ExpertProfile = {
@@ -283,10 +273,10 @@ export default function ExpertProfilePage() {
           is_online: data.is_online || false
         }
         
-        console.log('=== DEBUG: Mapped profile data ===', mappedData)
+        
         setProfileData(mappedData)
       } else {
-        console.log('=== DEBUG: No profile data found, using defaults ===')
+        
         // Profile doesn't exist yet, keep default values
         setProfileData(prev => ({
           ...prev,
@@ -294,21 +284,21 @@ export default function ExpertProfilePage() {
         }))
       }
     } catch (error) {
-      console.error('=== DEBUG: Unexpected error in loadProfile ===', error)
+      
     } finally {
-      console.log('=== DEBUG: Setting loading to false ===')
+      
       setLoading(false)
     }
   }
 
   const handleSave = async () => {
     try {
-      console.log('=== DEBUG: Save button clicked ===')
+      
       setSaving(true)
       setSaveMessage(null)
 
       if (!user?.id) {
-        console.log('=== DEBUG: No user ID ===')
+        
         setSaveMessage({
           type: 'error',
           message: 'User not authenticated'
@@ -317,8 +307,8 @@ export default function ExpertProfilePage() {
         return
       }
 
-      console.log('=== DEBUG: Saving Expert Profile ===')
-      console.log('Profile data:', profileData)
+      
+      
 
       // Create update object with only existing fields
       const updateData: any = {
@@ -334,9 +324,9 @@ export default function ExpertProfilePage() {
       if (profileData.hourly_rate !== undefined) updateData.hourly_rate = profileData.hourly_rate
       if (profileData.specialties) {
         updateData.specialties = profileData.specialties
-        console.log('=== DEBUG: Specialties being saved ===', profileData.specialties)
-        console.log('=== DEBUG: Specialties type ===', typeof profileData.specialties)
-        console.log('=== DEBUG: Specialties length ===', profileData.specialties.length)
+        
+        
+        
       }
       if (profileData.avatar_url !== undefined) updateData.avatar_url = profileData.avatar_url
       if (profileData.is_online !== undefined) updateData.is_online = profileData.is_online
@@ -352,22 +342,22 @@ export default function ExpertProfilePage() {
       
       updateData.is_profile_complete = isComplete
       
-      console.log('=== DEBUG: Profile completeness check ===')
-      console.log('Display name:', !!profileData.display_name)
-      console.log('Bio:', !!profileData.bio)
-      console.log('Experience years:', profileData.experience_years !== undefined)
-      console.log('Price per minute:', profileData.price_per_minute !== undefined)
-      console.log('Specialties:', profileData.specialties?.length || 0)
-      console.log('Is complete:', isComplete)
+      
+      
+      
+      
+      
+      
+      
 
-      console.log('=== DEBUG: Update data ===', updateData)
+      
 
       // Determine table name based on specialization
       let tableName = ""
-      console.log('=== DEBUG: Profile object ===', profile)
-      console.log('=== DEBUG: Profile role ===', profile?.role)
-      console.log('=== DEBUG: Profile specialization ===', profile?.specialization)
-      console.log('=== DEBUG: Profile specialization type ===', typeof profile?.specialization)
+      
+      
+      
+      
       
       if (profile?.specialization === 'counsellor') {
         tableName = "expert_counsellors"
@@ -382,13 +372,13 @@ export default function ExpertProfilePage() {
         tableName = "expert_meditation"
       } else {
         // Default fallback - but this should not happen with proper role setup
-        console.warn('=== DEBUG: Unknown specialization, defaulting to expert_astrologers ===', profile?.specialization)
+        
         tableName = "expert_astrologers"
       }
       
       // Additional safeguard: Prevent counsellors from saving to expert_astrologers
       if (profile?.specialization === 'counsellor' && tableName === 'expert_astrologers') {
-        console.error('=== DEBUG: ERROR: Attempting to save counsellor to expert_astrologers table ===')
+        
         setSaveMessage({
           type: 'error',
           message: 'System error: Counsellors cannot be saved to astrologers table. Please contact support.'
@@ -397,7 +387,7 @@ export default function ExpertProfilePage() {
         return
       }
       
-console.log('=== DEBUG: Saving to table ===', tableName)
+
 
       const query = supabase
         .from(tableName)
@@ -409,14 +399,14 @@ console.log('=== DEBUG: Saving to table ===', tableName)
       const data = result.data
       const error = result.error
 
-      console.log('=== DEBUG: Save Response ===')
-      console.log('Data:', data)
-      console.log('Error:', error)
-      console.log('Specialties in saved data:', data?.specialties)
-      console.log('Specialties type in saved data:', typeof data?.specialties)
+      
+      
+      
+      
+      
 
       if (error) {
-        console.error('=== DEBUG: Save Error ===', error)
+        
         setSaveMessage({
           type: 'error',
           message: `Failed to save profile: ${error.message}`
@@ -425,7 +415,7 @@ console.log('=== DEBUG: Saving to table ===', tableName)
         return
       }
 
-      console.log('=== DEBUG: Profile saved successfully ===')
+      
       setSaveMessage({
         type: 'success',
         message: 'Profile saved successfully!'
@@ -435,17 +425,17 @@ console.log('=== DEBUG: Saving to table ===', tableName)
       setShowConfirmationModal(true)
       
       // Reload profile to verify the save
-      console.log('=== DEBUG: Reloading profile to verify save ===')
+      
       await loadProfile()
 
     } catch (err: any) {
-      console.error('=== DEBUG: Unexpected error in handleSave ===', err)
+      
       setSaveMessage({
         type: 'error',
         message: `Unexpected error: ${err.message || 'Unknown error'}`
       })
     } finally {
-      console.log('=== DEBUG: Setting saving to false ===')
+      
       setSaving(false)
     }
   }
@@ -458,8 +448,8 @@ console.log('=== DEBUG: Saving to table ===', tableName)
     setSaveMessage(null)
     
     try {
-      console.log('=== DEBUG: Starting Avatar Upload ===')
-      console.log('File:', file.name, 'Size:', file.size, 'Type:', file.type)
+      
+      
       
       // Validate file type
       if (!file.type.startsWith('image/')) {
@@ -496,8 +486,8 @@ console.log('=== DEBUG: Saving to table ===', tableName)
           return
         }
         
-        console.log('=== DEBUG: Storing avatar URL in database ===')
-        console.log('Original base64 length:', base64.length)
+        
+        
         
         // Store the original base64 (no compression to avoid corruption)
         // If needed for very large files, implement proper image compression
@@ -535,7 +525,7 @@ console.log('=== DEBUG: Saving to table ===', tableName)
             // Compress to JPEG with 0.7 quality
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7)
             
-            console.log('Compressed base64 length:', compressedBase64.length)
+            
             
             // Update profile with compressed avatar
             setProfileData(prev => ({
@@ -585,7 +575,7 @@ console.log('=== DEBUG: Saving to table ===', tableName)
       reader.readAsDataURL(file)
       
     } catch (error) {
-      console.error('Upload error:', error)
+      
       setSaveMessage({
         type: 'error',
         message: `Upload failed: ${error instanceof Error ? error.message : 'Unknown error occurred'}`

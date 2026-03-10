@@ -33,20 +33,22 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [notes, setNotes] = useState('')
+  const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const handleSessionStart = async (sessionType: 'chat' | 'voice' | 'video') => {
     if (!user?.id) {
-      console.log('User not authenticated')
+      setShowLoginModal(true)
       return
     }
 
-    console.log(`Starting ${sessionType} session with expert ${astrologer.id}`)
+    
     setLoading(sessionType)
 
     try {
       // Step A: Fetch wallet balance
-      console.log('Fetching wallet balance...')
-      console.log('User ID:', user.id)
+      
+      
       
       const { data: wallet, error: walletError } = await supabase
         .from("user_wallet")
@@ -54,10 +56,10 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         .eq("user_id", user.id)
         .maybeSingle()
 
-      console.log('Wallet fetch result:', { wallet, walletError })
+      
 
       if (walletError) {
-        console.error('Wallet fetch error:', walletError)
+        
         console.error('Error details:', {
           code: walletError.code,
           message: walletError.message,
@@ -68,19 +70,19 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         return
       }
 
-      console.log('Wallet data:', wallet)
-      console.log('Wallet balance:', wallet?.balance || 0)
+      
+      
 
       // Check minimum required balance
       const MINIMUM_BALANCE = 50
       const currentBalance = wallet?.balance || 0
       if (currentBalance < MINIMUM_BALANCE) {
-        console.log('Insufficient balance:', currentBalance, 'Required:', MINIMUM_BALANCE)
-        alert(`Insufficient wallet balance. Current: ₹${currentBalance}, Required: ₹${MINIMUM_BALANCE}`)
+        
+        setShowInsufficientFundsModal(true)
         setLoading(null)
         return
       }
-      console.log('Balance sufficient, creating session...')
+      
 
       // Step 2: Create session in live_sessions
       const { data: session, error: sessionError } = await supabase
@@ -96,12 +98,12 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         .single()
 
       if (sessionError) {
-        console.error('Session creation error:', sessionError)
+        
         alert('Failed to create session. Please try again.')
         setLoading(null)
         return
       }
-      console.log('Session created successfully:', session)
+      
 
       // Step 3: Redirect to appropriate live session page
       let redirectUrl = ''
@@ -116,11 +118,11 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
           redirectUrl = `/live/video/${session.id}`
           break
       }
-      console.log('Redirecting to:', redirectUrl)
+      
       router.push(redirectUrl)
 
     } catch (error) {
-      console.error('Unexpected error during session creation:', error)
+      
       alert('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(null)
@@ -164,7 +166,7 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       setShowConfirmationModal(true)
       
     } catch (error: any) {
-      console.error('Error preparing appointment confirmation:', error)
+      
       alert(`Failed to prepare appointment: ${error.message}`)
     }
   }
@@ -200,7 +202,7 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
 
       // Create notification for astrologer
       try {
-        console.log('=== DEBUG: Sending notification to astrologer ===')
+        
         const notificationResponse = await fetch('/api/notifications', {
           method: 'POST',
           headers: {
@@ -216,20 +218,20 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         })
 
         const notificationData = await notificationResponse.json()
-        console.log('Notification response:', notificationData)
+        
 
         if (notificationResponse.ok && notificationData.success) {
-          console.log('✅ Notification sent to astrologer successfully')
+          
           if (notificationData.warning) {
-            console.log('⚠️ Notification warning:', notificationData.warning)
+            
           }
         } else {
-          console.error('❌ Failed to send notification to astrologer')
-          console.error('Response status:', notificationResponse.status)
-          console.error('Response data:', notificationData)
+          
+          
+          
         }
       } catch (notificationError) {
-        console.error('Error sending notification to astrologer:', notificationError)
+        
       }
 
       // Close confirmation modal
@@ -242,7 +244,7 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
       showNotification('Appointment request sent! Waiting for expert confirmation.', 'success')
       
     } catch (error: any) {
-      console.error('Appointment booking error:', error)
+      
       showNotification(`Failed to book appointment: ${error.message}`, 'error')
     } finally {
       setLoading(null)
@@ -258,7 +260,8 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
+    <>
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-300">
       {/* Header - Avatar, Name */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
@@ -355,7 +358,13 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         
         {/* Appointment Button */}
         <button 
-          onClick={() => setShowAppointmentModal(true)}
+          onClick={() => {
+            if (!user?.id) {
+              setShowLoginModal(true)
+              return
+            }
+            setShowAppointmentModal(true)
+          }}
           disabled={loading === 'appointment'}
           className="w-full py-3 rounded-xl bg-gradient-to-r from-[#fdce20] to-amber-500 text-black font-semibold hover:from-[#fdce20]/90 hover:to-amber-500/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -565,5 +574,113 @@ export default function AstrologerCard({ astrologer }: AstrologerCardProps) {
         </div>
       )}
     </div>
+
+    {/* Insufficient Funds Modal - Outside card for proper screen centering */}
+    {showInsufficientFundsModal && (
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={() => setShowInsufficientFundsModal(false)}
+      >
+        <div 
+          className="bg-gradient-to-br from-[#1C1C24] to-[#2a2a3e] border border-[#fbcc1e]/20 rounded-2xl p-6 max-w-md w-full shadow-2xl shadow-[#fbcc1e]/10 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowInsufficientFundsModal(false)}
+            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          
+          {/* Icon */}
+          <div className="w-16 h-16 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
+          </div>
+          
+          {/* Title */}
+          <h3 className="text-xl font-semibold text-white text-center mb-2">
+            Insufficient Funds
+          </h3>
+          
+          {/* Message */}
+          <p className="text-white/70 text-center mb-6">
+            You have insufficient funds in your wallet to continue
+          </p>
+          
+          {/* Buttons */}
+          <div className="flex gap-3">
+            {/* Read Free Blogs */}
+            <button
+              onClick={() => {
+                setShowInsufficientFundsModal(false)
+                router.push('/blog')
+              }}
+              className="flex-1 px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-semibold"
+            >
+              Read Free Blogs
+            </button>
+            <button
+              onClick={() => {
+                setShowInsufficientFundsModal(false)
+                router.push('/dashboard')
+              }}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-[#fbcc1e] to-amber-500 text-black rounded-lg hover:from-[#fbcc1e]/90 hover:to-amber-500/90 transition-all font-semibold"
+            >
+              Add Funds
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Login Modal - For unauthorized users */}
+    {showLoginModal && (
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={() => setShowLoginModal(false)}
+      >
+        <div 
+          className="bg-gradient-to-br from-[#1C1C24] to-[#2a2a3e] border border-[#fbcc1e]/20 rounded-2xl p-6 max-w-md w-full shadow-2xl shadow-[#fbcc1e]/10 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowLoginModal(false)}
+            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          
+          {/* Icon */}
+          <div className="w-16 h-16 bg-gradient-to-br from-[#fbcc1e]/20 to-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-[#fbcc1e]" />
+          </div>
+          
+          {/* Title */}
+          <h3 className="text-xl font-semibold text-white text-center mb-2">
+            Authentication Required
+          </h3>
+          
+          {/* Message */}
+          <p className="text-white/70 text-center mb-6">
+            Log in to get started
+          </p>
+          
+          {/* Login Button */}
+          <button
+            onClick={() => {
+              setShowLoginModal(false)
+              router.push('/login?redirect=' + encodeURIComponent(window.location.pathname))
+            }}
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#fbcc1e] to-amber-500 text-black rounded-lg hover:from-[#fbcc1e]/90 hover:to-amber-500/90 transition-all font-semibold"
+          >
+            Log In
+          </button>
+        </div>
+      </div>
+    )}
+
+      </>
   )
 }

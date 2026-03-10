@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [data, setData] = useState<EngagementData | null>(null)
   const [selectedService, setSelectedService] = useState<string>('all')
   const [walletBalance, setWalletBalance] = useState<number>(0)
+  const [isJoinEnabled, setIsJoinEnabled] = useState<boolean>(true)
   const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'past'>('active')
   
   const services = ['all', 'astrology', 'counselling', 'yoga', 'meditation'] as const
@@ -634,7 +635,7 @@ export default function Dashboard() {
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-6xl mx-auto px-6 py-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, {user.email?.split('@')[0]}!
+              Hey, {user.email?.split('@')[0]}!
             </h1>
             <p className="text-gray-600">
               Manage your wellness journey and bookings
@@ -691,7 +692,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome back, {profile?.full_name || user.email?.split('@')[0]}!
+                Hey, {profile?.full_name || user.email?.split('@')[0]}!
               </h1>
               <p className="text-white/70">
                 Manage your wellness journey and bookings

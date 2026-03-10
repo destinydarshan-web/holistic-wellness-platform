@@ -80,7 +80,7 @@ export default function AppointmentsPage() {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('User appointment change received:', payload)
+          
           
           // Refresh appointments when changes occur
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -102,7 +102,7 @@ export default function AppointmentsPage() {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('User booking change received:', payload)
+          
           
           // Refresh appointments when changes occur
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -121,11 +121,11 @@ export default function AppointmentsPage() {
   const fetchAppointments = async () => {
     try {
       if (!user) {
-        console.log('=== DEBUG: No user found, skipping fetch ===')
+        
         return
       }
       
-      console.log('=== DEBUG: Fetching Appointments ===')
+      
       
       // First try to fetch appointments without expert relationship
       let { data: appointmentsData, error } = await supabase
@@ -136,11 +136,11 @@ export default function AppointmentsPage() {
         .order('appointment_time', { ascending: false })
 
       if (error) {
-        console.log('=== DEBUG: Appointments table error ===', error)
+        
         
         // If appointments table doesn't exist, try bookings table instead
         if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-          console.log('=== DEBUG: Trying bookings table instead ===')
+          
           
           const { data: bookingsData, error: bookingsError } = await supabase
             .from('bookings')
@@ -156,12 +156,12 @@ export default function AppointmentsPage() {
             .order('booking_time', { ascending: false })
 
           if (bookingsError) {
-            console.error('Error fetching bookings:', bookingsError)
+            
             return
           }
 
-          console.log('=== DEBUG: Bookings Data ===')
-          console.log('Bookings fetched:', bookingsData?.length || 0)
+          
+          
           
           // Transform bookings to look like appointments
           const appointmentsFromBookings = (bookingsData || []).map(booking => ({
@@ -182,19 +182,19 @@ export default function AppointmentsPage() {
           return
         }
         
-        console.error('Error fetching appointments:', error)
+        
         return
       }
 
-      console.log('=== DEBUG: Raw Appointments Data ===')
-      console.log('Appointments fetched:', appointmentsData?.length || 0)
-      console.log('Sample appointment data:', appointmentsData?.[0])
+      
+      
+      
       
       // If we have appointments, try to fetch expert info separately
       if (appointmentsData && appointmentsData.length > 0) {
         const expertIds = [...new Set(appointmentsData.map(apt => apt.expert_id).filter(Boolean))]
         
-        console.log('=== DEBUG: Extracted expert IDs ===', expertIds)
+        
         
         if (expertIds.length > 0) {
           // Try a simpler query first to see if the table exists
@@ -204,16 +204,16 @@ export default function AppointmentsPage() {
               .select('id, display_name')
               .limit(5)
 
-            console.log('=== DEBUG: All experts test ===', { testExperts, testExpertsError })
+            
 
             if (testExpertsError) {
-              console.log('=== DEBUG: Expert astrologers table error ===', testExpertsError)
+              
               // Set appointments without expert info if table doesn't exist
               setAppointments(appointmentsData || [])
               return
             }
 
-            console.log('=== DEBUG: Fetching experts for IDs ===', expertIds)
+            
             
             // Fetch experts from all possible tables
             const [astrologersData, counsellorsData, yogaData, meditationData] = await Promise.allSettled([
@@ -246,7 +246,7 @@ export default function AppointmentsPage() {
               allExperts.push(...meditationData.value.data.map(e => ({ ...e, type: 'meditation_expert' })))
             }
 
-            console.log('=== DEBUG: Combined experts ===', allExperts)
+            
 
             if (allExperts.length > 0) {
               const expertMap = allExperts.reduce((acc, expert) => {
@@ -259,16 +259,16 @@ export default function AppointmentsPage() {
                 expert: expertMap[appointment.expert_id] || null
               }))
 
-              console.log('=== DEBUG: Appointments with expert data ===', appointmentsWithExperts)
+              
               setAppointments(appointmentsWithExperts)
               return
             } else {
-              console.log('=== DEBUG: No experts found in any table ===')
+              
               setAppointments(appointmentsData || [])
               return
             }
           } catch (expertFetchError) {
-            console.log('=== DEBUG: Expert fetch exception ===', expertFetchError)
+            
             setAppointments(appointmentsData || [])
             return
           }
@@ -279,7 +279,7 @@ export default function AppointmentsPage() {
       setAppointments(appointmentsData || [])
       
     } catch (error) {
-      console.error('Error in fetchAppointments:', error)
+      
     }
   }
 
@@ -393,7 +393,7 @@ export default function AppointmentsPage() {
 
   const handleCancelAppointment = async (appointmentId: string) => {
     try {
-      console.log('=== DEBUG: Cancelling appointment ===', appointmentId)
+      
       
       // First try to update in appointments table
       let { error } = await supabase
@@ -406,7 +406,7 @@ export default function AppointmentsPage() {
 
       // If appointments table update fails, try bookings table
       if (error) {
-        console.log('=== DEBUG: Appointments table update failed, trying bookings table ===', error)
+        
         
         const { error: bookingsError } = await supabase
           .from('bookings')
@@ -417,19 +417,19 @@ export default function AppointmentsPage() {
           .eq('user_id', user?.id)
 
         if (bookingsError) {
-          console.error('Error cancelling appointment in both tables:', bookingsError)
+          
           alert('Failed to cancel appointment. Please try again.')
           return
         }
       }
 
-      console.log('✅ Appointment cancelled successfully:', appointmentId)
+      
       alert('Appointment cancelled successfully!')
       
       // Refresh appointments to show the updated status
       fetchAppointments()
     } catch (error) {
-      console.error('Error in handleCancelAppointment:', error)
+      
       alert('Failed to cancel appointment. Please try again.')
     }
   }

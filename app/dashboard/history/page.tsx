@@ -189,7 +189,7 @@ export default function HistoryPage() {
 
       setHistory(historyItems)
     } catch (error) {
-      console.error('Error fetching history:', error)
+      
     } finally {
       setLoading(false)
     }

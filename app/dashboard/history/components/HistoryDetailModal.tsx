@@ -71,7 +71,7 @@ export default function HistoryDetailModal({ isOpen, onClose, historyItem }: His
         }
       }
     } catch (error) {
-      console.error('Error fetching detail data:', error)
+      
     } finally {
       setLoading(false)
     }

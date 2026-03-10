@@ -57,7 +57,7 @@ export default function ExpertDashboard() {
             tableName = "expert_astrologers" // Default fallback
           }
           
-          console.log('=== DEBUG: Loading profile from table ===', tableName)
+          
           
           const { data, error } = await supabase
             .from(tableName)
@@ -68,10 +68,10 @@ export default function ExpertDashboard() {
           if (error) {
             // Check if table doesn't exist
             if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-              console.log(`${tableName} table does not exist yet - showing completion notice`)
+              
               setExpertProfile(null) // Will trigger completion notice
             } else {
-              console.error('Error loading expert profile:', error)
+              
               console.error('Error details:', {
                 message: error.message,
                 details: error.details,
@@ -80,11 +80,11 @@ export default function ExpertDashboard() {
               })
             }
           } else {
-            console.log('Expert profile loaded:', data)
+            
             setExpertProfile(data)
           }
         } catch (err) {
-          console.error('Unexpected error loading expert profile:', err)
+          
           // Set to null to show completion notice
           setExpertProfile(null)
         }
@@ -99,7 +99,7 @@ export default function ExpertDashboard() {
 
   const loadPendingSessions = async () => {
     try {
-      console.log('=== DEBUG: Loading Pending Appointments ===')
+      
       
       const { data, error } = await supabase
         .from('appointments')
@@ -109,20 +109,20 @@ export default function ExpertDashboard() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error loading pending appointments:', error)
+        
       } else {
-        console.log('Pending appointments found:', data)
+        
         // Enrich with user data
         const enrichedAppointments = await Promise.all(
           (data || []).map(async (appointment) => {
             if (appointment.user_id) {
-              console.log('=== DEBUG: Fetching user data for user_id ===', appointment.user_id)
-              console.log('=== DEBUG: Appointment data ===', appointment)
+              
+              
               
               try {
                 // First, let's check if user exists at all in auth.users
                 const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(appointment.user_id)
-                console.log('Auth user check:', { authUser, authError })
+                
                 
                 // Then check profiles table (note: profiles table doesn't have email column)
                 const { data: userData, error: userError } = await supabase
@@ -131,11 +131,9 @@ export default function ExpertDashboard() {
                   .eq('id', appointment.user_id)
                   .maybeSingle()
                 
-                console.log('Profile data result:', { userData, userError })
+                
                 
                 if (userError) {
-                  console.error('Error fetching user data:', userError)
-                  console.log('Error details:', JSON.stringify(userError, null, 2))
                   
                   // Try a broader query to see what's available
                   const { data: allProfiles, error: allError } = await supabase
@@ -143,7 +141,7 @@ export default function ExpertDashboard() {
                     .select('id, full_name, role')
                     .limit(5)
                   
-                  console.log('Sample profiles in database:', { allProfiles, allError })
+                  
                   
                   return {
                     ...appointment,
@@ -153,7 +151,7 @@ export default function ExpertDashboard() {
                 }
                 
                 if (!userData) {
-                  console.log('No profile found for user_id:', appointment.user_id)
+                  
                   // Try to get email from auth.users as fallback
                   const userEmail = (authUser as any)?.email || 'unknown@auth.com'
                   return {
@@ -169,7 +167,7 @@ export default function ExpertDashboard() {
                   user_email: (authUser as any)?.email || 'noemail@debug.com'
                 }
               } catch (fetchError) {
-                console.error('Unexpected error fetching user data:', fetchError)
+                
                 return {
                   ...appointment,
                   user_name: 'User (Exception)',
@@ -184,13 +182,13 @@ export default function ExpertDashboard() {
         setPendingSessions(enrichedAppointments)
       }
     } catch (err) {
-      console.error('Unexpected error loading pending appointments:', err)
+      
     }
   }
 
   const loadPendingLiveSessions = async () => {
     try {
-      console.log('=== DEBUG: Loading Pending Live Sessions ===')
+      
       
       const { data, error } = await supabase
         .from('live_sessions')
@@ -200,19 +198,19 @@ export default function ExpertDashboard() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error loading pending live sessions:', error)
+        
       } else {
-        console.log('Pending live sessions found:', data)
+        
         // Enrich with user data
         const enrichedSessions = await Promise.all(
           (data || []).map(async (session) => {
             if (session.user_id) {
-              console.log('=== DEBUG: Fetching user data for live session user_id ===', session.user_id)
+              
               
               try {
                 // First, let's check if user exists at all in auth.users
                 const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(session.user_id)
-                console.log('Auth user check:', { authUser, authError })
+                
                 
                 // Then check profiles table
                 const { data: userData, error: userError } = await supabase
@@ -221,10 +219,10 @@ export default function ExpertDashboard() {
                   .eq('id', session.user_id)
                   .maybeSingle()
                 
-                console.log('Profile data result for live session:', { userData, userError })
+                
                 
                 if (userError) {
-                  console.error('Error fetching user data for live session:', userError)
+                  
                   return {
                     ...session,
                     user_name: `User (${userError.code || 'Error'})`,
@@ -233,7 +231,7 @@ export default function ExpertDashboard() {
                 }
                 
                 if (!userData) {
-                  console.log('No profile found for live session user_id:', session.user_id)
+                  
                   // Try to get email from auth.users as fallback
                   const userEmail = (authUser as any)?.email || 'unknown@auth.com'
                   return {
@@ -249,7 +247,7 @@ export default function ExpertDashboard() {
                   user_email: (authUser as any)?.email || 'noemail@debug.com'
                 }
               } catch (fetchError) {
-                console.error('Unexpected error fetching user data for live session:', fetchError)
+                
                 return {
                   ...session,
                   user_name: 'User (Exception)',
@@ -264,13 +262,13 @@ export default function ExpertDashboard() {
         setPendingLiveSessions(enrichedSessions)
       }
     } catch (err) {
-      console.error('Unexpected error loading pending live sessions:', err)
+      
     }
   }
 
   const handleAcceptSession = async (appointmentId: string) => {
     try {
-      console.log('=== DEBUG: Accepting Appointment ===', appointmentId)
+      
       
       // Update appointment status to confirmed
       const { data: appointmentData, error: appointmentError } = await supabase
@@ -285,12 +283,12 @@ export default function ExpertDashboard() {
         .single()
 
       if (appointmentError) {
-        console.error('Error accepting appointment:', appointmentError)
+        
         alert('Failed to accept appointment. Please try again.')
         return
       }
 
-      console.log('Appointment accepted successfully:', appointmentData)
+      
 
       // Create notification for user
       try {
@@ -309,12 +307,12 @@ export default function ExpertDashboard() {
         })
 
         if (userNotificationResponse.ok) {
-          console.log('✅ User notification sent successfully')
+          
         } else {
-          console.log('⚠️ Failed to send user notification')
+          
         }
       } catch (notificationError) {
-        console.error('Error sending user notification:', notificationError)
+        
       }
 
       // Remove from pending list
@@ -324,14 +322,14 @@ export default function ExpertDashboard() {
       alert('Appointment accepted! User has been notified.')
       
     } catch (err) {
-      console.error('Unexpected error accepting appointment:', err)
+      
       alert('Failed to accept appointment. Please try again.')
     }
   }
 
   const handleRejectSession = async (appointmentId: string) => {
     try {
-      console.log('=== DEBUG: Rejecting Appointment ===', appointmentId)
+      
       
       // Update appointment status to cancelled
       const { data: appointmentData, error: appointmentError } = await supabase
@@ -345,12 +343,12 @@ export default function ExpertDashboard() {
         .single()
 
       if (appointmentError) {
-        console.error('Error rejecting appointment:', appointmentError)
+        
         alert('Failed to reject appointment. Please try again.')
         return
       }
 
-      console.log('Appointment rejected successfully:', appointmentData)
+      
 
       // Create notification for user
       try {
@@ -369,12 +367,12 @@ export default function ExpertDashboard() {
         })
 
         if (userNotificationResponse.ok) {
-          console.log('✅ User notification sent successfully')
+          
         } else {
-          console.log('⚠️ Failed to send user notification')
+          
         }
       } catch (notificationError) {
-        console.error('Error sending user notification:', notificationError)
+        
       }
 
       // Remove from pending list
@@ -384,14 +382,14 @@ export default function ExpertDashboard() {
       alert('Appointment rejected. User has been notified.')
       
     } catch (err) {
-      console.error('Unexpected error rejecting appointment:', err)
+      
       alert('Failed to reject appointment. Please try again.')
     }
   }
 
   const handleAcceptLiveSession = async (sessionId: string) => {
     try {
-      console.log('=== DEBUG: Accepting Live Session ===', sessionId)
+      
       
       // Update live session status to accepted
       const { data: sessionData, error: sessionError } = await supabase
@@ -405,12 +403,12 @@ export default function ExpertDashboard() {
         .single()
 
       if (sessionError) {
-        console.error('Error accepting live session:', sessionError)
+        
         alert('Failed to accept live session. Please try again.')
         return
       }
 
-      console.log('Live session accepted successfully:', sessionData)
+      
 
       // Create notification for user
       try {
@@ -429,30 +427,30 @@ export default function ExpertDashboard() {
         })
 
         if (userNotificationResponse.ok) {
-          console.log('✅ User notification sent successfully')
+          
         } else {
-          console.log('⚠️ Failed to send user notification')
+          
         }
       } catch (notificationError) {
-        console.error('Error sending user notification:', notificationError)
+        
       }
 
       // Remove from pending list
       setPendingLiveSessions(prev => prev.filter(session => session.id !== sessionId))
       
       // Show success message and redirect to chat
-      console.log('Live session accepted! Redirecting to chat...')
+      
       router.push(`/session/chat/${sessionId}`)
       
     } catch (err) {
-      console.error('Unexpected error accepting live session:', err)
+      
       alert('Failed to accept live session. Please try again.')
     }
   }
 
   const handleRejectLiveSession = async (sessionId: string) => {
     try {
-      console.log('=== DEBUG: Rejecting Live Session ===', sessionId)
+      
       
       // Update live session status to rejected
       const { data: sessionData, error: sessionError } = await supabase
@@ -466,12 +464,12 @@ export default function ExpertDashboard() {
         .single()
 
       if (sessionError) {
-        console.error('Error rejecting live session:', sessionError)
+        
         alert('Failed to reject live session. Please try again.')
         return
       }
 
-      console.log('Live session rejected successfully:', sessionData)
+      
 
       // Create notification for user
       try {
@@ -490,12 +488,12 @@ export default function ExpertDashboard() {
         })
 
         if (userNotificationResponse.ok) {
-          console.log('✅ User notification sent successfully')
+          
         } else {
-          console.log('⚠️ Failed to send user notification')
+          
         }
       } catch (notificationError) {
-        console.error('Error sending user notification:', notificationError)
+        
       }
 
       // Remove from pending list
@@ -505,14 +503,14 @@ export default function ExpertDashboard() {
       alert('Live session rejected. User has been notified.')
       
     } catch (err) {
-      console.error('Unexpected error rejecting live session:', err)
+      
       alert('Failed to reject live session. Please try again.')
     }
   }
 
   const loadExpertData = async () => {
     try {
-      console.log('=== DEBUG: Loading Expert Dashboard Data ===')
+      
       
       // Load real stats from database
       const [bookingsResponse, sessionsResponse, transactionsResponse] = await Promise.allSettled([
@@ -540,23 +538,23 @@ export default function ExpertDashboard() {
       
       if (bookingsResponse.status === 'fulfilled') {
         bookings = bookingsResponse.value.data || []
-        console.log('Bookings loaded:', bookings.length)
+        
       } else {
-        console.log('Bookings table not found or error:', bookingsResponse.reason)
+        
       }
       
       if (sessionsResponse.status === 'fulfilled') {
         sessions = sessionsResponse.value.data || []
-        console.log('Sessions loaded:', sessions.length)
+        
       } else {
-        console.log('Sessions table not found or error:', sessionsResponse.reason)
+        
       }
 
       if (transactionsResponse.status === 'fulfilled') {
         transactions = transactionsResponse.value.data || []
-        console.log('Transactions loaded:', transactions.length)
+        
       } else {
-        console.log('Transactions table not found or error:', transactionsResponse.reason)
+        
       }
 
       // Calculate stats from real data
@@ -567,11 +565,11 @@ export default function ExpertDashboard() {
       // Calculate earnings using the same logic as earnings page
       const earnings = await calculateTotalEarnings(sessions, transactions);
 
-      console.log('=== DEBUG: Expert Stats Calculated ===');
-      console.log('Completed sessions:', completedSessions);
-      console.log('Upcoming sessions:', upcomingSessions);
-      console.log('Total bookings:', totalBookings);
-      console.log('Earnings from sessions:', earnings);
+      ;
+      ;
+      ;
+      ;
+      ;
 
       setStats({
         totalBookings,
@@ -584,7 +582,7 @@ export default function ExpertDashboard() {
       setSessions(sessions.slice(0, 5)) // Show recent 5 sessions
       
     } catch (error) {
-      console.error('Error loading expert data:', error)
+      
       // Set empty stats on error
       setStats({
         totalBookings: 0,
@@ -598,7 +596,7 @@ export default function ExpertDashboard() {
 
   const calculateTotalEarnings = async (sessions: any[], transactions: any[]) => {
     try {
-      console.log('=== DEBUG: Calculating Total Earnings ===');
+      ;
       
       // Process sessions and match with transactions (same logic as earnings page)
       const earningsRecords = sessions?.map((session: any) => {
@@ -644,21 +642,21 @@ export default function ExpertDashboard() {
             amount: transactionAmount
           }
         } catch (error) {
-          console.error('=== DEBUG: Error processing session ===', session.id, error)
+          
           return null
         }
       }).filter(Boolean) || []
 
-      console.log('=== DEBUG: Processed earnings records ===', earningsRecords.length);
+      ;
 
       // Calculate total earnings from all matched transactions
       const totalEarnings = earningsRecords.reduce((sum, record) => sum + (record?.amount || 0), 0);
       
-      console.log('=== DEBUG: Total earnings calculated ===', totalEarnings);
+      ;
       
       return totalEarnings;
     } catch (error) {
-      console.error('=== DEBUG: Error calculating total earnings ===', error);
+      ;
       return 0;
     }
   }

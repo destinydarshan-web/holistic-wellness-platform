@@ -109,7 +109,7 @@ export default function AdminExpertsPage() {
 
       setExperts(expertsWithDetails)
     } catch (error) {
-      console.error('Error loading experts:', error)
+      
       setError('Failed to load experts')
     } finally {
       setIsLoading(false)
@@ -149,7 +149,7 @@ export default function AdminExpertsPage() {
       if (error) throw error
       await loadExperts()
     } catch (error) {
-      console.error('Error updating expert status:', error)
+      
       setError('Failed to update expert status')
     } finally {
       setIsLoading(false)
